@@ -1,0 +1,54 @@
+{
+  "name": "lswoo-middleware",
+  "version": "1.0.0",
+  "description": "GCP-Native Headless Middleware — Lightspeed Retail + WooCommerce + Custom Frontend",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mike190995/shoeaholictt.git"
+  },
+  "keywords": [
+    "lightspeed",
+    "woocommerce",
+    "gcp",
+    "middleware",
+    "cloud-run"
+  ],
+  "author": "mike190995",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/mike190995/shoeaholictt/issues"
+  },
+  "homepage": "https://github.com/mike190995/shoeaholictt#readme",
+  "dependencies": {
+    "@google-cloud/secret-manager": "^6.1.1",
+    "@google-cloud/tasks": "^6.2.1",
+    "@prisma/client": "^7.4.2",
+    "axios": "^1.13.6",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "ioredis": "^5.10.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.3.5",
+    "dotenv": "^17.3.1",
+    "eslint": "^10.0.3",
+    "prisma": "^7.4.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
