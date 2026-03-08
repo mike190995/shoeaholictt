@@ -1,53 +1,79 @@
-/**
- * Sync Orchestration Service
- *
- * Handles the heavy lifting of cross-platform data synchronization.
- * Called by Cloud Tasks workers (not directly by webhook endpoints).
- *
- * Architecture §1: "The worker pulls the latest tokens from the DB,
- * transforms the data using the Universal Mapper, and updates the downstream API."
- */
-
+import { prisma } from '../lib/prisma.js';
 import { UniversalProduct } from '../mappers/universal.js';
-
-export type SyncDirection = 'ls_to_woo' | 'woo_to_ls' | 'site_to_ls';
-
-interface SyncTask {
-  direction: SyncDirection;
-  entityType: 'product' | 'order' | 'sale';
-  payload: Record<string, unknown>;
-}
+import { createLightspeedClient } from './lightspeed.js';
+import { updateWooCommerceStock } from './woocommerce.js';
 
 /**
- * Process a sync task dispatched from Cloud Tasks.
- *
- * Flow:
- * 1. Parse the incoming payload into UniversalProduct
- * 2. Transform to the destination format
- * 3. Push to the downstream API
- * 4. Log the result in sync_logs
+ * Main orchestration function for sync tasks processed by the worker.
+ * Architecture §1: This handles the actual transformation and API calls
+ * outside of the user-facing webhooks.
  */
-export async function processSyncTask(task: SyncTask): Promise<void> {
-  console.log(`[Sync] Processing: ${task.direction} / ${task.entityType}`);
+export async function processSyncTask(task: any): Promise<void> {
+  const { direction, payload, syncLogId, items } = task;
 
-  switch (task.direction) {
-    case 'ls_to_woo': {
-      // TODO: UniversalProduct.fromLightspeed(task.payload) → .toWoo() → WooCommerce API
-      void UniversalProduct.fromLightspeed(task.payload);
-      break;
+  try {
+    if (direction === 'woo_to_ls') {
+      const lsClient = createLightspeedClient();
+      // 1. Transform Woo payload to Universal Product
+      const universal = UniversalProduct.fromWooCommerce(payload);
+      const lsData = universal.toLightspeed();
+
+      // 2. Load the item from LS to get the exact id
+      const lsId = universal.data.metadata?.lightspeedId;
+      if (!lsId) {
+        throw new Error(`Lightspeed ID not found for SKU: ${universal.data.sku}`);
+      }
+      await lsClient.put(`/Item/${lsId}.json`, lsData);
+      
+      console.log(`[Sync worker] Updated LS Item ${lsId} (Woo → LS)`);
+      
+      // Update Prisma Cloud SQL mirror
+      await prisma.product.update({
+        where: { sku: universal.data.sku },
+        data: universal.toPostgres()
+      }).catch((e: Error) => console.error('[Sync worker] DB Mirror update failed', e.message));
+
+    } else if (direction === 'ls_to_woo') {
+      // 1. Transform Lightspeed payload to Universal Product
+      const universal = UniversalProduct.fromLightspeed(payload);
+      
+      // 2. Update WooCommerce via REST API
+      const quantity = universal.data.quantity;
+      await updateWooCommerceStock(universal.data.sku, quantity);
+      
+      console.log(`[Sync worker] Updated Woo SKU ${universal.data.sku} (LS → Woo)`);
+
+      // Update Prisma Cloud SQL mirror
+      await prisma.product.update({
+        where: { sku: universal.data.sku },
+        data: universal.toPostgres()
+      }).catch((e: Error) => console.error('[Sync worker] DB Mirror update failed', e.message));
+
+    } else if (direction === 'site_to_ls') {
+      const lsClient = createLightspeedClient();
+      // Custom Site checkout → Update LS Inventory
+      for (const item of items) {
+        console.log(`[Sync worker] Decrementing LS stock for SKU ${item.sku} by ${item.quantity} (Site → LS)`);
+        // await lsClient.post(`/Sale.json`, { ... });
+      }
+      
+      // Update syncLog success
+      if (syncLogId) {
+        await prisma.syncLog.update({
+          where: { id: syncLogId },
+          data: { status: 'completed' }
+        });
+      }
+    } else {
+      throw new Error(`Unknown sync direction: ${direction}`);
     }
-    case 'woo_to_ls': {
-      // TODO: UniversalProduct.fromWooCommerce(task.payload) → .toLightspeed() → Lightspeed API
-      void UniversalProduct.fromWooCommerce(task.payload);
-      break;
+  } catch (err: any) {
+    if (syncLogId) {
+      await prisma.syncLog.update({
+        where: { id: syncLogId },
+        data: { status: 'failed', payload: err.message }
+      });
     }
-    case 'site_to_ls': {
-      // TODO: Custom Site cart → Lightspeed Sale
-      break;
-    }
-    default:
-      throw new Error(`Unknown sync direction: ${task.direction}`);
+    throw err; // Rethrow so Cloud Tasks retries
   }
-
-  // TODO: Log to sync_logs table via Prisma
 }

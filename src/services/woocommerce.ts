@@ -54,3 +54,18 @@ export async function getWooProductBySku(
   const products = response.data as unknown[];
   return products.length > 0 ? (products[0] as Record<string, unknown>) : null;
 }
+
+/**
+ * Top-level Orchestration Wrapper
+ * Finds product ID by SKU, then updates its stock.
+ */
+export async function updateWooCommerceStock(sku: string, quantity: number): Promise<void> {
+  const client = createWooCommerceClient();
+  const product = await getWooProductBySku(client, sku);
+  
+  if (!product || !product.id) {
+    throw new Error(`WooCommerce product not found for SKU: ${sku}`);
+  }
+  
+  await updateWooStock(client, Number(product.id), quantity);
+}

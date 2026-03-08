@@ -8,6 +8,7 @@
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { config } from '../config/env.js';
+import { prisma } from '../lib/prisma.js';
 
 const LS_API_BASE = 'https://api.lightspeedapp.com/API/V3';
 
@@ -25,9 +26,10 @@ export function createLightspeedClient(): AxiosInstance {
 
   // ─── Request Interceptor: Attach Access Token ───
   client.interceptors.request.use(async (requestConfig) => {
-    // TODO: Fetch current access_token from credentials table (Prisma)
-    // const credential = await prisma.credential.findUnique({ where: { platform: 'lightspeed' } });
-    // requestConfig.headers.Authorization = `Bearer ${credential.accessToken}`;
+    const credential = await prisma.credential.findUnique({ where: { platform: 'lightspeed' } });
+    if (credential?.accessToken) {
+      requestConfig.headers.Authorization = `OAuth ${credential.accessToken}`; // LS uses OAuth keyword
+    }
     return requestConfig;
   });
 
@@ -40,10 +42,11 @@ export function createLightspeedClient(): AxiosInstance {
       if (error.response?.status === 401 && originalRequest && !(originalRequest as any)._retry) {
         (originalRequest as any)._retry = true;
 
-        // TODO: Call refreshLightspeedToken() to get new access_token
-        // TODO: Update credentials table with new tokens
-        // TODO: Update originalRequest.headers.Authorization
-        // return client(originalRequest);
+        const tokens = await refreshLightspeedToken();
+        if (tokens) {
+          originalRequest.headers.Authorization = `OAuth ${tokens.accessToken}`;
+          return client(originalRequest);
+        }
       }
 
       return Promise.reject(error);
@@ -55,16 +58,38 @@ export function createLightspeedClient(): AxiosInstance {
 
 /**
  * Refreshes the Lightspeed OAuth access token using the stored refresh_token.
- * Architecture §4: Tokens stored in Cloud SQL credentials table.
  */
 export async function refreshLightspeedToken(): Promise<{
   accessToken: string;
   refreshToken: string;
-  expiresIn: number;
-}> {
-  // TODO: Fetch refresh_token from credentials table
-  // TODO: POST to https://cloud.lightspeedapp.com/oauth/access_token.php
-  // TODO: Update credentials table with new tokens
+} | null> {
+  const credential = await prisma.credential.findUnique({ where: { platform: 'lightspeed' } });
+  if (!credential?.refreshToken) return null;
 
-  throw new Error('refreshLightspeedToken not yet implemented');
+  try {
+    const response = await axios.post('https://cloud.lightspeedapp.com/oauth/access_token.php', {
+      client_id: config.lightspeedClientId,
+      client_secret: config.lightspeedClientSecret,
+      refresh_token: credential.refreshToken,
+      grant_type: 'refresh_token'
+    }, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    const { access_token, refresh_token, expires_in } = response.data;
+    
+    await prisma.credential.update({
+      where: { platform: 'lightspeed' },
+      data: {
+        accessToken: access_token,
+        refreshToken: refresh_token,
+        expiresAt: new Date(Date.now() + expires_in * 1000)
+      }
+    });
+
+    return { accessToken: access_token, refreshToken: refresh_token };
+  } catch (err: any) {
+    console.error('[Lightspeed] Failed to refresh token:', err.response?.data || err.message);
+    return null;
+  }
 }

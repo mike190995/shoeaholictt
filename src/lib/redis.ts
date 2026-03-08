@@ -6,24 +6,42 @@
  *
  * Prevents infinite ping-pong between Lightspeed and WooCommerce:
  * Woo updates LS → LS webhook fires → would update Woo again (loop!)
+ *
+ * Falls back to in-memory Map when Redis is unavailable (local development).
  */
 
 import Redis from 'ioredis';
 import { config } from '../config/env.js';
 
 let redis: Redis | null = null;
+let useMemoryFallback = false;
+const memoryStore = new Map<string, NodeJS.Timeout>();
 
 /**
  * Get or create the Redis connection to Memorystore.
+ * If connection fails, switches to in-memory fallback.
  */
-export function getRedisClient(): Redis {
+export async function getRedisClient(): Promise<Redis | null> {
+  if (useMemoryFallback) return null;
+
   if (!redis) {
     redis = new Redis({
       host: config.redisHost,
       port: config.redisPort,
-      maxRetriesPerRequest: 3,
+      maxRetriesPerRequest: 1,
       lazyConnect: true,
+      connectTimeout: 3000,
     });
+
+    try {
+      await redis.connect();
+      console.log('[Redis] Connected to', config.redisHost);
+    } catch {
+      console.warn('[Redis] Connection failed — using in-memory fallback');
+      useMemoryFallback = true;
+      redis = null;
+      return null;
+    }
   }
   return redis;
 }
@@ -44,10 +62,16 @@ export async function isDuplicateSync(
   sku: string,
   quantity: number
 ): Promise<boolean> {
-  const client = getRedisClient();
   const key = syncKey(sku, quantity);
-  const exists = await client.exists(key);
-  return exists === 1;
+  const client = await getRedisClient();
+
+  if (client) {
+    const exists = await client.exists(key);
+    return exists === 1;
+  }
+
+  // In-memory fallback
+  return memoryStore.has(key);
 }
 
 /**
@@ -58,9 +82,20 @@ export async function markSyncInProgress(
   sku: string,
   quantity: number
 ): Promise<void> {
-  const client = getRedisClient();
   const key = syncKey(sku, quantity);
-  await client.set(key, '1', 'EX', config.redisSyncTtl);
+  const client = await getRedisClient();
+
+  if (client) {
+    await client.set(key, '1', 'EX', config.redisSyncTtl);
+    return;
+  }
+
+  // In-memory fallback with TTL
+  if (memoryStore.has(key)) {
+    clearTimeout(memoryStore.get(key)!);
+  }
+  const timeout = setTimeout(() => memoryStore.delete(key), config.redisSyncTtl * 1000);
+  memoryStore.set(key, timeout);
 }
 
 /**
@@ -71,4 +106,9 @@ export async function disconnectRedis(): Promise<void> {
     await redis.quit();
     redis = null;
   }
+  // Clear memory fallback
+  for (const timeout of memoryStore.values()) {
+    clearTimeout(timeout);
+  }
+  memoryStore.clear();
 }

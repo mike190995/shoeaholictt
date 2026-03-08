@@ -19,10 +19,13 @@ app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+import { workerRouter } from './routes/worker.js';
+
 // ─── Routes ────────────────────────────────────
 app.use('/api', apiRouter);          // GET endpoints for custom frontend
 app.use('/webhooks', webhookRouter); // POST webhook receivers
 app.use('/auth', authRouter);        // OAuth callback routes
+app.use('/worker', workerRouter);    // Cloud tasks processing
 
 // ─── Global Error Handler ──────────────────────
 app.use(errorHandler);
