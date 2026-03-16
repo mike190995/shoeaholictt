@@ -10,8 +10,9 @@
  * Falls back to in-memory Map when Redis is unavailable (local development).
  */
 
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 import { config } from '../config/env.js';
+import { log } from './logger.js';
 
 let redis: Redis | null = null;
 let useMemoryFallback = false;
@@ -35,9 +36,9 @@ export async function getRedisClient(): Promise<Redis | null> {
 
     try {
       await redis.connect();
-      console.log('[Redis] Connected to', config.redisHost);
+      log.info({ host: config.redisHost }, '[Redis] Connected');
     } catch {
-      console.warn('[Redis] Connection failed — using in-memory fallback');
+      log.warn('[Redis] Connection failed — using in-memory fallback');
       useMemoryFallback = true;
       redis = null;
       return null;
@@ -48,21 +49,25 @@ export async function getRedisClient(): Promise<Redis | null> {
 
 /**
  * Generate a deduplication hash key for a sync event.
- * Format: sync:{sku}:{quantity}
+ * Now includes the direction (e.g., 'woo_to_ls' or 'ls_to_woo') 
+ * to ensure bidirectional updates don't falsely trip each other.
  */
-function syncKey(sku: string, quantity: number): string {
-  return `sync:${sku}:${quantity}`;
+function syncKey(sku: string, direction: string): string {
+  return `sync:${direction}:${sku}`;
 }
 
 /**
  * Check if this sync event is a redundant "echo" (loop).
  * Returns true if the event should be DROPPED.
+ * E.g., If we just pushed 'woo_to_ls', we should drop near-immediate 'ls_to_woo' events for this SKU.
  */
 export async function isDuplicateSync(
   sku: string,
-  quantity: number
+  sourceDirection: string
 ): Promise<boolean> {
-  const key = syncKey(sku, quantity);
+  // If the source is Lightspeed, we check if WooCommerce recently pushed this SKU
+  const checkDirection = sourceDirection === 'ls_to_woo' ? 'woo_to_ls' : 'ls_to_woo';
+  const key = syncKey(sku, checkDirection);
   const client = await getRedisClient();
 
   if (client) {
@@ -80,9 +85,9 @@ export async function isDuplicateSync(
  */
 export async function markSyncInProgress(
   sku: string,
-  quantity: number
+  direction: string // e.g., 'woo_to_ls' or 'ls_to_woo'
 ): Promise<void> {
-  const key = syncKey(sku, quantity);
+  const key = syncKey(sku, direction);
   const client = await getRedisClient();
 
   if (client) {

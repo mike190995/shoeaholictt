@@ -10,12 +10,14 @@
 
 import { CloudTasksClient } from '@google-cloud/tasks';
 import { config } from '../config/env.js';
+import { log } from './logger.js';
 
 const tasksClient = new CloudTasksClient();
 
 /**
  * Enqueue a sync task into the Cloud Tasks queue.
  * The task will be dispatched to the Worker Cloud Run service.
+ * Includes WORKER_SECRET header so the worker endpoint can authenticate it.
  */
 export async function enqueueTask(
   direction: string,
@@ -31,7 +33,10 @@ export async function enqueueTask(
     httpRequest: {
       httpMethod: 'POST' as const,
       url: `${config.workerServiceUrl}/process`,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Worker-Secret': config.workerSecret,
+      },
       body: Buffer.from(
         JSON.stringify({ direction, payload, timestamp: new Date().toISOString() })
       ).toString('base64'),
@@ -39,7 +44,7 @@ export async function enqueueTask(
   };
 
   const [response] = await tasksClient.createTask({ parent, task });
-  console.log(`[Tasks] Enqueued: ${response.name}`);
+  log.info({ taskName: response.name, direction }, '[Tasks] Enqueued sync task');
 
   return response.name || '';
 }

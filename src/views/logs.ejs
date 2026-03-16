@@ -1,0 +1,138 @@
+<div class="space-y-6 max-w-7xl mx-auto">
+  
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-5 rounded-xl border border-gray-100 shadow-sm gap-4">
+    <div>
+      <h3 class="text-base font-semibold text-gray-900">Sync Event History</h3>
+      <p class="text-xs text-gray-500 mt-1">Showing page <%= page %> of <%= totalPages %> (<%= total %> total events)</p>
+    </div>
+    
+    <!-- Filter Controls Placeholder -->
+    <div class="flex items-center space-x-2 w-full sm:w-auto">
+      <select onchange="window.location.href='?filter='+this.value" class="block w-full sm:w-auto pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md shadow-sm">
+        <option value="" <%= !filter ? 'selected' : '' %>>All Statuses</option>
+        <option value="failed" <%= filter === 'failed' ? 'selected' : '' %>>Errors Only</option>
+        <option value="pending" <%= filter === 'pending' ? 'selected' : '' %>>Active Queue</option>
+      </select>
+
+      <!-- Pagination Controls -->
+      <div class="flex space-x-1 pl-2 border-l border-gray-200">
+        <% if (page > 1) { %>
+          <a href="?page=<%= page - 1 %><%= filter ? '&filter=' + filter : '' %>" class="px-3 py-2 border border-gray-200 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Prev</a>
+        <% } else { %>
+          <button disabled class="px-3 py-2 border border-gray-100 text-sm font-medium rounded-md text-gray-400 bg-gray-50 cursor-not-allowed">Prev</button>
+        <% } %>
+        
+        <% if (page < totalPages) { %>
+          <a href="?page=<%= page + 1 %><%= filter ? '&filter=' + filter : '' %>" class="px-3 py-2 border border-gray-200 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Next</a>
+        <% } else { %>
+          <button disabled class="px-3 py-2 border border-gray-100 text-sm font-medium rounded-md text-gray-400 bg-gray-50 cursor-not-allowed">Next</button>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Direction</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entity</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-100">
+          <% logs.forEach(log => { %>
+            <tr class="hover:bg-gray-50 transition">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
+                <%= new Date(log.createdAt).toLocaleString() %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  <%= log.direction %>
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <span class="font-medium"><%= log.entityType %></span> 
+                <span class="text-gray-400 font-mono ml-1"><%= log.entityId %></span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <% if (log.status === 'completed') { %>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Success</span>
+                <% } else if (log.status === 'failed') { %>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 flex items-center gap-1 cursor-help" title="Hover for raw error details">
+                    Failed
+                  </span>
+                <% } else { %>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>
+                <% } %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <button onclick="viewPayload('<%= log.id %>')" class="text-blue-600 hover:text-blue-900 font-medium">Inspect Data</button>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (logs.length === 0) { %>
+            <tr><td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500">No sync events found for the current filter.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Payload Inspector Modal -->
+<div id="payloadModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closePayloadModal()"></div>
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+    <div class="inline-block align-bottom bg-gray-900 rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full border border-gray-700">
+      
+      <div class="bg-gray-800 px-4 py-3 border-b border-gray-700 flex justify-between items-center">
+        <h3 class="text-sm font-medium text-white font-mono" id="inspector-title">Raw Event Payload</h3>
+        <button onclick="closePayloadModal()" class="text-gray-400 hover:text-white">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <div class="p-0 overflow-auto max-h-[70vh]">
+        <pre id="payload-content" class="text-green-400 font-mono text-xs whitespace-pre-wrap p-4 m-0 bg-gray-900">Loading data...</pre>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  window.syncLogsData = <%- JSON.stringify(logs) %>;
+
+  function viewPayload(logId) {
+    const log = window.syncLogsData.find(l => l.id === logId);
+    if (!log) return;
+    
+    document.getElementById('inspector-title').innerText = `Inspector: ${log.direction} | ${log.entityType} ${log.entityId}`;
+    
+    // Attempt to format neatly
+    let displayStr = '';
+    try {
+      if (log.error) {
+         displayStr += "// ERROR DETAILS \\\\ \n" + log.error + "\n\n";
+      }
+      displayStr += "// RAW PAYLOAD \\\\ \n" + JSON.stringify(log.payload, null, 2);
+    } catch(e) {
+      displayStr = "Data cannot be parsed";
+    }
+    
+    document.getElementById('payload-content').innerText = displayStr;
+    document.getElementById('payloadModal').classList.remove('hidden');
+  }
+
+  function closePayloadModal() {
+    document.getElementById('payloadModal').classList.add('hidden');
+  }
+</script>

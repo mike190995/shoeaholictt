@@ -1,0 +1,107 @@
+<div class="space-y-8 max-w-4xl mx-auto">
+  
+  <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+    <div class="border-b border-gray-100 pb-4 mb-4">
+      <h3 class="text-lg font-semibold text-gray-900">Force Single Sync</h3>
+      <p class="text-sm text-gray-500 mt-1">Immediately trigger a bilateral sync for a specific product.</p>
+    </div>
+    
+    <div class="flex items-end space-x-4">
+      <div class="flex-1">
+        <label class="block text-sm font-medium text-gray-700">Lightspeed ID or WooCommerce SKU</label>
+        <input type="text" id="single-sync-input" placeholder="e.g. SHIRT-123 or a6b89..." class="mt-2 block w-full border border-gray-300 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+      </div>
+      <button onclick="triggerSingleSync()" id="btn-single-sync" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg shadow-sm border border-transparent font-medium hover:bg-blue-700 transition w-32 flex justify-center">
+        Sync Item
+      </button>
+    </div>
+    <div id="single-sync-result" class="mt-4 text-sm hidden py-2 px-3 rounded text-green-800 bg-green-50"></div>
+  </div>
+
+  <div class="bg-red-50 p-6 rounded-xl border border-red-100 shadow-sm">
+    <div class="border-b border-red-200 pb-4 mb-4 text-red-900">
+      <h3 class="text-lg font-semibold text-red-900 flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        Force Full Catalog Sync
+      </h3>
+      <p class="text-sm text-red-700 mt-1">Danger Zone: This will query all active products in Lightspeed and mass-update WooCommerce. Use only for initial setup or recovering from major outages.</p>
+    </div>
+    
+    <div class="flex items-center justify-between">
+      <p class="text-xs text-red-600 font-medium">This process operates asynchronously and may take several minutes depending on catalog size.</p>
+      <button onclick="triggerFullSync()" id="btn-full-sync" class="bg-red-600 text-white px-6 py-2.5 rounded-lg shadow-sm border border-transparent font-medium hover:bg-red-700 transition">
+        Execute Master Override
+      </button>
+    </div>
+    <div id="full-sync-result" class="mt-4 text-sm hidden py-2 px-3 rounded text-red-800 bg-red-100 font-bold border border-red-200"></div>
+  </div>
+
+</div>
+
+<script>
+  async function triggerSingleSync() {
+    const input = document.getElementById('single-sync-input').value.trim();
+    const btn = document.getElementById('btn-single-sync');
+    const resDiv = document.getElementById('single-sync-result');
+    
+    if (!input) return alert('Please enter an ID or SKU.');
+    
+    btn.disabled = true;
+    btn.innerText = 'Syncing...';
+    resDiv.classList.add('hidden');
+
+    try {
+      const resp = await fetch('/admin/api/sync/single', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: input })
+      });
+      const data = await resp.json();
+      
+      resDiv.classList.remove('hidden');
+      if (data.success) {
+        resDiv.className = 'mt-4 text-sm py-2 px-3 rounded text-green-800 bg-green-50';
+        resDiv.innerText = data.message;
+        document.getElementById('single-sync-input').value = '';
+      } else {
+        resDiv.className = 'mt-4 text-sm py-2 px-3 rounded text-red-800 bg-red-50';
+        resDiv.innerText = 'Error: ' + data.error;
+      }
+    } catch (e) {
+      alert('Network error while triggering sync.');
+    } finally {
+      btn.disabled = false;
+      btn.innerText = 'Sync Item';
+    }
+  }
+
+  async function triggerFullSync() {
+    if (!confirm('WARNING: Are you sure you want to trigger a full catalog sync from Lightspeed to WooCommerce? This is a heavy operation.')) return;
+    
+    const btn = document.getElementById('btn-full-sync');
+    const resDiv = document.getElementById('full-sync-result');
+    
+    btn.disabled = true;
+    btn.innerText = 'Queueing...';
+    resDiv.classList.add('hidden');
+
+    try {
+      const resp = await fetch('/admin/api/sync/full', { method: 'POST' });
+      const data = await resp.json();
+      
+      resDiv.classList.remove('hidden');
+      if (data.success) {
+         resDiv.innerText = '⚙️ ' + data.message;
+      } else {
+         resDiv.innerText = 'Error: ' + data.error;
+      }
+    } catch(e) {
+      alert('Network error while triggering full sync.');
+    } finally {
+      btn.disabled = false;
+      btn.innerText = 'Execute Master Override';
+    }
+  }
+</script>

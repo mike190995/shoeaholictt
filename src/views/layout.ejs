@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LSWOO Admin Dashboard</title>
+  <!-- Tailwind CSS via CDN for rapid styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 flex h-screen overflow-hidden">
+  
+  <!-- Sidebar -->
+  <aside class="w-64 bg-gray-900 text-white flex flex-col h-full shrink-0">
+    <div class="h-16 flex items-center px-6 border-b border-gray-800 shrink-0">
+      <h1 class="text-lg font-bold tracking-wider">LSWOO <span class="text-blue-500 font-normal">Middle</span></h1>
+    </div>
+    <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+      <a href="/admin" class="flex items-center px-3 py-2 text-sm font-medium rounded-md <%= activeTab === 'dashboard' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' %>">
+        <svg class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        System Health
+      </a>
+      <a href="/admin/products" class="flex items-center px-3 py-2 text-sm font-medium rounded-md <%= activeTab === 'products' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' %>">
+        <svg class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+        Product Matrix
+      </a>
+      <a href="/admin/sync" class="flex items-center px-3 py-2 text-sm font-medium rounded-md <%= activeTab === 'sync' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' %>">
+        <svg class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        Manual Controls
+      </a>
+      <a href="/admin/logs" class="flex items-center px-3 py-2 text-sm font-medium rounded-md <%= activeTab === 'logs' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' %>">
+        <svg class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Audit Trail
+      </a>
+    </nav>
+    <div class="p-4 border-t border-gray-800 flex items-center shrink-0">
+      <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold shadow-sm">
+        A
+      </div>
+      <div class="ml-3">
+        <p class="text-sm font-medium">Administrator</p>
+        <p class="text-xs text-gray-400 truncate">Protected via IAP</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col h-full bg-gray-50 overflow-hidden relative">
+    
+    <!-- Top Header -->
+    <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0 shadow-sm z-10">
+      <h2 class="text-xl font-semibold text-gray-800"><%= title %></h2>
+      <div class="flex items-center space-x-4">
+        <!-- Optional Global Actions can go here -->
+      </div>
+    </header>
+
+    <!-- Scrollable Page Content -->
+    <div class="flex-1 overflow-auto bg-gray-50 p-8 no-scrollbar">
+      <%- body %>
+    </div>
+    
+  </main>
+
+  <script>
+    // Global utility scripts can go here
+  </script>
+</body>
+</html>

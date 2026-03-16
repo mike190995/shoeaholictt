@@ -1,8 +1,34 @@
 import { Router } from 'express';
+import { z } from 'zod';
+import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
 import { enqueueTask } from '../lib/tasks.js';
+import { validateBody } from '../middleware/validate.js';
+import { config } from '../config/env.js';
+import { createLightspeedClient } from '../services/lightspeed.js';
 
 export const apiRouter = Router();
+
+// Zod Schema for Checkout Payload
+const CheckoutItemSchema = z.object({
+  sku: z.string().min(1),
+  quantity: z.number().int().positive(),
+  price: z.number().nonnegative().optional(),
+});
+
+const CheckoutPayloadSchema = z.object({
+  items: z.array(CheckoutItemSchema).min(1, 'Cart cannot be empty'),
+  customer: z.record(z.string(), z.unknown()).optional(),
+});
+
+// Rate Limiter for Checkout API
+const checkoutLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 checkout requests per `window` (here, per 15 minutes)
+  message: 'Too many checkout requests from this IP, please try again later.',
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
 
 /**
  * GET /api/products
@@ -82,14 +108,9 @@ apiRouter.get('/categories', async (_req, res, next) => {
  * Manages the transition from Custom Site cart to Lightspeed Sale.
  * Verifies inventory, performs atomic local update, enqueues Lightspeed sync.
  */
-apiRouter.post('/checkout', async (req, res, next) => {
+apiRouter.post('/checkout', checkoutLimiter, validateBody(CheckoutPayloadSchema), async (req, res, next) => {
   try {
     const { items, customer } = req.body;
-
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      res.status(400).json({ error: 'Invalid checkout payload' });
-      return;
-    }
 
     // 1. Transaction to carefully verify inventory and decrement stock atomically
     const syncLogId = await prisma.$transaction(async (tx) => {
@@ -138,4 +159,38 @@ apiRouter.post('/checkout', async (req, res, next) => {
     next(err);
   }
 });
+
+/**
+ * GET /api/debug/lightspeed/:sku
+ * FOR MANUAL VERIFICATION: Fetches raw data directly from Lightspeed.
+ * GUARDED: Dev-only. Not exposed in production.
+ */
+if (config.nodeEnv !== 'production') {
+  apiRouter.get('/debug/lightspeed/:sku', async (req, res, next) => {
+    try {
+      const { sku } = req.params;
+      const product = await prisma.product.findUnique({ where: { sku } });
+      if (!product || !product.metadata) {
+        res.status(404).json({ error: 'Product not mirrored or missing metadata' });
+        return;
+      }
+
+      const lsId = (product.metadata as any).lightspeedId;
+      const lsClient = await createLightspeedClient();
+      
+      const [prodRes, invRes] = await Promise.all([
+        lsClient.get(`/products/${lsId}`),
+        lsClient.get(`/products/${lsId}/inventory`)
+      ]);
+
+      res.json({
+        internalMirror: product,
+        rawLightspeed: prodRes.data,
+        rawInventory: invRes.data
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message, details: err.response?.data });
+    }
+  });
+}
 

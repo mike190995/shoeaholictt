@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.git/
+.env
+*.log
+docker-compose.dev.yml
+README.md
+Architecture.md
+Skill Spec.md
+.agent/
+.gemini/
+.gitignore
+.gcloudignore

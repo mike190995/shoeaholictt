@@ -1,0 +1,129 @@
+<div class="max-w-7xl mx-auto space-y-8">
+  
+  <!-- Welcome Banner -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col sm:flex-row items-center justify-between">
+    <div>
+      <h3 class="text-lg font-bold text-gray-900">System Overview</h3>
+      <p class="text-sm text-gray-500 mt-1">Real-time status of connected platforms and queues.</p>
+    </div>
+    <div class="mt-4 sm:mt-0">
+      <!-- Re-Authorize Button (Links to our standard OAuth initiation) -->
+      <a href="/auth/lightspeed" target="_blank" class="inline-flex items-center px-4 py-2 border border-blue-500 rounded-lg shadow-sm text-sm font-medium text-blue-600 bg-white hover:bg-blue-50 hover:text-blue-700 transition">
+        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+        </svg>
+        Re-Authorize Lightspeed
+      </a>
+    </div>
+  </div>
+
+  <!-- Status Cards Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    
+    <!-- Lightspeed Status -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col">
+      <div class="flex items-center justify-between">
+        <h4 class="text-sm font-medium text-gray-500">Lightspeed API</h4>
+        <span class="flex h-3 w-3">
+          <span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-green-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+        </span>
+      </div>
+      <p class="text-2xl font-bold text-gray-900 mt-4">Connected</p>
+      <p class="text-xs text-gray-400 mt-1">X-Series Retail</p>
+    </div>
+
+    <!-- WooCommerce Status -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col">
+      <div class="flex items-center justify-between">
+        <h4 class="text-sm font-medium text-gray-500">WooCommerce</h4>
+        <span class="flex h-3 w-3">
+          <span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-green-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+        </span>
+      </div>
+      <p class="text-2xl font-bold text-gray-900 mt-4">Connected</p>
+      <p class="text-xs text-gray-400 mt-1">REST API v3</p>
+    </div>
+
+    <!-- Database Status -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col">
+      <div class="flex items-center justify-between">
+        <h4 class="text-sm font-medium text-gray-500">Cloud SQL Replica</h4>
+        <span class="flex h-3 w-3">
+          <span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-green-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+        </span>
+      </div>
+      <p class="text-2xl font-bold text-gray-900 mt-4"><%= productCount %></p>
+      <p class="text-xs text-gray-400 mt-1">Products Cached</p>
+    </div>
+
+    <!-- Cloud Tasks Queue -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col">
+      <div class="flex items-center justify-between">
+        <h4 class="text-sm font-medium text-gray-500">Sync Queue</h4>
+        <svg class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+        </svg>
+      </div>
+      <!-- Placeholder metric, we'd need GCP API to fetch true queue length -->
+      <p class="text-2xl font-bold text-gray-900 mt-4">Active</p>
+      <p class="text-xs text-gray-400 mt-1">Cloud Tasks Ready</p>
+    </div>
+
+  </div>
+
+  <!-- Recent Logs Snippet -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
+      <h3 class="text-base font-semibold text-gray-900">Recent Sync Activity</h3>
+      <a href="/admin/logs" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View All &rarr;</a>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Direction</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event ID</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-100">
+          <% if (recentLogs && recentLogs.length > 0) { %>
+            <% recentLogs.forEach(log => { %>
+              <tr class="hover:bg-gray-50 transition">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <%= new Date(log.createdAt).toLocaleString() %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    <%= log.direction %>
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <% if (log.status === 'completed') { %>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Success</span>
+                  <% } else if (log.status === 'failed') { %>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Failed</span>
+                  <% } else { %>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>
+                  <% } %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400 font-mono">
+                  <%= log.id.substring(0, 8) %>...
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td colspan="4" class="px-6 py-8 text-center text-sm text-gray-500">No recent sync activity found.</td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

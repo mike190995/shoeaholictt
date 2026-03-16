@@ -5,7 +5,9 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
+import axiosRetry from 'axios-retry';
 import { config } from '../config/env.js';
+import { log } from '../lib/logger.js';
 
 /**
  * Creates an authenticated Axios instance for WooCommerce REST API.
@@ -21,6 +23,19 @@ export function createWooCommerceClient(): AxiosInstance {
     headers: {
       'Content-Type': 'application/json',
     },
+  });
+
+  // Add retry logic for 5xx errors and network timeouts
+  axiosRetry(client, {
+    retries: 3,
+    retryDelay: axiosRetry.exponentialDelay,
+    retryCondition: (error) => {
+      // Retry on network errors or 5xx warnings
+      return axiosRetry.isNetworkOrIdempotentRequestError(error) || (error.response?.status ? error.response.status >= 500 : false);
+    },
+    onRetry: (retryCount, error) => {
+      log.warn({ retryCount, error: error.message }, '[WooCommerce API] Retrying request');
+    }
   });
 
   return client;
@@ -56,10 +71,21 @@ export async function getWooProductBySku(
 }
 
 /**
- * Top-level Orchestration Wrapper
- * Finds product ID by SKU, then updates its stock.
+ * Update a WooCommerce product's full data.
  */
-export async function updateWooCommerceStock(sku: string, quantity: number): Promise<void> {
+export async function updateWooProduct(
+  client: AxiosInstance,
+  wooProductId: number,
+  data: Record<string, any>
+): Promise<void> {
+  await client.put(`/products/${wooProductId}`, data);
+}
+
+/**
+ * Top-level Orchestration Wrapper
+ * Finds product ID by SKU, then updates its content and stock.
+ */
+export async function updateWooCommerceStock(sku: string, quantity: number, fullData?: Record<string, any>): Promise<void> {
   const client = createWooCommerceClient();
   const product = await getWooProductBySku(client, sku);
   
@@ -67,5 +93,14 @@ export async function updateWooCommerceStock(sku: string, quantity: number): Pro
     throw new Error(`WooCommerce product not found for SKU: ${sku}`);
   }
   
-  await updateWooStock(client, Number(product.id), quantity);
+  if (fullData) {
+    console.log(`[WooService] Performing full update for SKU: ${sku}`);
+    await updateWooProduct(client, Number(product.id), {
+      ...fullData,
+      stock_quantity: quantity,
+      manage_stock: true,
+    });
+  } else {
+    await updateWooStock(client, Number(product.id), quantity);
+  }
 }

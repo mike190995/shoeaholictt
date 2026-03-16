@@ -1,119 +1,98 @@
+import { resolve } from 'path';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { config } from './config/env.js';
+import { APP_VERSION } from './version.js';
 import { apiRouter } from './routes/api.js';
 import { webhookRouter } from './routes/webhooks.js';
 import { authRouter } from './routes/auth.js';
+import { workerRouter } from './routes/worker.js';
+import { adminRouter } from './routes/admin.js';
+import { syncRouter } from './routes/sync.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { log } from './lib/logger.js';
 
 const app = express();
+
+// ─── Frontend Static Serving ────────────────────
+const frontendDist = resolve(process.cwd(), 'frontend/dist');
+app.use(express.static(frontendDist));
+
+app.set('views', resolve(process.cwd(), 'src/views'));
+app.set('view engine', 'ejs');
 
 // ─── Security & Parsing ────────────────────────
 app.use(helmet());
 app.use(cors({ origin: config.frontendOrigin }));
-app.use(express.json());
 
-// ─── Health Check & Landing ────────────────────
-app.get('/', (_req, res) => {
-  res.status(200).send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>LSWOO Middleware | Status: Active</title>
-      <style>
-        :root {
-          --bg: #0f172a;
-          --text: #f8fafc;
-          --primary: #38bdf8;
-          --accent: #818cf8;
-        }
-        body {
-          margin: 0;
-          font-family: 'Inter', -apple-system, sans-serif;
-          background: var(--bg);
-          color: var(--text);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          height: 100vh;
-          overflow: hidden;
-        }
-        .container {
-          text-align: center;
-          background: rgba(30, 41, 59, 0.7);
-          backdrop-filter: blur(12px);
-          padding: 3rem;
-          border-radius: 24px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-          animation: fadeIn 0.8s ease-out;
-        }
-        h1 {
-          font-size: 2.5rem;
-          margin-bottom: 1rem;
-          background: linear-gradient(135deg, var(--primary), var(--accent));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-        p {
-          font-size: 1.125rem;
-          color: #94a3b8;
-          max-width: 400px;
-          line-height: 1.6;
-        }
-        .status {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          background: rgba(34, 197, 94, 0.1);
-          color: #4ade80;
-          padding: 0.5rem 1rem;
-          border-radius: 9999px;
-          font-weight: 600;
-          font-size: 0.875rem;
-          margin-bottom: 1.5rem;
-        }
-        .status::before {
-          content: '';
-          width: 8px;
-          height: 8px;
-          background: #4ade80;
-          border-radius: 50%;
-          box-shadow: 0 0 12px #4ade80;
-          animation: pulse 2s infinite;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="status">System Online</div>
-        <h1>LSWOO Middleware</h1>
-        <p>The high-performance bridge between Lightspeed Retail and WooCommerce is active and healthy.</p>
-      </div>
-    </body>
-    </html>
-  `);
+// Global Rate Limiter
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 1000, 
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true, 
+  legacyHeaders: false, 
 });
+app.use(globalLimiter);
+
+app.use(express.json({
+  verify: (req: any, _res, buf) => {
+    // Save raw body for Lightspeed HMAC verification
+    req.rawBody = buf;
+  }
+}));
+
+
 
 app.get('/health', (_req, res) => {
-  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.status(200).json({ status: 'ok', version: APP_VERSION, timestamp: new Date().toISOString() });
 });
 
-import { workerRouter } from './routes/worker.js';
-
 // ─── Routes ────────────────────────────────────
-app.use('/api', apiRouter);          // GET endpoints for custom frontend
-app.use('/webhooks', webhookRouter); // POST webhook receivers
-app.use('/auth', authRouter);        // OAuth callback routes
-app.use('/worker', workerRouter);    // Cloud tasks processing
+app.use('/api', apiRouter);          
+app.use('/webhooks', webhookRouter); 
+app.use('/auth', authRouter);        
+app.use('/worker', workerRouter);    
+app.use('/admin', adminRouter);      // Admin GUI (Fixed for Express 5)
+app.use('/sync', syncRouter);        
+
+app.get('/debug', (req, res) => {
+  const routes: string[] = [];
+  try {
+    const stack = (app as any)._router?.stack || (app as any).router?.stack || [];
+    stack.forEach((r: any) => {
+      if (r.route && r.route.path) {
+        routes.push(r.route.path);
+      }
+    });
+  } catch (e) {
+    console.warn('Could not list routes in /debug');
+  }
+
+  res.json({
+    message: 'Debug Info',
+    routes,
+    config: {
+      port: config.port,
+      nodeEnv: config.nodeEnv,
+    }
+  });
+});
 
 // ─── Global Error Handler ──────────────────────
 app.use(errorHandler);
+
+// ─── Client-Side Routing Fallback ──────────────
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/admin') || req.path.startsWith('/webhooks') || req.path.startsWith('/auth') || req.path.startsWith('/sync')) {
+    log.error({ path: req.path }, 'Hit wildcard for API route');
+    res.status(404).json({ error: 'Endpoint not found' });
+    return;
+  }
+  res.sendFile(resolve(frontendDist, 'index.html'));
+});
 
 // ─── Start Server ──────────────────────────────
 app.listen(config.port, () => {

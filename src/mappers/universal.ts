@@ -16,6 +16,10 @@ const UniversalProductSchema = z.object({
   quantity: z.number().int().nonnegative(),
   category: z.string().optional(),
   imageUrl: z.string().url().optional(),
+  variantParentId: z.string().optional(),
+  handle: z.string().optional(),
+  brand: z.string().optional(),
+  tags: z.array(z.string()).optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -37,21 +41,28 @@ export class UniversalProduct {
   // ─── Ingress: Platform → Universal ───────────
 
   /**
-   * Transforms a Lightspeed Retail item into a UniversalProduct.
-   * Lightspeed format: { itemID, description, Prices.ItemPrice[0].amount, ... }
+   * Transforms a Lightspeed X-Series (Vend) product into a UniversalProduct.
+   * X-Series format: { id, sku, handle, price, inventory: { count }, ... }
    */
   static fromLightspeed(raw: Record<string, unknown>): UniversalProduct {
-    const parsed = UniversalProductSchema.parse({
-      sku: raw.customSku || raw.systemSku || String(raw.itemID),
-      title: raw.description || '',
-      description: (raw.Note || '') as string,
-      price: parseFloat(String(raw.amount || 0)),
-      quantity: parseInt(String(raw.qoh || 0), 10),
-      category: ((raw.Category as any)?.name || '') as string,
-      imageUrl: undefined,
-      metadata: { lightspeedId: raw.itemID },
+    return new UniversalProduct({
+      sku: (raw.sku || raw.handle || String(raw.id)) as string,
+      title: (raw.name || raw.variant_name || '') as string,
+      description: (raw.description || '') as string,
+      price: parseFloat(String(raw.price || raw.retail_price || 0)),
+      quantity: parseInt(String((raw.inventory as any)?.[0]?.count || 0), 10),
+      category: typeof raw.type === 'object' && raw.type !== null 
+        ? (raw.type as any).name 
+        : (raw.type as string) || undefined,
+      imageUrl: (raw.image_url as string) || undefined,
+      variantParentId: (raw.variant_parent_id as string) || undefined,
+      handle: (raw.handle as string) || undefined,
+      brand: typeof raw.brand === 'object' && raw.brand !== null ? (raw.brand as any).name : (raw.brand as string) || undefined,
+      tags: Array.isArray(raw.tags) 
+        ? raw.tags.map((t: any) => typeof t === 'object' ? t.name : String(t))
+        : (raw.tags as string)?.split(',').map(t => t.trim()).filter(Boolean) || [],
+      metadata: { lightspeedId: raw.id },
     });
-    return new UniversalProduct(parsed);
   }
 
   /**
@@ -75,6 +86,23 @@ export class UniversalProduct {
   // ─── Egress: Universal → Platform ────────────
 
   /**
+   * Transforms a Prisma Product record back into a UniversalProduct.
+   */
+  static fromDatabase(raw: any): UniversalProduct {
+    const parsed = UniversalProductSchema.parse({
+      sku: raw.sku,
+      title: raw.title,
+      description: raw.description || '',
+      price: parseFloat(String(raw.price || 0)),
+      quantity: parseInt(String(raw.quantity || 0), 10),
+      category: raw.category || undefined,
+      imageUrl: raw.imageUrl || undefined,
+      metadata: raw.metadata || undefined,
+    });
+    return new UniversalProduct(parsed);
+  }
+
+  /**
    * Transforms to a Prisma-compatible object for Cloud SQL insertion.
    */
   toPostgres(): Record<string, unknown> {
@@ -86,6 +114,10 @@ export class UniversalProduct {
       quantity: this.data.quantity,
       category: this.data.category || null,
       imageUrl: this.data.imageUrl || null,
+      variantParentId: this.data.variantParentId || null,
+      parentSku: this.data.handle || null,
+      brand: this.data.brand || null,
+      tags: this.data.tags || [],
       metadata: this.data.metadata || null,
     };
   }
@@ -105,16 +137,15 @@ export class UniversalProduct {
   }
 
   /**
-   * Transforms to Lightspeed Retail API format.
+   * Transforms to Lightspeed X-Series API format.
    */
   toLightspeed(): Record<string, unknown> {
     return {
-      description: this.data.title,
-      customSku: this.data.sku,
-      Prices: {
-        ItemPrice: [{ amount: String(this.data.price), useType: 'Default' }],
-      },
-      // Note: Lightspeed inventory is updated via ItemShop endpoint, not Item
+      sku: this.data.sku,
+      name: this.data.title,
+      description: this.data.description,
+      retail_price: this.data.price,
+      // Note: X-Series inventory is updated via different specialized endpoints
     };
   }
 }

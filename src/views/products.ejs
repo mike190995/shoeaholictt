@@ -1,0 +1,186 @@
+<div class="space-y-6 max-w-7xl mx-auto">
+  
+  <div class="flex justify-between items-center bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+    <div>
+      <h3 class="text-base font-semibold text-gray-900">Cached Products</h3>
+      <p class="text-xs text-gray-500 mt-1">Showing page <%= page %> of <%= totalPages %> (<%= total %> total)</p>
+    </div>
+    <div class="flex space-x-2">
+      <!-- Pagination Controls -->
+      <% if (page > 1) { %>
+        <a href="?page=<%= page - 1 %>" class="px-3 py-1.5 border border-gray-200 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Previous</a>
+      <% } else { %>
+        <button disabled class="px-3 py-1.5 border border-gray-100 text-sm font-medium rounded-md text-gray-400 bg-gray-50 cursor-not-allowed">Previous</button>
+      <% } %>
+      
+      <% if (page < totalPages) { %>
+        <a href="?page=<%= page + 1 %>" class="px-3 py-1.5 border border-gray-200 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Next</a>
+      <% } else { %>
+        <button disabled class="px-3 py-1.5 border border-gray-100 text-sm font-medium rounded-md text-gray-400 bg-gray-50 cursor-not-allowed">Next</button>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LS ID</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Woo ID</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price/Stock</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-100">
+          <% products.forEach(p => { %>
+            <tr class="hover:bg-gray-50 transition">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%= p.title %></td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= p.sku || 'N/A' %></td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"><%= p.lightspeedId || 'N/A' %></td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"><%= p.woocommerceId || 'N/A' %></td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                $<%- p.price %> <span class="text-xs text-gray-400 ml-1">(Qty: <%= p.quantity %>)</span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <!-- Open Modal Button -->
+                <button onclick="openEditModal('<%= p.id %>')" class="text-blue-600 hover:text-blue-900 font-medium">Edit & Sync</button>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (products.length === 0) { %>
+            <tr><td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500">No products found in the database.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Interactive Edit Modal (Hidden by default) -->
+<div id="editModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeEditModal()"></div>
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+    <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+      
+      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-gray-100">
+        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Edit Product <span id="modal-sku" class="text-sm font-normal text-gray-500 ml-2"></span></h3>
+      </div>
+      
+      <div class="px-4 py-5 sm:p-6 text-sm text-gray-600">
+        <p class="mb-4">Manually override core product details. Saving will queue a bilateral sync to update Lightspeed and WooCommerce.</p>
+        
+        <!-- Editable Form -->
+        <form id="editForm" class="space-y-4">
+          <input type="hidden" id="edit-id" />
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div class="col-span-2">
+              <label class="block text-xs font-medium text-gray-700">Display Name</label>
+              <input type="text" id="edit-title" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700">SKU / Code</label>
+              <input type="text" id="edit-sku" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700">Category</label>
+              <input type="text" id="edit-category" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700">Retail Price ($)</label>
+              <input type="number" step="0.01" id="edit-price" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700">Stock Quantity</label>
+              <input type="number" id="edit-quantity" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+          </div>
+
+        </form>
+      </div>
+      
+      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <button type="button" onclick="submitSync()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+          Save & Sync
+        </button>
+        <button type="button" onclick="closeEditModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+          Cancel
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  async function openEditModal(id) {
+    document.getElementById('edit-id').value = id;
+    
+    // Fetch product details
+    try {
+      const resp = await fetch(`/admin/api/products/${id}`);
+      const data = await resp.json();
+      
+      if (data.product) {
+        document.getElementById('edit-title').value = data.product.title || '';
+        document.getElementById('edit-sku').value = data.product.sku || '';
+        document.getElementById('edit-category').value = data.product.category || '';
+        document.getElementById('edit-price').value = data.product.price || 0;
+        document.getElementById('edit-quantity').value = data.product.quantity || 0;
+        document.getElementById('modal-sku').innerText = `(${data.product.sku})`;
+      }
+    } catch(e) {
+      console.error('Failed to fetch product data:', e);
+    }
+    
+    document.getElementById('editModal').classList.remove('hidden');
+  }
+
+  function closeEditModal() {
+    document.getElementById('editModal').classList.add('hidden');
+  }
+
+  async function submitSync() {
+    const id = document.getElementById('edit-id').value;
+    const btn = event.target;
+    const originalText = btn.innerText;
+    
+    btn.innerText = 'Saving...';
+    btn.disabled = true;
+
+    const payload = {
+      title: document.getElementById('edit-title').value,
+      sku: document.getElementById('edit-sku').value,
+      category: document.getElementById('edit-category').value,
+      price: parseFloat(document.getElementById('edit-price').value),
+      quantity: parseInt(document.getElementById('edit-quantity').value, 10)
+    };
+
+    try {
+      const resp = await fetch(`/admin/api/products/${id}/sync`, { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json();
+      
+      if(data.success) {
+        // Reload page to reflect changes
+        window.location.reload();
+      } else {
+        alert('Failed to save product: ' + data.error);
+        btn.innerText = originalText;
+        btn.disabled = false;
+      }
+    } catch (e) {
+      alert('Network error while saving product.');
+      btn.innerText = originalText;
+      btn.disabled = false;
+    }
+  }
+</script>
