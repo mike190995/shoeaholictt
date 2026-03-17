@@ -1,81 +1,90 @@
-<div class="space-y-6 max-w-7xl mx-auto">
+<div class="space-y-10 px-4 sm:px-0">
   
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-5 rounded-xl border border-gray-100 shadow-sm gap-4">
-    <div>
-      <h3 class="text-base font-semibold text-gray-900">Sync Event History</h3>
-      <p class="text-xs text-gray-500 mt-1">Showing page <%= page %> of <%= totalPages %> (<%= total %> total events)</p>
+  <!-- Header & Filters -->
+  <div class="glass rounded-[2rem] p-8 flex flex-col lg:flex-row items-center justify-between relative overflow-hidden">
+    <div class="relative z-10">
+      <h3 class="text-2xl font-bold text-white tracking-tight">Audit Trail</h3>
+      <p class="text-gray-400 mt-2 font-medium">Real-time ledger of synchronization events and platform handshakes.</p>
     </div>
-    
-    <!-- Filter Controls Placeholder -->
-    <div class="flex items-center space-x-2 w-full sm:w-auto">
-      <select onchange="window.location.href='?filter='+this.value" class="block w-full sm:w-auto pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md shadow-sm">
+    <div class="mt-6 lg:mt-0 flex flex-col sm:flex-row items-center gap-4 relative z-10">
+      <select onchange="window.location.href='?filter='+this.value" class="glass bg-white/5 border-white/10 rounded-2xl px-6 py-3 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none min-w-[180px]">
         <option value="" <%= !filter ? 'selected' : '' %>>All Statuses</option>
         <option value="failed" <%= filter === 'failed' ? 'selected' : '' %>>Errors Only</option>
         <option value="pending" <%= filter === 'pending' ? 'selected' : '' %>>Active Queue</option>
       </select>
-
-      <!-- Pagination Controls -->
-      <div class="flex space-x-1 pl-2 border-l border-gray-200">
+      
+      <div class="flex space-x-2">
         <% if (page > 1) { %>
-          <a href="?page=<%= page - 1 %><%= filter ? '&filter=' + filter : '' %>" class="px-3 py-2 border border-gray-200 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Prev</a>
-        <% } else { %>
-          <button disabled class="px-3 py-2 border border-gray-100 text-sm font-medium rounded-md text-gray-400 bg-gray-50 cursor-not-allowed">Prev</button>
+          <a href="?page=<%= page - 1 %><%= filter ? '&filter=' + filter : '' %>" class="glass px-4 py-2 rounded-xl text-xs font-bold text-white hover:bg-white/10 transition-colors">Prev</a>
         <% } %>
-        
         <% if (page < totalPages) { %>
-          <a href="?page=<%= page + 1 %><%= filter ? '&filter=' + filter : '' %>" class="px-3 py-2 border border-gray-200 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Next</a>
-        <% } else { %>
-          <button disabled class="px-3 py-2 border border-gray-100 text-sm font-medium rounded-md text-gray-400 bg-gray-50 cursor-not-allowed">Next</button>
+          <a href="?page=<%= page + 1 %><%= filter ? '&filter=' + filter : '' %>" class="glass px-4 py-2 rounded-xl text-xs font-bold text-white hover:bg-white/10 transition-colors">Next</a>
         <% } %>
       </div>
     </div>
+    <div class="absolute right-0 top-0 w-64 h-64 bg-red-600/10 blur-3xl -z-0 pointer-events-none"></div>
   </div>
 
-  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+  <!-- Events Table -->
+  <div class="glass rounded-[2rem] overflow-hidden">
     <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-white/[0.02]">
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Direction</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entity</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+            <th class="px-8 py-5 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Timestamp</th>
+            <th class="px-8 py-5 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Flow Direction</th>
+            <th class="px-8 py-5 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Entity Context</th>
+            <th class="px-8 py-5 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Outcome</th>
+            <th class="px-8 py-5 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Analysis</th>
           </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-gray-100">
+        <tbody class="divide-y divide-white/5">
           <% logs.forEach(log => { %>
-            <tr class="hover:bg-gray-50 transition">
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
-                <%= new Date(log.createdAt).toLocaleString() %>
+            <tr class="group hover:bg-white/[0.02] transition-colors">
+              <td class="px-8 py-6">
+                <p class="text-sm font-medium text-white"><%= new Date(log.createdAt).toLocaleTimeString() %></p>
+                <p class="text-[10px] text-gray-500 font-bold uppercase"><%= new Date(log.createdAt).toLocaleDateString() %></p>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              <td class="px-8 py-6">
+                <div class="px-3 py-1 rounded-lg bg-gray-500/10 border border-white/5 text-[10px] font-bold text-gray-400 uppercase inline-block">
                   <%= log.direction %>
-                </span>
+                </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                <span class="font-medium"><%= log.entityType %></span> 
-                <span class="text-gray-400 font-mono ml-1"><%= log.entityId %></span>
+              <td class="px-8 py-6">
+                <div class="flex flex-col">
+                  <span class="text-xs font-bold text-white uppercase tracking-wider"><%= log.entityType %></span> 
+                  <span class="text-[10px] text-blue-500 font-mono mt-1 opacity-70"><%= log.entityId %></span>
+                </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-8 py-6">
                 <% if (log.status === 'completed') { %>
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Success</span>
+                  <div class="flex items-center space-x-2 text-green-500">
+                    <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest">Success</span>
+                  </div>
                 <% } else if (log.status === 'failed') { %>
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 flex items-center gap-1 cursor-help" title="Hover for raw error details">
-                    Failed
-                  </span>
+                  <div class="flex items-center space-x-2 text-red-500">
+                    <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest">Failed</span>
+                  </div>
                 <% } else { %>
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>
+                  <div class="flex items-center space-x-2 text-yellow-500">
+                    <div class="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest">In Queue</span>
+                  </div>
                 <% } %>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <button onclick="viewPayload('<%= log.id %>')" class="text-blue-600 hover:text-blue-900 font-medium">Inspect Data</button>
+              <td class="px-8 py-6">
+                <button onclick="viewPayload('<%= log.id %>')" class="glass px-4 py-2 rounded-xl text-[10px] font-bold text-blue-500 uppercase tracking-widest hover:text-white transition-all group-hover:bg-blue-600/20">
+                  Inspect Frame
+                </button>
               </td>
             </tr>
           <% }) %>
           <% if (logs.length === 0) { %>
-            <tr><td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500">No sync events found for the current filter.</td></tr>
+            <tr>
+              <td colspan="5" class="px-8 py-20 text-center uppercase tracking-widest text-xs text-gray-500 font-bold">No telemetry frames detected for this filter</td>
+            </tr>
           <% } %>
         </tbody>
       </table>
@@ -84,24 +93,35 @@
 
 </div>
 
-<!-- Payload Inspector Modal -->
-<div id="payloadModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closePayloadModal()"></div>
-    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-    <div class="inline-block align-bottom bg-gray-900 rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full border border-gray-700">
+<!-- High-Fidelity Data Inspector -->
+<div id="payloadModal" class="hidden fixed inset-0 z-[100] overflow-hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="flex items-center justify-center min-h-screen px-4 pb-20 text-center sm:p-0">
+    <div class="fixed inset-0 bg-black/80 backdrop-blur-xl transition-opacity" aria-hidden="true" onclick="closePayloadModal()"></div>
+    
+    <div class="inline-block glass bg-[#0a0a0b] rounded-[2.5rem] text-left overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full border border-white/10">
       
-      <div class="bg-gray-800 px-4 py-3 border-b border-gray-700 flex justify-between items-center">
-        <h3 class="text-sm font-medium text-white font-mono" id="inspector-title">Raw Event Payload</h3>
-        <button onclick="closePayloadModal()" class="text-gray-400 hover:text-white">
+      <div class="px-10 py-8 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+        <div>
+          <h3 class="text-xl font-bold text-white tracking-tight" id="inspector-title">Frame Inspector</h3>
+          <p class="text-blue-500 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Staging Telemetry Hub</p>
+        </div>
+        <button onclick="closePayloadModal()" class="w-10 h-10 rounded-full glass flex items-center justify-center text-gray-500 hover:text-white transition-colors">
           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
       
-      <div class="p-0 overflow-auto max-h-[70vh]">
-        <pre id="payload-content" class="text-green-400 font-mono text-xs whitespace-pre-wrap p-4 m-0 bg-gray-900">Loading data...</pre>
+      <div class="p-0 overflow-auto max-h-[60vh] bg-black/40">
+        <div class="px-10 py-8">
+           <pre id="payload-content" class="text-blue-400 font-mono text-sm leading-relaxed whitespace-pre-wrap"></pre>
+        </div>
+      </div>
+      
+      <div class="px-10 py-6 border-t border-white/5 bg-white/[0.02] flex justify-end">
+        <button onclick="closePayloadModal()" class="glass bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all">
+          Close Inspection
+        </button>
       </div>
 
     </div>
@@ -115,20 +135,20 @@
     const log = window.syncLogsData.find(l => l.id === logId);
     if (!log) return;
     
-    document.getElementById('inspector-title').innerText = `Inspector: ${log.direction} | ${log.entityType} ${log.entityId}`;
+    document.getElementById('inspector-title').innerText = `${log.direction} // ${log.entityType}`;
     
-    // Attempt to format neatly
     let displayStr = '';
     try {
       if (log.error) {
-         displayStr += "// ERROR DETAILS \\\\ \n" + log.error + "\n\n";
+         displayStr += `<span class="text-red-500 font-bold">// CRITICAL ENGINE ERROR \\\\</span>\n${log.error}\n\n`;
       }
-      displayStr += "// RAW PAYLOAD \\\\ \n" + JSON.stringify(log.payload, null, 2);
+      displayStr += `<span class="text-gray-500">// RAW JSON METADATA \\\\</span>\n` + JSON.stringify(log.payload, null, 2);
     } catch(e) {
-      displayStr = "Data cannot be parsed";
+      displayStr = "Data decomposition failure.";
     }
     
-    document.getElementById('payload-content').innerText = displayStr;
+    const contentEl = document.getElementById('payload-content');
+    contentEl.innerHTML = displayStr;
     document.getElementById('payloadModal').classList.remove('hidden');
   }
 

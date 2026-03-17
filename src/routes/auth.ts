@@ -95,17 +95,22 @@ authRouter.get('/lightspeed/callback', async (req, res, next) => {
     });
 
     res.json({ 
-      message: 'Lightspeed R-Series setup complete.',
-      account: config.lightspeedAccountId
+      message: 'Lightspeed X-Series setup complete.',
+      account: domain_prefix
     });
   } catch (err: any) {
     const errorData = err.response?.data;
     const errorMessage = err.message;
     
-    console.error('Lightspeed R-Series Auth Error:', {
+    console.error('Lightspeed X-Series Auth Error:', {
       message: errorMessage,
       data: errorData,
-      status: err.response?.status
+      status: err.response?.status,
+      config: {
+        url: err.config?.url,
+        method: err.config?.method,
+        headers: { ...err.config?.headers, Authorization: '[REDACTED]' }
+      }
     });
 
     // Pass specialized error if we have it

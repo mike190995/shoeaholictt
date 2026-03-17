@@ -434,9 +434,65 @@ adminRouter.post('/api/lightspeed/import', async (req, res) => {
   }
 });
 
-// ─── React Catch-all ─────────────────────────────
-adminRouter.get(/.*/, (_req, res) => {
-  res.sendFile(INDEX_PATH);
+// ─── View Routes ─────────────────────────────────
+adminRouter.get('/', async (req, res) => {
+  try {
+    const [productCount, recentLogs] = await Promise.all([
+      prisma.product.count().catch(() => 0),
+      prisma.syncLog.findMany({ 
+        orderBy: { createdAt: 'desc' }, 
+        take: 10 
+      }).catch(() => []),
+    ]);
+
+    res.render('dashboard', { 
+      title: 'System Health', 
+      activeTab: 'dashboard',
+      productCount,
+      recentLogs
+    });
+  } catch (err) {
+    res.status(500).send('Error loading dashboard');
+  }
+});
+
+adminRouter.get('/products', async (req, res) => {
+  res.render('products', { title: 'Product Matrix', activeTab: 'products' });
+});
+
+adminRouter.get('/sync', async (req, res) => {
+  res.render('sync', { title: 'Manual Controls', activeTab: 'sync' });
+});
+
+adminRouter.get('/logs', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const filter = req.query.filter as string | undefined;
+    const limit = 50;
+
+    const where = filter ? { status: filter } : {};
+
+    const [logs, total] = await Promise.all([
+      prisma.syncLog.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.syncLog.count({ where }),
+    ]);
+
+    res.render('logs', {
+      title: 'Audit Trail',
+      activeTab: 'logs',
+      logs,
+      page,
+      totalPages: Math.ceil(total / limit),
+      filter
+    });
+  } catch (err) {
+    res.status(500).send('Error loading logs');
+  }
 });
 
 export default adminRouter;

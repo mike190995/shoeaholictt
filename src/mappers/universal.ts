@@ -20,6 +20,7 @@ const UniversalProductSchema = z.object({
   handle: z.string().optional(),
   brand: z.string().optional(),
   tags: z.array(z.string()).optional(),
+  variantOptions: z.array(z.object({ name: z.string(), value: z.string() })).optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -61,6 +62,9 @@ export class UniversalProduct {
       tags: Array.isArray(raw.tags) 
         ? raw.tags.map((t: any) => typeof t === 'object' ? t.name : String(t))
         : (raw.tags as string)?.split(',').map(t => t.trim()).filter(Boolean) || [],
+      variantOptions: Array.isArray(raw.variant_options)
+        ? raw.variant_options.map((opt: any) => ({ name: String(opt.name), value: String(opt.value) }))
+        : undefined,
       metadata: { lightspeedId: raw.id },
     });
   }
@@ -118,7 +122,10 @@ export class UniversalProduct {
       parentSku: this.data.handle || null,
       brand: this.data.brand || null,
       tags: this.data.tags || [],
-      metadata: this.data.metadata || null,
+      metadata: {
+        ...this.data.metadata,
+        variantOptions: this.data.variantOptions || []
+      },
     };
   }
 
@@ -126,7 +133,7 @@ export class UniversalProduct {
    * Transforms to WooCommerce REST API format.
    */
   toWoo(): Record<string, unknown> {
-    return {
+    const payload: Record<string, any> = {
       sku: this.data.sku,
       name: this.data.title,
       short_description: this.data.description || '',
@@ -134,6 +141,15 @@ export class UniversalProduct {
       stock_quantity: this.data.quantity,
       manage_stock: true,
     };
+
+    if (this.data.variantOptions && this.data.variantOptions.length > 0) {
+      payload.attributes = this.data.variantOptions.map(opt => ({
+        name: opt.name,
+        option: opt.value
+      }));
+    }
+
+    return payload;
   }
 
   /**

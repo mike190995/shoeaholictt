@@ -1,57 +1,77 @@
-<div class="space-y-6 max-w-7xl mx-auto">
+<div class="space-y-10 px-4 sm:px-0">
   
-  <div class="flex justify-between items-center bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-    <div>
-      <h3 class="text-base font-semibold text-gray-900">Cached Products</h3>
-      <p class="text-xs text-gray-500 mt-1">Showing page <%= page %> of <%= totalPages %> (<%= total %> total)</p>
+  <!-- Header & Actions -->
+  <div class="glass rounded-[2rem] p-8 flex flex-col lg:flex-row items-center justify-between relative overflow-hidden">
+    <div class="relative z-10">
+      <h3 class="text-2xl font-bold text-white tracking-tight">Product Matrix</h3>
+      <p class="text-gray-400 mt-2 font-medium">Showing page <%= page %> of <%= totalPages %> (<%= total %> total)</p>
     </div>
-    <div class="flex space-x-2">
-      <!-- Pagination Controls -->
-      <% if (page > 1) { %>
-        <a href="?page=<%= page - 1 %>" class="px-3 py-1.5 border border-gray-200 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Previous</a>
-      <% } else { %>
-        <button disabled class="px-3 py-1.5 border border-gray-100 text-sm font-medium rounded-md text-gray-400 bg-gray-50 cursor-not-allowed">Previous</button>
-      <% } %>
-      
-      <% if (page < totalPages) { %>
-        <a href="?page=<%= page + 1 %>" class="px-3 py-1.5 border border-gray-200 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Next</a>
-      <% } else { %>
-        <button disabled class="px-3 py-1.5 border border-gray-100 text-sm font-medium rounded-md text-gray-400 bg-gray-50 cursor-not-allowed">Next</button>
-      <% } %>
+    <div class="mt-6 lg:mt-0 flex items-center space-x-4 relative z-10">
+      <div class="flex space-x-2">
+        <% if (page > 1) { %>
+          <a href="?page=<%= page - 1 %>" class="glass px-4 py-2 rounded-xl text-xs font-bold text-white hover:bg-white/10 transition-colors">Previous</a>
+        <% } %>
+        <% if (page < totalPages) { %>
+          <a href="?page=<%= page + 1 %>" class="glass px-4 py-2 rounded-xl text-xs font-bold text-white hover:bg-white/10 transition-colors">Next</a>
+        <% } %>
+      </div>
     </div>
+    <div class="absolute right-0 top-0 w-64 h-64 bg-indigo-600/10 blur-3xl -z-0 pointer-events-none"></div>
   </div>
 
-  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+  <!-- Product Table -->
+  <div class="glass rounded-[2rem] overflow-hidden">
     <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-white/[0.02]">
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LS ID</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Woo ID</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price/Stock</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            <th class="px-8 py-5 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Product Detail</th>
+            <th class="px-8 py-5 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Sku & Identifiers</th>
+            <th class="px-8 py-5 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Price / Stock</th>
+            <th class="px-8 py-5 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Actions</th>
           </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-gray-100">
+        <tbody class="divide-y divide-white/5">
           <% products.forEach(p => { %>
-            <tr class="hover:bg-gray-50 transition">
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%= p.title %></td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= p.sku || 'N/A' %></td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"><%= p.lightspeedId || 'N/A' %></td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"><%= p.woocommerceId || 'N/A' %></td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                $<%- p.price %> <span class="text-xs text-gray-400 ml-1">(Qty: <%= p.quantity %>)</span>
+            <tr class="group hover:bg-white/[0.02] transition-colors">
+              <td class="px-8 py-6">
+                <div class="flex items-center">
+                  <div class="w-12 h-12 rounded-xl bg-gray-500/10 border border-white/10 flex items-center justify-center text-gray-600 shrink-0 overflow-hidden">
+                    <% if (p.imageUrl) { %>
+                      <img src="<%= p.imageUrl %>" class="w-full h-full object-cover">
+                    <% } else { %>
+                      <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                      </svg>
+                    <% } %>
+                  </div>
+                  <div class="ml-4">
+                    <p class="text-sm font-bold text-white group-hover:text-blue-400 transition-colors"><%= p.title %></p>
+                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5"><%= p.category || 'No Category' %></p>
+                  </div>
+                </div>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <!-- Open Modal Button -->
-                <button onclick="openEditModal('<%= p.id %>')" class="text-blue-600 hover:text-blue-900 font-medium">Edit & Sync</button>
+              <td class="px-8 py-6">
+                <p class="text-xs font-mono text-blue-500"><%= p.sku || 'N/A' %></p>
+                <div class="flex items-center space-x-2 mt-1">
+                  <span class="text-[9px] font-bold text-gray-500 uppercase">LS: <%= (p.lightspeedId || 'N/A').substring(0, 8) %></span>
+                </div>
+              </td>
+              <td class="px-8 py-6">
+                <p class="text-sm font-bold text-white tracking-tight">$<%= parseFloat(p.price).toFixed(2) %></p>
+                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Stock: <%= p.quantity %></p>
+              </td>
+              <td class="px-8 py-6">
+                <button onclick="openEditModal('<%= p.id %>')" class="glass px-4 py-2 rounded-xl text-[10px] font-bold text-blue-500 uppercase tracking-widest hover:text-white transition-colors">
+                  Edit & Sync
+                </button>
               </td>
             </tr>
           <% }) %>
           <% if (products.length === 0) { %>
-            <tr><td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500">No products found in the database.</td></tr>
+            <tr>
+              <td colspan="4" class="px-8 py-20 text-center text-sm text-gray-500 uppercase tracking-widest">No products found in the database.</td>
+            </tr>
           <% } %>
         </tbody>
       </table>
@@ -60,55 +80,61 @@
 
 </div>
 
-<!-- Interactive Edit Modal (Hidden by default) -->
-<div id="editModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeEditModal()"></div>
+<!-- Interactive Edit Modal -->
+<div id="editModal" class="hidden fixed inset-0 z-[60] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <!-- Overlay -->
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closeEditModal()"></div>
+    
     <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-    <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+    
+    <div class="inline-block align-bottom glass bg-[#0e0e0f] rounded-[2rem] text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-white/10">
       
-      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-gray-100">
-        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Edit Product <span id="modal-sku" class="text-sm font-normal text-gray-500 ml-2"></span></h3>
+      <div class="px-8 pt-8 pb-4">
+        <h3 class="text-2xl font-bold text-white tracking-tight" id="modal-title">Sync Controller</h3>
+        <p class="text-gray-500 text-xs font-medium mt-1">Directly patch attributes and trigger cross-platform reconciliation.</p>
       </div>
       
-      <div class="px-4 py-5 sm:p-6 text-sm text-gray-600">
-        <p class="mb-4">Manually override core product details. Saving will queue a bilateral sync to update Lightspeed and WooCommerce.</p>
-        
-        <!-- Editable Form -->
-        <form id="editForm" class="space-y-4">
+      <div class="px-8 py-6">
+        <form id="editForm" class="space-y-6">
           <input type="hidden" id="edit-id" />
           
-          <div class="grid grid-cols-2 gap-4">
-            <div class="col-span-2">
-              <label class="block text-xs font-medium text-gray-700">Display Name</label>
-              <input type="text" id="edit-title" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-            </div>
+          <div class="space-y-4">
             <div>
-              <label class="block text-xs font-medium text-gray-700">SKU / Code</label>
-              <input type="text" id="edit-sku" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+              <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Display Title</label>
+              <input type="text" id="edit-title" class="w-full glass bg-white/5 border-white/10 rounded-2xl px-5 py-3 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all">
             </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-700">Category</label>
-              <input type="text" id="edit-category" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">SKU identifier</label>
+                <input type="text" id="edit-sku" class="w-full glass bg-white/5 border-white/10 rounded-2xl px-5 py-3 text-sm font-mono text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Type / Category</label>
+                <input type="text" id="edit-category" class="w-full glass bg-white/5 border-white/10 rounded-2xl px-5 py-3 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all">
+              </div>
             </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-700">Retail Price ($)</label>
-              <input type="number" step="0.01" id="edit-price" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-700">Stock Quantity</label>
-              <input type="number" id="edit-quantity" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Retail ($)</label>
+                <input type="number" step="0.01" id="edit-price" class="w-full glass bg-white/5 border-white/10 rounded-2xl px-5 py-3 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Global Stock</label>
+                <input type="number" id="edit-quantity" class="w-full glass bg-white/5 border-white/10 rounded-2xl px-5 py-3 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all">
+              </div>
             </div>
           </div>
-
         </form>
       </div>
       
-      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-        <button type="button" onclick="submitSync()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
-          Save & Sync
+      <div class="px-8 py-6 bg-white/[0.02] border-t border-white/5 flex flex-col sm:flex-row-reverse gap-3">
+        <button type="button" onclick="submitSync()" class="glass bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest shadow-lg shadow-blue-500/20 transition-all">
+          Execute Sync
         </button>
-        <button type="button" onclick="closeEditModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+        <button type="button" onclick="closeEditModal()" class="glass hover:bg-white/10 text-gray-400 hover:text-white px-8 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all">
           Cancel
         </button>
       </div>
@@ -121,7 +147,6 @@
   async function openEditModal(id) {
     document.getElementById('edit-id').value = id;
     
-    // Fetch product details
     try {
       const resp = await fetch(`/admin/api/products/${id}`);
       const data = await resp.json();
@@ -132,7 +157,6 @@
         document.getElementById('edit-category').value = data.product.category || '';
         document.getElementById('edit-price').value = data.product.price || 0;
         document.getElementById('edit-quantity').value = data.product.quantity || 0;
-        document.getElementById('modal-sku').innerText = `(${data.product.sku})`;
       }
     } catch(e) {
       console.error('Failed to fetch product data:', e);
@@ -150,7 +174,7 @@
     const btn = event.target;
     const originalText = btn.innerText;
     
-    btn.innerText = 'Saving...';
+    btn.innerText = 'EXECUTING...';
     btn.disabled = true;
 
     const payload = {
@@ -170,15 +194,14 @@
       const data = await resp.json();
       
       if(data.success) {
-        // Reload page to reflect changes
         window.location.reload();
       } else {
-        alert('Failed to save product: ' + data.error);
+        alert('Sync Error: ' + data.error);
         btn.innerText = originalText;
         btn.disabled = false;
       }
     } catch (e) {
-      alert('Network error while saving product.');
+      alert('Engine reconciliation failure.');
       btn.innerText = originalText;
       btn.disabled = false;
     }

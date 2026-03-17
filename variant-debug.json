@@ -1,0 +1,226 @@
+{
+    "internalMirror":  {
+                           "id":  "cmmnomb5v003c01s6yedxmonq",
+                           "sku":  "11886",
+                           "title":  "Accessories",
+                           "description":  null,
+                           "price":  "0",
+                           "quantity":  0,
+                           "category":  null,
+                           "brand":  null,
+                           "tags":  [
+
+                                    ],
+                           "imageUrl":  "https://secure.vendhq.com/images/placeholder/product/no-image-white-standard.png",
+                           "metadata":  {
+                                            "lightspeedId":  "bc856bab-4499-4701-983c-f3dc84c0b850"
+                                        },
+                           "lightspeedId":  null,
+                           "variantParentId":  "237d5fac-0894-4960-a621-4ad68827e7fb",
+                           "parentSku":  "accessories",
+                           "woocommerceId":  null,
+                           "isActive":  true,
+                           "createdAt":  "2026-03-12T16:28:15.235Z",
+                           "updatedAt":  "2026-03-14T01:49:25.541Z"
+                       },
+    "rawLightspeed":  {
+                          "includes":  null,
+                          "data":  {
+                                       "id":  "bc856bab-4499-4701-983c-f3dc84c0b850",
+                                       "source_id":  null,
+                                       "source_variant_id":  null,
+                                       "variant_parent_id":  "237d5fac-0894-4960-a621-4ad68827e7fb",
+                                       "family_id":  "36fe555c-3e4a-466a-89fa-7f6aad26b809",
+                                       "name":  "Accessories",
+                                       "variant_name":  "Accessories / 40",
+                                       "handle":  "accessories",
+                                       "sku":  "11886",
+                                       "supplier_code":  null,
+                                       "active":  true,
+                                       "ecwid_enabled_webstore":  true,
+                                       "has_inventory":  true,
+                                       "is_composite":  false,
+                                       "description":  null,
+                                       "image_url":  "https://secure.vendhq.com/images/placeholder/product/no-image-white-standard.png",
+                                       "created_at":  "2025-08-08T19:35:59+00:00",
+                                       "updated_at":  "2025-11-28T13:52:30+00:00",
+                                       "deleted_at":  null,
+                                       "source":  "USER",
+                                       "account_code":  null,
+                                       "account_code_purchase":  null,
+                                       "supply_price":  0,
+                                       "version":  47641198134,
+                                       "type":  null,
+                                       "product_category":  null,
+                                       "supplier":  null,
+                                       "brand":  null,
+                                       "variant_options":  [
+                                                               {
+                                                                   "id":  "509d276e-2ac6-4592-b79b-fd2f1da6d905",
+                                                                   "name":  "Price",
+                                                                   "value":  "40"
+                                                               }
+                                                           ],
+                                       "categories":  [
+
+                                                      ],
+                                       "images":  [
+
+                                                  ],
+                                       "skuImages":  [
+
+                                                     ],
+                                       "has_variants":  false,
+                                       "variant_count":  null,
+                                       "customizations":  [
+
+                                                          ],
+                                       "button_order":  5,
+                                       "price_including_tax":  0,
+                                       "price_excluding_tax":  0,
+                                       "loyalty_amount":  null,
+                                       "product_codes":  [
+                                                             {
+                                                                 "id":  "18657bc0-ca78-4a47-a035-61c5cd44831e",
+                                                                 "type":  "CUSTOM",
+                                                                 "code":  "11886"
+                                                             }
+                                                         ],
+                                       "product_suppliers":  [
+                                                                 {
+                                                                     "id":  "fa641615-8bbb-4da0-9fc3-a10c29ce681e",
+                                                                     "product_id":  "bc856bab-4499-4701-983c-f3dc84c0b850",
+                                                                     "supplier_id":  null,
+                                                                     "supplier_name":  null,
+                                                                     "code":  null,
+                                                                     "price":  0
+                                                                 }
+                                                             ],
+                                       "packaging":  {
+                                                         "made_from":  [
+
+                                                                       ],
+                                                         "breaks_into":  [
+
+                                                                         ]
+                                                     },
+                                       "weight":  null,
+                                       "weight_unit":  null,
+                                       "length":  null,
+                                       "width":  null,
+                                       "height":  null,
+                                       "dimensions_unit":  null,
+                                       "attributes":  [
+
+                                                      ],
+                                       "supplier_id":  null,
+                                       "is_active":  true,
+                                       "image_thumbnail_url":  "https://secure.vendhq.com/images/placeholder/product/no-image-white-thumb.png",
+                                       "product_type_id":  null,
+                                       "brand_id":  null,
+                                       "tag_ids":  [
+
+                                                   ]
+                                   }
+                      },
+    "rawInventory":  {
+                         "data":  [
+                                      {
+                                          "id":  "aebed45c-1e26-30fb-1317-74d847a5cc5c",
+                                          "outlet_id":  "0683d884-600b-11f0-e104-4271b25b0a74",
+                                          "product_id":  "bc856bab-4499-4701-983c-f3dc84c0b850",
+                                          "inventory_level":  -2,
+                                          "current_amount":  -2,
+                                          "version":  47641198856,
+                                          "deleted_at":  null,
+                                          "average_cost":  0,
+                                          "reorder_point":  1,
+                                          "reorder_amount":  3
+                                      },
+                                      {
+                                          "id":  "36c0383e-cb73-5dea-4b3b-631a0b3f8b56",
+                                          "outlet_id":  "0683d884-600b-11f0-e104-42718ff4d423",
+                                          "product_id":  "bc856bab-4499-4701-983c-f3dc84c0b850",
+                                          "inventory_level":  0,
+                                          "current_amount":  0,
+                                          "version":  47641198857,
+                                          "deleted_at":  null,
+                                          "average_cost":  0,
+                                          "reorder_point":  1,
+                                          "reorder_amount":  3
+                                      },
+                                      {
+                                          "id":  "3dd0ae65-2450-14a1-c269-fe08bdb59b79",
+                                          "outlet_id":  "0683d884-600b-11f0-e104-45a41da2956d",
+                                          "product_id":  "bc856bab-4499-4701-983c-f3dc84c0b850",
+                                          "inventory_level":  -1,
+                                          "current_amount":  -1,
+                                          "version":  48214576270,
+                                          "deleted_at":  null,
+                                          "average_cost":  0,
+                                          "reorder_point":  null,
+                                          "reorder_amount":  null
+                                      },
+                                      {
+                                          "id":  "07e9098a-5264-b40c-67e5-66b318cba156",
+                                          "outlet_id":  "0683d884-600b-11f0-e104-42716f053b00",
+                                          "product_id":  "bc856bab-4499-4701-983c-f3dc84c0b850",
+                                          "inventory_level":  -2,
+                                          "current_amount":  -2,
+                                          "version":  48389141546,
+                                          "deleted_at":  null,
+                                          "average_cost":  0,
+                                          "reorder_point":  1,
+                                          "reorder_amount":  3
+                                      },
+                                      {
+                                          "id":  "d8bce471-5e4d-ce5f-dd81-9be7689b11d4",
+                                          "outlet_id":  "067d4bf7-fc0b-11f0-ed25-efb7207e32dd",
+                                          "product_id":  "bc856bab-4499-4701-983c-f3dc84c0b850",
+                                          "inventory_level":  0,
+                                          "current_amount":  0,
+                                          "version":  48720861944,
+                                          "deleted_at":  null,
+                                          "average_cost":  0,
+                                          "reorder_point":  null,
+                                          "reorder_amount":  null
+                                      },
+                                      {
+                                          "id":  "cb90883c-9bdc-b283-c97c-b07722173f6e",
+                                          "outlet_id":  "0683d884-6097-11f0-e104-3bec0998533c",
+                                          "product_id":  "bc856bab-4499-4701-983c-f3dc84c0b850",
+                                          "inventory_level":  -1,
+                                          "current_amount":  -1,
+                                          "version":  49462954938,
+                                          "deleted_at":  null,
+                                          "average_cost":  0,
+                                          "reorder_point":  1,
+                                          "reorder_amount":  3
+                                      },
+                                      {
+                                          "id":  "bc54e6ae-28a4-57a8-fbb7-f6c11592886f",
+                                          "outlet_id":  "0683d884-600b-11f0-e104-42713cccef2e",
+                                          "product_id":  "bc856bab-4499-4701-983c-f3dc84c0b850",
+                                          "inventory_level":  -7,
+                                          "current_amount":  -7,
+                                          "version":  49871254374,
+                                          "deleted_at":  null,
+                                          "average_cost":  0,
+                                          "reorder_point":  1,
+                                          "reorder_amount":  3
+                                      },
+                                      {
+                                          "id":  "4a7719e6-6cfa-2b07-e747-75384ce2bd84",
+                                          "outlet_id":  "067d4bf7-fc0b-11f0-f9ca-66440f5210ba",
+                                          "product_id":  "bc856bab-4499-4701-983c-f3dc84c0b850",
+                                          "inventory_level":  -143,
+                                          "current_amount":  -143,
+                                          "version":  50193233021,
+                                          "deleted_at":  null,
+                                          "average_cost":  0,
+                                          "reorder_point":  null,
+                                          "reorder_amount":  null
+                                      }
+                                  ]
+                     }
+}

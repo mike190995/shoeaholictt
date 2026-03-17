@@ -16,21 +16,34 @@ syncRouter.get('/pull', async (req, res, next) => {
     console.log('[Sync] Starting full product pull from Lightspeed X-Series...');
 
     const response = await lsClient.get('/products');
-    let lsProducts = response.data.data || [];
+    const allProducts = response.data.data || [];
     
-    const totalCount = lsProducts.length;
-    const activeCount = lsProducts.filter((p: any) => p.is_active === true || p.active === true).length;
-    const ecwidCount = lsProducts.filter((p: any) => p.ecwid_enabled_webstore === true).length;
-    const priceCount = lsProducts.filter((p: any) => parseFloat(String(p.price || p.retail_price || 0)) > 0).length;
+    // 2. Perform counts and filtering in a single pass
+    let activeCount = 0;
+    let ecwidCount = 0;
+    let priceCount = 0;
+    const filteredProducts = [];
 
-    console.log(`[Sync] Stats: Total=${totalCount}, Active=${activeCount}, OnlineChannel=${ecwidCount}, HasPrice=${priceCount}`);
+    for (const p of allProducts) {
+      const isActive = p.is_active === true || p.active === true;
+      const isOnline = p.ecwid_enabled_webstore === true;
+      const hasPrice = parseFloat(String(p.price || p.retail_price || 0)) > 0;
 
-    // Strictly filter by "Online store" channel as requested.
-    console.log(`[Sync] Enforcing strict 'Online store' channel filtering (ecwid_enabled_webstore: true).`);
-    lsProducts = lsProducts.filter((p: any) => p.ecwid_enabled_webstore === true);
+      if (isActive) activeCount++;
+      if (isOnline) ecwidCount++;
+      if (hasPrice) priceCount++;
+
+      // Strictly filter by "Online store" channel as requested
+      if (isOnline) {
+        filteredProducts.push(p);
+      }
+    }
+
+    console.log(`[Sync] Stats: Total=${allProducts.length}, Active=${activeCount}, Online=${ecwidCount}, HasPrice=${priceCount}`);
+    console.log(`[Sync] Processing ${filteredProducts.length} products for internal mirror...`);
 
     let count = 0;
-    for (const raw of lsProducts) {
+    for (const raw of filteredProducts) {
       const universal = UniversalProduct.fromLightspeed(raw);
       const data = universal.toPostgres() as any;
 

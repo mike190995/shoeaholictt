@@ -1,85 +1,158 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LSWOO Admin Dashboard</title>
-  <!-- Tailwind CSS via CDN for rapid styling -->
+  <title>LSWOO | Premium Middleware</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Inter -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', sans-serif; }
-    /* Hide scrollbar for Chrome, Safari and Opera */
+    :root {
+      --bg-main: #0a0a0b;
+      --bg-sidebar: rgba(16, 16, 18, 0.95);
+      --glass-bg: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.05);
+      --accent-blue: #3b82f6;
+      --text-muted: #94a3b8;
+    }
+    body { 
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-main);
+      color: #f8fafc;
+    }
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+    }
+    .sidebar-active {
+      background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0) 100%);
+      border-left: 2px solid var(--accent-blue);
+      color: white;
+    }
     .no-scrollbar::-webkit-scrollbar { display: none; }
-    /* Hide scrollbar for IE, Edge and Firefox */
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Mobile Menu Animations */
+    #mobile-sidebar {
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .sidebar-closed { transform: translateX(-100%); }
+    .sidebar-open { transform: translateX(0); }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-900 flex h-screen overflow-hidden">
+<body class="flex h-screen overflow-hidden bg-[#0a0a0b]">
+
+  <!-- Mobile Overlay -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 hidden lg:hidden"></div>
   
   <!-- Sidebar -->
-  <aside class="w-64 bg-gray-900 text-white flex flex-col h-full shrink-0">
-    <div class="h-16 flex items-center px-6 border-b border-gray-800 shrink-0">
-      <h1 class="text-lg font-bold tracking-wider">LSWOO <span class="text-blue-500 font-normal">Middle</span></h1>
+  <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-72 bg-[#0e0e0f] border-r border-white/5 flex flex-col h-full z-50 lg:relative lg:translate-x-0 sidebar-closed">
+    <div class="h-20 flex items-center px-8 border-b border-white/5 shrink-0">
+      <div class="flex items-center space-x-3">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-lg shadow-[0_0_15px_rgba(59,130,246,0.5)]">L</div>
+        <h1 class="text-xl font-bold tracking-tight">LSWOO <span class="text-blue-500 font-light">Pro</span></h1>
+      </div>
     </div>
-    <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-      <a href="/admin" class="flex items-center px-3 py-2 text-sm font-medium rounded-md <%= activeTab === 'dashboard' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' %>">
-        <svg class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    
+    <nav class="flex-1 overflow-y-auto pt-6 px-4 space-y-2">
+      <p class="px-4 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-3 ml-2">Main Menu</p>
+      
+      <a href="/admin" class="group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 <%= activeTab === 'dashboard' ? 'sidebar-active' : 'text-gray-400 hover:text-white hover:bg-white/5' %>">
+        <svg class="mr-3 h-5 w-5 <%= activeTab === 'dashboard' ? 'text-blue-500' : 'text-gray-500 group-hover:text-gray-300' %>" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
         </svg>
         System Health
       </a>
-      <a href="/admin/products" class="flex items-center px-3 py-2 text-sm font-medium rounded-md <%= activeTab === 'products' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' %>">
-        <svg class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+      <a href="/admin/products" class="group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 <%= activeTab === 'products' ? 'sidebar-active' : 'text-gray-400 hover:text-white hover:bg-white/5' %>">
+        <svg class="mr-3 h-5 w-5 <%= activeTab === 'products' ? 'text-blue-500' : 'text-gray-500 group-hover:text-gray-300' %>" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
         </svg>
         Product Matrix
       </a>
-      <a href="/admin/sync" class="flex items-center px-3 py-2 text-sm font-medium rounded-md <%= activeTab === 'sync' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' %>">
-        <svg class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+      <a href="/admin/sync" class="group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 <%= activeTab === 'sync' ? 'sidebar-active' : 'text-gray-400 hover:text-white hover:bg-white/5' %>">
+        <svg class="mr-3 h-5 w-5 <%= activeTab === 'sync' ? 'text-blue-500' : 'text-gray-500 group-hover:text-gray-300' %>" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
         </svg>
         Manual Controls
       </a>
-      <a href="/admin/logs" class="flex items-center px-3 py-2 text-sm font-medium rounded-md <%= activeTab === 'logs' ? 'bg-gray-800 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' %>">
-        <svg class="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+      <a href="/admin/logs" class="group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 <%= activeTab === 'logs' ? 'sidebar-active' : 'text-gray-400 hover:text-white hover:bg-white/5' %>">
+        <svg class="mr-3 h-5 w-5 <%= activeTab === 'logs' ? 'text-blue-500' : 'text-gray-500 group-hover:text-gray-300' %>" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
         </svg>
         Audit Trail
       </a>
     </nav>
-    <div class="p-4 border-t border-gray-800 flex items-center shrink-0">
-      <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold shadow-sm">
-        A
-      </div>
-      <div class="ml-3">
-        <p class="text-sm font-medium">Administrator</p>
-        <p class="text-xs text-gray-400 truncate">Protected via IAP</p>
+
+    <div class="p-6 border-t border-white/5 bg-[#0e0e0f]">
+      <div class="glass rounded-2xl p-4 flex items-center">
+        <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-lg font-bold shadow-lg">
+          A
+        </div>
+        <div class="ml-3 overflow-hidden">
+          <p class="text-xs font-bold text-white truncate">Administrator</p>
+          <p class="text-[10px] text-blue-400 font-medium">IAP PROTECTED</p>
+        </div>
       </div>
     </div>
   </aside>
 
-  <!-- Main Content -->
-  <main class="flex-1 flex flex-col h-full bg-gray-50 overflow-hidden relative">
+  <!-- Main Content Area -->
+  <div class="flex-1 flex flex-col h-full relative overflow-hidden">
     
-    <!-- Top Header -->
-    <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0 shadow-sm z-10">
-      <h2 class="text-xl font-semibold text-gray-800"><%= title %></h2>
+    <!-- Top Bar -->
+    <header class="h-20 border-b border-white/5 flex items-center justify-between px-6 lg:px-10 shrink-0 bg-[#0a0a0b]/80 backdrop-blur-md z-30">
+      <div class="flex items-center">
+        <button id="menu-toggle" class="p-2 mr-4 text-gray-400 hover:text-white lg:hidden">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+          </svg>
+        </button>
+        <div class="flex flex-col">
+          <h2 class="text-xl font-bold text-white tracking-tight"><%= title %></h2>
+          <div class="flex items-center space-x-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Staging Environment</p>
+          </div>
+        </div>
+      </div>
+      
       <div class="flex items-center space-x-4">
-        <!-- Optional Global Actions can go here -->
+        <div class="hidden sm:flex flex-col items-end mr-2">
+          <p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Cloud Run v14</p>
+          <p class="text-[10px] text-blue-500">PROD READY</p>
+        </div>
       </div>
     </header>
 
-    <!-- Scrollable Page Content -->
-    <div class="flex-1 overflow-auto bg-gray-50 p-8 no-scrollbar">
-      <%- body %>
-    </div>
-    
-  </main>
+    <!-- Scrollable Content -->
+    <main class="flex-1 overflow-auto p-1 lg:p-10 no-scrollbar relative">
+      <div class="max-w-[1600px] mx-auto pb-20">
+        <%- body %>
+      </div>
+      
+      <!-- Background Accents -->
+      <div class="fixed top-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+      <div class="fixed bottom-[-5%] left-[-5%] w-[30%] h-[30%] bg-indigo-600/10 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+    </main>
+  </div>
 
   <script>
-    // Global utility scripts can go here
+    const menuToggle = document.getElementById('menu-toggle');
+    const mobileSidebar = document.getElementById('mobile-sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+    function toggleMenu() {
+      mobileSidebar.classList.toggle('sidebar-closed');
+      mobileSidebar.classList.toggle('sidebar-open');
+      sidebarOverlay.classList.toggle('hidden');
+    }
+
+    menuToggle.addEventListener('click', toggleMenu);
+    sidebarOverlay.addEventListener('click', toggleMenu);
   </script>
 </body>
 </html>

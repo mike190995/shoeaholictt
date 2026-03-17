@@ -1,124 +1,175 @@
-<div class="max-w-7xl mx-auto space-y-8">
+<div class="space-y-10 px-4 sm:px-0">
   
-  <!-- Welcome Banner -->
-  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col sm:flex-row items-center justify-between">
-    <div>
-      <h3 class="text-lg font-bold text-gray-900">System Overview</h3>
-      <p class="text-sm text-gray-500 mt-1">Real-time status of connected platforms and queues.</p>
+  <!-- System Status Header -->
+  <div class="glass rounded-[2rem] p-8 flex flex-col lg:flex-row items-center justify-between relative overflow-hidden">
+    <div class="relative z-10">
+      <h3 class="text-2xl font-bold text-white tracking-tight">Middleware Ecosystem</h3>
+      <p class="text-gray-400 mt-2 font-medium">Real-time telemetry and cross-platform synchronization state.</p>
     </div>
-    <div class="mt-4 sm:mt-0">
-      <!-- Re-Authorize Button (Links to our standard OAuth initiation) -->
-      <a href="/auth/lightspeed" target="_blank" class="inline-flex items-center px-4 py-2 border border-blue-500 rounded-lg shadow-sm text-sm font-medium text-blue-600 bg-white hover:bg-blue-50 hover:text-blue-700 transition">
-        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div class="mt-6 lg:mt-0 flex items-center space-x-4 relative z-10">
+      <a href="/auth/lightspeed" target="_blank" class="glass group flex items-center px-6 py-3 rounded-2xl text-sm font-bold text-white hover:bg-white/10 transition-all duration-300 border border-white/10">
+        <svg class="w-4 h-4 mr-2 text-blue-500 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
         </svg>
-        Re-Authorize Lightspeed
+        Re-Authorize Engine
       </a>
     </div>
+    <!-- Abstract background shape -->
+    <div class="absolute right-0 top-0 w-64 h-64 bg-blue-600/10 blur-3xl -z-0 pointer-events-none"></div>
   </div>
 
-  <!-- Status Cards Grid -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+  <!-- Telemetry Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
     
     <!-- Lightspeed Status -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col">
+    <div class="glass rounded-[2rem] p-6 group hover:border-blue-500/30 transition-all duration-500">
       <div class="flex items-center justify-between">
-        <h4 class="text-sm font-medium text-gray-500">Lightspeed API</h4>
-        <span class="flex h-3 w-3">
-          <span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-green-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-        </span>
+        <div class="p-3 rounded-2xl bg-blue-500/10 text-blue-500">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <div class="flex items-center space-x-2 bg-green-500/10 px-3 py-1 rounded-full">
+          <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+          <span class="text-[10px] font-bold text-green-500 uppercase">Live</span>
+        </div>
       </div>
-      <p class="text-2xl font-bold text-gray-900 mt-4">Connected</p>
-      <p class="text-xs text-gray-400 mt-1">X-Series Retail</p>
+      <div class="mt-8">
+        <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Lightspeed X</p>
+        <p class="text-3xl font-bold text-white mt-1">Connected</p>
+      </div>
     </div>
 
     <!-- WooCommerce Status -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col">
+    <div class="glass rounded-[2rem] p-6 group hover:border-purple-500/30 transition-all duration-500">
       <div class="flex items-center justify-between">
-        <h4 class="text-sm font-medium text-gray-500">WooCommerce</h4>
-        <span class="flex h-3 w-3">
-          <span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-green-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-        </span>
+        <div class="p-3 rounded-2xl bg-purple-500/10 text-purple-500">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+          </svg>
+        </div>
+        <div class="flex items-center space-x-2 bg-green-500/10 px-3 py-1 rounded-full">
+          <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+          <span class="text-[10px] font-bold text-green-500 uppercase">Live</span>
+        </div>
       </div>
-      <p class="text-2xl font-bold text-gray-900 mt-4">Connected</p>
-      <p class="text-xs text-gray-400 mt-1">REST API v3</p>
+      <div class="mt-8">
+        <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">WooCommerce</p>
+        <p class="text-3xl font-bold text-white mt-1">REST v3</p>
+      </div>
     </div>
 
-    <!-- Database Status -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col">
+    <!-- Cloud SQL Monitor -->
+    <div class="glass rounded-[2rem] p-6 group hover:border-indigo-500/30 transition-all duration-500">
       <div class="flex items-center justify-between">
-        <h4 class="text-sm font-medium text-gray-500">Cloud SQL Replica</h4>
-        <span class="flex h-3 w-3">
-          <span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-green-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-        </span>
+        <div class="p-3 rounded-2xl bg-indigo-500/10 text-indigo-500">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 2 2 6 2s6 0 6-2V7M4 7c0 2 2 2 6 2s6 0 6-2M4 7c0-2 2-2 6-2s6 0 6 2m0 5c0 2 2 2 6 2s6 0 6-2"/>
+          </svg>
+        </div>
+        <div class="text-[10px] font-bold text-indigo-400 uppercase bg-indigo-500/10 px-3 py-1 rounded-full">Primary SQL</div>
       </div>
-      <p class="text-2xl font-bold text-gray-900 mt-4"><%= productCount %></p>
-      <p class="text-xs text-gray-400 mt-1">Products Cached</p>
+      <div class="mt-8">
+        <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Catalog Cache</p>
+        <p class="text-3xl font-bold text-white mt-1 leading-none"><%= productCount %></p>
+        <p class="text-xs text-gray-500 mt-2 font-medium">Variants Mirrored</p>
+      </div>
     </div>
 
-    <!-- Cloud Tasks Queue -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col">
+    <!-- Queue Engine -->
+    <div class="glass rounded-[2rem] p-6 group hover:border-orange-500/30 transition-all duration-500">
       <div class="flex items-center justify-between">
-        <h4 class="text-sm font-medium text-gray-500">Sync Queue</h4>
-        <svg class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-        </svg>
+        <div class="p-3 rounded-2xl bg-orange-500/10 text-orange-500">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          </svg>
+        </div>
+        <div class="text-[10px] font-bold text-orange-400 uppercase bg-orange-500/10 px-3 py-1 rounded-full">Processing</div>
       </div>
-      <!-- Placeholder metric, we'd need GCP API to fetch true queue length -->
-      <p class="text-2xl font-bold text-gray-900 mt-4">Active</p>
-      <p class="text-xs text-gray-400 mt-1">Cloud Tasks Ready</p>
+      <div class="mt-8">
+        <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Sync Queue</p>
+        <p class="text-3xl font-bold text-white mt-1">Ready</p>
+        <p class="text-xs text-gray-500 mt-2 font-medium">Event-Driven Loop</p>
+      </div>
     </div>
 
   </div>
 
-  <!-- Recent Logs Snippet -->
-  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-    <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
-      <h3 class="text-base font-semibold text-gray-900">Recent Sync Activity</h3>
-      <a href="/admin/logs" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View All &rarr;</a>
+  <!-- Log Activity Table -->
+  <div class="glass rounded-[2rem] overflow-hidden">
+    <div class="px-8 py-6 border-b border-white/5 flex justify-between items-center bg-white/5">
+      <div>
+        <h3 class="text-lg font-bold text-white">Event Stream</h3>
+        <p class="text-xs text-gray-500 font-medium">Live audit trail of platform transitions.</p>
+      </div>
+      <a href="/admin/logs" class="group flex items-center text-xs font-bold text-blue-500 uppercase tracking-widest hover:text-white transition-colors">
+        Full History
+        <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+        </svg>
+      </a>
     </div>
+    
     <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Direction</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event ID</th>
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-white/[0.02]">
+            <th class="px-8 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Timestamp</th>
+            <th class="px-8 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Flow Direction</th>
+            <th class="px-8 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Status</th>
+            <th class="px-8 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Diagnostic ID</th>
           </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-gray-100">
+        <tbody class="divide-y divide-white/5">
           <% if (recentLogs && recentLogs.length > 0) { %>
             <% recentLogs.forEach(log => { %>
-              <tr class="hover:bg-gray-50 transition">
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <%= new Date(log.createdAt).toLocaleString() %>
+              <tr class="group hover:bg-white/[0.02] transition-colors">
+                <td class="px-8 py-5">
+                  <p class="text-sm font-medium text-white"><%= new Date(log.createdAt).toLocaleTimeString() %></p>
+                  <p class="text-[10px] text-gray-500 font-bold uppercase"><%= new Date(log.createdAt).toLocaleDateString() %></p>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    <%= log.direction %>
-                  </span>
+                <td class="px-8 py-5">
+                  <div class="flex items-center">
+                    <div class="px-3 py-1 rounded-lg bg-gray-500/10 border border-white/5 text-[10px] font-bold text-gray-400 uppercase">
+                      <%= log.direction %>
+                    </div>
+                  </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-8 py-5">
                   <% if (log.status === 'completed') { %>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Success</span>
+                    <div class="flex items-center space-x-2 text-green-500">
+                      <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                      <span class="text-xs font-bold uppercase tracking-wider">Success</span>
+                    </div>
                   <% } else if (log.status === 'failed') { %>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Failed</span>
+                    <div class="flex items-center space-x-2 text-red-500">
+                      <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                      <span class="text-xs font-bold uppercase tracking-wider">Failed</span>
+                    </div>
                   <% } else { %>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>
+                    <div class="flex items-center space-x-2 text-yellow-500">
+                      <div class="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
+                      <span class="text-xs font-bold uppercase tracking-wider">Pending</span>
+                    </div>
                   <% } %>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400 font-mono">
-                  <%= log.id.substring(0, 8) %>...
+                <td class="px-8 py-5 text-gray-400 font-mono text-xs">
+                  <span class="bg-gray-500/5 px-2 py-1 rounded border border-white/5"><%= log.id.substring(0, 12) %></span>
                 </td>
               </tr>
             <% }) %>
           <% } else { %>
             <tr>
-              <td colspan="4" class="px-6 py-8 text-center text-sm text-gray-500">No recent sync activity found.</td>
+              <td colspan="4" class="px-8 py-20 text-center">
+                <div class="flex flex-col items-center">
+                  <div class="w-12 h-12 rounded-full bg-gray-500/10 flex items-center justify-center text-gray-500 mb-4">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0l-8 8-8-8"/>
+                    </svg>
+                  </div>
+                  <p class="text-sm font-medium text-gray-500">No active sync events detected</p>
+                </div>
+              </td>
             </tr>
           <% } %>
         </tbody>

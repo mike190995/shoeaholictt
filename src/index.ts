@@ -16,6 +16,9 @@ import { log } from './lib/logger.js';
 
 const app = express();
 
+// Cloud Run uses a proxy, so we must trust it for rate limiting to work correctly
+app.set('trust proxy', 1);
+
 // ─── Frontend Static Serving ────────────────────
 const frontendDist = resolve(process.cwd(), 'frontend/dist');
 app.use(express.static(frontendDist));
@@ -83,16 +86,6 @@ app.get('/debug', (req, res) => {
 
 // ─── Global Error Handler ──────────────────────
 app.use(errorHandler);
-
-// ─── Client-Side Routing Fallback ──────────────
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api') || req.path.startsWith('/admin') || req.path.startsWith('/webhooks') || req.path.startsWith('/auth') || req.path.startsWith('/sync')) {
-    log.error({ path: req.path }, 'Hit wildcard for API route');
-    res.status(404).json({ error: 'Endpoint not found' });
-    return;
-  }
-  res.sendFile(resolve(frontendDist, 'index.html'));
-});
 
 // ─── Start Server ──────────────────────────────
 app.listen(config.port, () => {
