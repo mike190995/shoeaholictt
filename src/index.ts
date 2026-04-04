@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { config } from './config/env.js';
+import { config, initSecrets } from './config/env.js';
 import { APP_VERSION } from './version.js';
 import { apiRouter } from './routes/api.js';
 import { webhookRouter } from './routes/webhooks.js';
@@ -88,9 +88,20 @@ app.get('/debug', (req, res) => {
 app.use(errorHandler);
 
 // ─── Start Server ──────────────────────────────
-app.listen(config.port, () => {
-  console.log(`🚀 LSWOO Middleware running on port ${config.port}`);
-  console.log(`   Environment: ${config.nodeEnv}`);
+async function main() {
+  // Load secrets from GCP Secret Manager (production) or .env (development)
+  await initSecrets();
+
+  app.listen(config.port, () => {
+    console.log(`🚀 LSWOO Middleware running on port ${config.port}`);
+    console.log(`   Environment: ${config.nodeEnv}`);
+  });
+}
+
+main().catch((err) => {
+  console.error('💀 Fatal startup error:', err);
+  process.exit(1);
 });
 
 export default app;
+

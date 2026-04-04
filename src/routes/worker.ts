@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { processSyncTask } from '../services/sync.js';
-import { config } from '../config/env.js';
+import { secrets } from '../config/env.js';
 import { AppError } from '../lib/AppError.js';
 import { log } from '../lib/logger.js';
 
@@ -13,7 +13,7 @@ export const workerRouter = Router();
  */
 function verifyWorkerSecret(req: Request, res: Response, next: NextFunction): void {
   const secret = req.headers['x-worker-secret'];
-  if (!config.workerSecret || secret !== config.workerSecret) {
+  if (!secrets.workerSecret || secret !== secrets.workerSecret) {
     log.warn({ path: req.path, ip: req.ip }, '[Worker] Unauthorized request — invalid secret');
     res.status(401).json({ error: 'Unauthorized' });
     return;

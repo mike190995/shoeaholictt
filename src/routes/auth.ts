@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import axios from 'axios';
 import { prisma } from '../lib/prisma.js';
-import { config } from '../config/env.js';
+import { config, secrets } from '../config/env.js';
 
 export const authRouter = Router();
 
@@ -15,7 +15,7 @@ authRouter.get('/lightspeed', (_req, res) => {
   
   const params = new URLSearchParams({
     response_type: 'code',
-    client_id: config.lightspeedClientId,
+    client_id: secrets.lightspeedClientId,
     redirect_uri: config.lightspeedRedirectUri,
     state,
   });
@@ -58,8 +58,8 @@ authRouter.get('/lightspeed/callback', async (req, res, next) => {
     console.log(`[Lightspeed X-Series] Exchanging code for tokens at: ${tokenUrl}`);
 
     const tokenParams = new URLSearchParams();
-    tokenParams.append('client_id', config.lightspeedClientId);
-    tokenParams.append('client_secret', config.lightspeedClientSecret);
+    tokenParams.append('client_id', secrets.lightspeedClientId);
+    tokenParams.append('client_secret', secrets.lightspeedClientSecret);
     tokenParams.append('code', code);
     tokenParams.append('grant_type', 'authorization_code');
     tokenParams.append('redirect_uri', config.lightspeedRedirectUri);

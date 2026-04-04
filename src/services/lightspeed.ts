@@ -7,7 +7,7 @@
  */
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import { config } from '../config/env.js';
+import { config, secrets } from '../config/env.js';
 import { prisma } from '../lib/prisma.js';
 import { log } from '../lib/logger.js';
 
@@ -106,8 +106,8 @@ export async function refreshLightspeedToken(): Promise<{
 
   try {
     const tokenParams = new URLSearchParams();
-    tokenParams.append('client_id', config.lightspeedClientId);
-    tokenParams.append('client_secret', config.lightspeedClientSecret);
+    tokenParams.append('client_id', secrets.lightspeedClientId);
+    tokenParams.append('client_secret', secrets.lightspeedClientSecret);
     tokenParams.append('refresh_token', credential.refreshToken);
     tokenParams.append('grant_type', 'refresh_token');
 

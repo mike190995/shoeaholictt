@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { z } from 'zod';
 import { isDuplicateSync, markSyncInProgress } from '../lib/redis.js';
 import { enqueueTask } from '../lib/tasks.js';
-import { config } from '../config/env.js';
+import { secrets } from '../config/env.js';
 import { validateBody } from '../middleware/validate.js';
 import { log } from '../lib/logger.js';
 
@@ -72,7 +72,7 @@ webhookRouter.post('/lightspeed', async (req, res, next) => {
     }
 
     const expectedSignature = crypto
-      .createHmac('sha256', config.lightspeedClientSecret)
+      .createHmac('sha256', secrets.lightspeedClientSecret)
       .update(rawBody)
       .digest('base64');
 

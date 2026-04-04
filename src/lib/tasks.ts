@@ -9,7 +9,7 @@
  */
 
 import { CloudTasksClient } from '@google-cloud/tasks';
-import { config } from '../config/env.js';
+import { config, secrets } from '../config/env.js';
 import { log } from './logger.js';
 
 const tasksClient = new CloudTasksClient();
@@ -32,10 +32,10 @@ export async function enqueueTask(
   const task = {
     httpRequest: {
       httpMethod: 'POST' as const,
-      url: `${config.workerServiceUrl}/process`,
+      url: `${secrets.workerServiceUrl}/process`,
       headers: {
         'Content-Type': 'application/json',
-        'X-Worker-Secret': config.workerSecret,
+        'X-Worker-Secret': secrets.workerSecret,
       },
       body: Buffer.from(
         JSON.stringify({ direction, payload, timestamp: new Date().toISOString() })

@@ -6,7 +6,7 @@
 
 import axios, { AxiosInstance } from 'axios';
 import axiosRetry from 'axios-retry';
-import { config } from '../config/env.js';
+import { secrets } from '../config/env.js';
 import { log } from '../lib/logger.js';
 
 /**
@@ -15,10 +15,10 @@ import { log } from '../lib/logger.js';
  */
 export function createWooCommerceClient(): AxiosInstance {
   const client = axios.create({
-    baseURL: `${config.wooBaseUrl}/wp-json/wc/v3`,
+    baseURL: `${secrets.wooBaseUrl}/wp-json/wc/v3`,
     auth: {
-      username: config.wooConsumerKey,
-      password: config.wooConsumerSecret,
+      username: secrets.wooConsumerKey,
+      password: secrets.wooConsumerSecret,
     },
     headers: {
       'Content-Type': 'application/json',
