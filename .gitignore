@@ -36,6 +36,7 @@ docker-compose.override.yml
 prisma/schema.push.prisma
 fetch-raw-product.ts
 migrate-manual.ts
+scripts/set-token.ts
 *.pem
 *.key
 service-account*.json
