@@ -9,9 +9,8 @@
  */
 
 import pino from 'pino';
-import { config } from '../config/env.js';
 
-const isDev = config.nodeEnv !== 'production';
+const isDev = process.env.NODE_ENV !== 'production';
 
 export const log = pino(
   {
