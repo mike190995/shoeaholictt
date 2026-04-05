@@ -16,7 +16,7 @@ authRouter.get('/lightspeed', (_req, res) => {
   const params = new URLSearchParams({
     response_type: 'code',
     client_id: secrets.lightspeedClientId,
-    redirect_uri: config.lightspeedRedirectUri,
+    redirect_uri: secrets.lightspeedRedirectUri,
     state,
   });
   
@@ -62,7 +62,7 @@ authRouter.get('/lightspeed/callback', async (req, res, next) => {
     tokenParams.append('client_secret', secrets.lightspeedClientSecret);
     tokenParams.append('code', code);
     tokenParams.append('grant_type', 'authorization_code');
-    tokenParams.append('redirect_uri', config.lightspeedRedirectUri);
+    tokenParams.append('redirect_uri', secrets.lightspeedRedirectUri);
 
     const response = await axios.post(tokenUrl, tokenParams, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }

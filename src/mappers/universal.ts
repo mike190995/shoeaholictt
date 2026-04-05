@@ -132,7 +132,7 @@ export class UniversalProduct {
   /**
    * Transforms to WooCommerce REST API format.
    */
-  toWoo(): Record<string, unknown> {
+  toWoo(wooCategoryId?: number): Record<string, unknown> {
     const payload: Record<string, any> = {
       sku: this.data.sku,
       name: this.data.title,
@@ -141,6 +141,10 @@ export class UniversalProduct {
       stock_quantity: this.data.quantity,
       manage_stock: true,
     };
+
+    if (wooCategoryId) {
+      payload.categories = [{ id: wooCategoryId }];
+    }
 
     if (this.data.variantOptions && this.data.variantOptions.length > 0) {
       payload.attributes = this.data.variantOptions.map(opt => ({

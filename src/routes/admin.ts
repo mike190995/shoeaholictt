@@ -4,8 +4,10 @@ import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { enqueueTask } from '../lib/tasks.js';
 import { createLightspeedClient } from '../services/lightspeed.js';
-import { createWooCommerceClient } from '../services/woocommerce.js';
+import { createWooCommerceClient, createWooProduct, updateWooProduct, deleteWooProduct } from '../services/woocommerce.js';
 import { getRedisClient } from '../lib/redis.js';
+import { UniversalProduct } from '../mappers/universal.js';
+import { optimizeAndUploadImage } from '../lib/images.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -107,6 +109,7 @@ adminRouter.get('/api/products', async (req, res) => {
       brand: p.brand,
       imageUrl: p.imageUrl,
       status: p.quantity > 0 ? 'published' : 'draft',
+      woocommerceId: (p.metadata as any)?.woocommerceId || null,
       lastSynced: p.updatedAt,
     }));
 
@@ -234,6 +237,238 @@ adminRouter.post('/api/products/:sku/force-sync', async (req, res) => {
   } catch (err: any) {
     console.error('[Admin] Force sync error:', err.message);
     res.status(500).json({ error: 'Failed to force sync product' });
+  }
+});
+
+// ─── Push Product to WooCommerce ──────────────────
+adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
+  try {
+    const { sku } = req.params;
+    const product = await prisma.product.findUnique({ where: { sku } });
+
+    if (!product) {
+      res.status(404).json({ error: `Product not found for SKU: ${sku}` });
+      return;
+    }
+
+    // 1. Image Optimization Pipeline
+    let finalImageUrl = product.imageUrl;
+    if (product.imageUrl) {
+      console.log(`[Admin] Optimizing image for SKU: ${sku}`);
+      const optimizedUrl = await optimizeAndUploadImage(product.imageUrl, sku);
+      if (optimizedUrl) {
+        finalImageUrl = optimizedUrl;
+        // Update local DB mirror with the optimized URL
+        await prisma.product.update({
+          where: { sku },
+          data: { imageUrl: finalImageUrl },
+        });
+      }
+    }
+
+    // 2. Prepare Universal Model & WooCommerce Payload
+    const universal = UniversalProduct.fromDatabase({ 
+      ...product, 
+      imageUrl: finalImageUrl 
+    });
+    
+    // Resolve Category Mapping
+    let wooCategoryId: number | undefined;
+    if (product.category) {
+      const mapping = await prisma.categoryMapping.findUnique({
+        where: { lsCategory: product.category }
+      });
+      if (mapping) {
+        wooCategoryId = mapping.wooCategoryId;
+        console.log(`[Admin] Resolved category mapping for "${product.category}" -> ${wooCategoryId}`);
+      }
+    }
+
+    const wooPayload = universal.toWoo(wooCategoryId);
+    const wooClient = createWooCommerceClient();
+    
+    // 3. Push to WooCommerce
+    const metadata = (product.metadata as Record<string, any>) || {};
+    let wooId = metadata.woocommerceId ? Number(metadata.woocommerceId) : null;
+    let action: 'created' | 'updated';
+
+    if (!wooId) {
+      console.log(`[Admin] Pushing NEW product to WooCommerce: ${sku}`);
+      wooId = await createWooProduct(wooClient, wooPayload);
+      action = 'created';
+    } else {
+      console.log(`[Admin] Updating EXISTING product in WooCommerce: ${sku} (ID: ${wooId})`);
+      await updateWooProduct(wooClient, wooId, wooPayload);
+      action = 'updated';
+    }
+
+    // Update local database with the ID and sync timestamp
+    const updatedProduct = await prisma.product.update({
+      where: { sku },
+      data: {
+        metadata: {
+          ...metadata,
+          woocommerceId: wooId,
+          lastPushToWoo: new Date().toISOString(),
+        },
+      },
+    });
+
+    // Create a sync log for success
+    await prisma.syncLog.create({
+      data: {
+        direction: 'admin_to_woo',
+        entityType: 'product',
+        entityId: sku,
+        status: 'completed',
+        payload: { action, wooId, sku },
+      },
+    });
+
+    res.json({ 
+      success: true, 
+      message: `Product ${action} successfully in WooCommerce.`, 
+      woocommerceId: wooId,
+      product: updatedProduct
+    });
+  } catch (err: any) {
+    console.error('[Admin] Push to WooCommerce error:', err.message);
+    res.status(500).json({ 
+      error: 'Failed to push product to WooCommerce', 
+      details: err.response?.data || err.message 
+    });
+  }
+});
+
+// ─── Unlink Product from WooCommerce ──────────────
+adminRouter.post('/api/products/:sku/unlink', async (req, res) => {
+  try {
+    const { sku } = req.params;
+    const product = await prisma.product.findUnique({ where: { sku } });
+
+    if (!product) {
+      res.status(404).json({ error: `Product not found for SKU: ${sku}` });
+      return;
+    }
+
+    const metadata = (product.metadata as Record<string, any>) || {};
+    const oldWooId = metadata.woocommerceId;
+
+    // Remove linking fields from metadata
+    const { woocommerceId, lastPushToWoo, ...restMetadata } = metadata;
+
+    const updatedProduct = await prisma.product.update({
+      where: { sku },
+      data: { metadata: restMetadata },
+    });
+
+    await prisma.syncLog.create({
+      data: {
+        direction: 'admin_action',
+        entityType: 'product',
+        entityId: sku,
+        status: 'completed',
+        payload: { action: 'unlink', oldWooId },
+      },
+    });
+
+    res.json({ 
+      success: true, 
+      message: `Product ${sku} unlinked successfully.`,
+      product: updatedProduct 
+    });
+  } catch (err: any) {
+    console.error('[Admin] Unlink error:', err.message);
+    res.status(500).json({ error: 'Failed to unlink product' });
+  }
+});
+
+// ─── Delete Product from WooCommerce Store ─────────
+adminRouter.delete('/api/products/:sku/woo', async (req, res) => {
+  try {
+    const { sku } = req.params;
+    const product = await prisma.product.findUnique({ where: { sku } });
+
+    if (!product) {
+      res.status(404).json({ error: `Product not found for SKU: ${sku}` });
+      return;
+    }
+
+    const metadata = (product.metadata as Record<string, any>) || {};
+    const wooId = metadata.woocommerceId ? Number(metadata.woocommerceId) : null;
+
+    if (wooId) {
+      const wooClient = createWooCommerceClient();
+      await deleteWooProduct(wooClient, wooId);
+    }
+
+    // Now perform the unlink logic to clean up local DB
+    const { woocommerceId, lastPushToWoo, ...restMetadata } = metadata;
+
+    const updatedProduct = await prisma.product.update({
+      where: { sku },
+      data: { metadata: restMetadata },
+    });
+
+    await prisma.syncLog.create({
+      data: {
+        direction: 'admin_action',
+        entityType: 'product',
+        entityId: sku,
+        status: 'completed',
+        payload: { action: 'delete_from_woo', wooId },
+      },
+    });
+
+    res.json({ 
+      success: true, 
+      message: `Product ${sku} deleted from WooCommerce Store and unlinked locally.`,
+      product: updatedProduct 
+    });
+  } catch (err: any) {
+    console.error('[Admin] Delete from WooCommerce error:', err.message);
+    res.status(500).json({ 
+      error: 'Failed to delete product from WooCommerce Store',
+      details: err.response?.data || err.message
+    });
+  }
+});
+
+// ─── Category Mapping Management ──────────────────
+adminRouter.get('/api/categories/mapping', async (req, res) => {
+  try {
+    const mappings = await prisma.categoryMapping.findMany({
+      orderBy: { lsCategory: 'asc' },
+    });
+    res.json(mappings);
+  } catch (err: any) {
+    console.error('[Admin] Get category mappings error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch category mappings' });
+  }
+});
+
+adminRouter.post('/api/categories/mapping', async (req, res) => {
+  try {
+    const { lsCategory, wooCategoryId } = req.body;
+
+    if (!lsCategory || wooCategoryId === undefined) {
+      res.status(400).json({ error: 'lsCategory and wooCategoryId are required' });
+      return;
+    }
+
+    const mapping = await prisma.categoryMapping.upsert({
+      where: { lsCategory },
+      update: { wooCategoryId: Number(wooCategoryId) },
+      create: { 
+        lsCategory, 
+        wooCategoryId: Number(wooCategoryId) 
+      },
+    });
+
+    res.json({ success: true, mapping });
+  } catch (err: any) {
+    console.error('[Admin] Save category mapping error:', err.message);
+    res.status(500).json({ error: 'Failed to save category mapping' });
   }
 });
 

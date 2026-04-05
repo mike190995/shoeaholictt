@@ -1,15 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import ProductMatrix from './components/ProductMatrix';
 import LogViewer from './components/LogViewer';
 import SpreadsheetView from './components/SpreadsheetView';
 import LightspeedImporter from './components/LightspeedImporter';
-
-type View = 'dashboard' | 'importer' | 'spreadsheet' | 'products' | 'logs';
+import CategoryMapper from './components/CategoryMapper';
 
 export default function AppRoot() {
-  const [currentView, setCurrentView] = useState<View>('dashboard');
-
   return (
     <div className="AppRoot min-h-screen bg-[#0f172a] flex">
       {/* Sidebar Navigation */}
@@ -20,11 +18,12 @@ export default function AppRoot() {
         </div>
 
         <div className="space-y-2 flex-1">
-          <NavItem active={currentView === 'dashboard'} onClick={() => setCurrentView('dashboard')} icon="📊" label="Dashboard" />
-          <NavItem active={currentView === 'importer'} onClick={() => setCurrentView('importer')} icon="📥" label="Import Node" />
-          <NavItem active={currentView === 'spreadsheet'} onClick={() => setCurrentView('spreadsheet')} icon="🗂️" label="Spreadsheet" />
-          <NavItem active={currentView === 'products'} onClick={() => setCurrentView('products')} icon="📦" label="Catalog" />
-          <NavItem active={currentView === 'logs'} onClick={() => setCurrentView('logs')} icon="📜" label="Sync Logs" />
+          <NavItem to="/dashboard" icon="📊" label="Dashboard" />
+          <NavItem to="/importer" icon="📥" label="Import Node" />
+          <NavItem to="/spreadsheet" icon="🗂️" label="Spreadsheet" />
+          <NavItem to="/mapper" icon="🗺️" label="Category Mapper" />
+          <NavItem to="/products" icon="📦" label="Catalog" />
+          <NavItem to="/logs" icon="📜" label="Sync Logs" />
         </div>
 
         <div className="mt-auto pt-6 border-t border-white/5">
@@ -40,22 +39,31 @@ export default function AppRoot() {
 
       {/* Main Content Area */}
       <main className="flex-1 min-h-screen overflow-y-auto">
-        {currentView === 'dashboard' && <Dashboard />}
-        {currentView === 'importer' && <LightspeedImporter />}
-        {currentView === 'spreadsheet' && <SpreadsheetView />}
-        {currentView === 'products' && <ProductMatrix />}
-        {currentView === 'logs' && <LogViewer />}
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/importer" element={<LightspeedImporter />} />
+          <Route path="/spreadsheet" element={<SpreadsheetView />} />
+          <Route path="/mapper" element={<CategoryMapper />} />
+          <Route path="/products" element={<ProductMatrix />} />
+          <Route path="/logs" element={<LogViewer />} />
+        </Routes>
       </main>
     </div>
   );
 }
 
-const NavItem: React.FC<{ active: boolean; onClick: () => void; icon: string; label: string }> = ({ active, onClick, icon, label }) => (
-  <button
-    onClick={onClick}
-    className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all font-bold text-sm tracking-tight ${active ? 'bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/20' : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'}`}
+const NavItem: React.FC<{ to: string; icon: string; label: string }> = ({ to, icon, label }) => (
+  <NavLink
+    to={to}
+    className={({ isActive }) => `
+      w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all font-bold text-sm tracking-tight border
+      ${isActive 
+        ? 'bg-[#10b981]/10 text-[#10b981] border-[#10b981]/20' 
+        : 'text-slate-400 hover:text-white hover:bg-white/5 border-transparent'}
+    `}
   >
     <span className="text-lg">{icon}</span>
     {label}
-  </button>
+  </NavLink>
 );

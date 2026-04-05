@@ -19,6 +19,7 @@ export const config = {
   gcpProjectId: getEnv('GCP_PROJECT_ID', 'senmizu'),
   cloudTasksLocation: getEnv('CLOUD_TASKS_LOCATION', 'us-central1'),
   cloudTasksQueue: getEnv('CLOUD_TASKS_QUEUE', 'inventory-sync-queue'),
+  gcsBucket: getEnv('GCS_BUCKET', 'lswoo-images'),
 
   // Memorystore (Redis)
   redisHost: getEnv('REDIS_HOST', '127.0.0.1'),
@@ -28,9 +29,7 @@ export const config = {
   frontendOrigin: getEnv('FRONTEND_ORIGIN', 'http://localhost:3000'),
 
   // Lightspeed (non-secret identifiers)
-  lightspeedAccountId: getEnv('LS_ACCOUNT_ID'),
   lightspeedOutletId: getEnv('LS_OUTLET_ID'),
-  lightspeedRedirectUri: getEnv('LS_REDIRECT_URI'),
 
   // Redis loop-prevention TTL (seconds)
   redisSyncTtl: parseInt(getEnv('REDIS_SYNC_TTL', '60'), 10),
@@ -43,6 +42,8 @@ interface SecretsConfig {
   databaseUrl: string;
   lightspeedClientId: string;
   lightspeedClientSecret: string;
+  lightspeedAccountId: string;
+  lightspeedRedirectUri: string;
   wooBaseUrl: string;
   wooConsumerKey: string;
   wooConsumerSecret: string;
@@ -54,6 +55,8 @@ export const secrets: SecretsConfig = {
   databaseUrl: '',
   lightspeedClientId: '',
   lightspeedClientSecret: '',
+  lightspeedAccountId: '',
+  lightspeedRedirectUri: '',
   wooBaseUrl: '',
   wooConsumerKey: '',
   wooConsumerSecret: '',
@@ -65,19 +68,21 @@ export const secrets: SecretsConfig = {
  * Initialize sensitive secrets. Must be called once at application startup
  * before the Express server begins accepting requests.
  *
- * - In production: pulls from GCP Secret Manager (prefixed LSWOO_).
+ * - In production: pulls from GCP Secret Manager (matching screenshot names).
  * - In development: falls back to process.env / .env file.
  */
 export async function initSecrets(): Promise<void> {
   const entries: Array<[keyof typeof secrets, string, string]> = [
-    ['databaseUrl',            'LSWOO_DATABASE_URL',         'DATABASE_URL'],
-    ['lightspeedClientId',     'LSWOO_LS_CLIENT_ID',         'LS_CLIENT_ID'],
-    ['lightspeedClientSecret', 'LSWOO_LS_CLIENT_SECRET',     'LS_CLIENT_SECRET'],
-    ['wooBaseUrl',             'LSWOO_WOO_BASE_URL',         'WOO_BASE_URL'],
-    ['wooConsumerKey',         'LSWOO_WOO_CONSUMER_KEY',     'WOO_CONSUMER_KEY'],
-    ['wooConsumerSecret',      'LSWOO_WOO_CONSUMER_SECRET',  'WOO_CONSUMER_SECRET'],
-    ['workerServiceUrl',       'LSWOO_WORKER_SERVICE_URL',   'WORKER_SERVICE_URL'],
-    ['workerSecret',           'LSWOO_WORKER_SECRET',        'WORKER_SECRET'],
+    ['databaseUrl',            'DATABASE_URL',         'DATABASE_URL'],
+    ['lightspeedClientId',     'LS_CLIENT_ID',         'LS_CLIENT_ID'],
+    ['lightspeedClientSecret', 'LS_CLIENT_SECRET',     'LS_CLIENT_SECRET'],
+    ['lightspeedAccountId',    'LS_ACCOUNT_ID',        'LS_ACCOUNT_ID'],
+    ['lightspeedRedirectUri',  'LS_REDIRECT_URI',      'LS_REDIRECT_URI'],
+    ['wooBaseUrl',             'WOO_BASE_URL',         'WOO_BASE_URL'],
+    ['wooConsumerKey',         'WOO_CONSUMER_KEY',     'WOO_CONSUMER_KEY'],
+    ['wooConsumerSecret',      'WOO_CONSUMER_SECRET',  'WOO_CONSUMER_SECRET'],
+    ['workerServiceUrl',       'WORKER_SERVICE_URL',   'WORKER_SERVICE_URL'],
+    ['workerSecret',           'WORKER_SECRET',        'WORKER_SECRET'],
   ];
 
   const results = await Promise.allSettled(

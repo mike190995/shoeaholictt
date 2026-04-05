@@ -56,6 +56,33 @@ export async function updateWooStock(
 }
 
 /**
+ * Create a new WooCommerce product.
+ */
+export async function createWooProduct(
+  client: AxiosInstance,
+  data: Record<string, any>
+): Promise<number> {
+  const response = await client.post('/products', data);
+  const product = response.data as Record<string, any>;
+  if (!product.id) {
+    throw new Error('WooCommerce API did not return a product ID after creation');
+  }
+  return Number(product.id);
+}
+
+/**
+ * Permanently delete a WooCommerce product.
+ */
+export async function deleteWooProduct(
+  client: AxiosInstance,
+  wooId: number
+): Promise<void> {
+  await client.delete(`/products/${wooId}`, {
+    params: { force: true },
+  });
+}
+
+/**
  * Fetch a WooCommerce product by SKU.
  */
 export async function getWooProductBySku(

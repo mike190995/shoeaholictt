@@ -70,3 +70,16 @@ model SyncLog {
   @@index([entityType, entityId])
   @@map("sync_logs")
 }
+
+// ─────────────────────────────────────────────
+// Category Mappings — Lightspeed → WooCommerce
+// ─────────────────────────────────────────────
+model CategoryMapping {
+  id            Int      @id @default(autoincrement())
+  lsCategory    String   @unique @map("ls_category")
+  wooCategoryId Int      @map("woo_category_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("category_mappings")
+}

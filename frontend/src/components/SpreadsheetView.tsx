@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AgGridReact } from 'ag-grid-react';
 import type { ColDef, GridApi, CellValueChangedEvent, GridReadyEvent } from 'ag-grid-community';
 import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
-import { fetchProducts, batchUpdateProducts, forceSyncProduct, type Product } from '../api/products';
+import { fetchProducts, batchUpdateProducts, forceSyncProduct, pushProductToWoo, unlinkProduct, deleteProductFromWoo, type Product } from '../api/products';
 import { ProductCellSchema } from '../lib/validation';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -157,6 +157,71 @@ const SpreadsheetView: React.FC = () => {
     showToast(`Sync enqueued for ${selected.length} products.`, 'success');
   };
 
+  const handlePushToWooSelected = async () => {
+    const selected = gridApiRef.current?.getSelectedRows() ?? [];
+    if (!selected.length) { showToast('Select rows first.', 'info'); return; }
+    
+    showToast(`Pushing ${selected.length} products to WooCommerce...`, 'info', 2000);
+    
+    let successCount = 0;
+    for (const row of selected) {
+      try {
+        await pushProductToWoo(row.sku);
+        successCount++;
+        // Optionally update the local row data if the API returned updated info
+      } catch (err: any) {
+        console.error(`Failed to push ${row.sku}:`, err.message);
+      }
+    }
+    
+    showToast(`Push complete: ${successCount}/${selected.length} products live.`, 'success');
+    // Refresh data to show new "Linked" status
+    fetchProducts(1, undefined).then(data => setAllProducts(data.products));
+  };
+
+  const handleUnlinkSelected = async () => {
+    const selected = gridApiRef.current?.getSelectedRows() ?? [];
+    if (!selected.length) { showToast('Select rows first.', 'info'); return; }
+    
+    showToast(`Unlinking ${selected.length} products...`, 'info', 2000);
+    
+    let successCount = 0;
+    for (const row of selected) {
+      try {
+        await unlinkProduct(row.sku);
+        successCount++;
+      } catch (err: any) {
+        console.error(`Failed to unlink ${row.sku}:`, err.message);
+      }
+    }
+    
+    showToast(`Unlink complete: ${successCount}/${selected.length} products unlinked.`, 'success');
+    fetchProducts(1, undefined).then(data => setAllProducts(data.products));
+  };
+
+  const handleDeleteFromWooSelected = async () => {
+    const selected = gridApiRef.current?.getSelectedRows() ?? [];
+    if (!selected.length) { showToast('Select rows first.', 'info'); return; }
+    
+    const confirmDelete = window.confirm(`DANGER: Are you sure you want to permanently DELETE ${selected.length} products from the WooCommerce store? This cannot be undone.`);
+    if (!confirmDelete) return;
+
+    showToast(`Deleting ${selected.length} products from WooCommerce...`, 'info', 2000);
+    
+    let successCount = 0;
+    for (const row of selected) {
+      try {
+        await deleteProductFromWoo(row.sku);
+        successCount++;
+      } catch (err: any) {
+        console.error(`Failed to delete ${row.sku}:`, err.message);
+      }
+    }
+    
+    showToast(`Deletion complete: ${successCount}/${selected.length} products removed from store.`, 'success');
+    fetchProducts(1, undefined).then(data => setAllProducts(data.products));
+  };
+
   const colDefs: ColDef[] = useMemo(() => [
     {
       headerCheckboxSelection: true,
@@ -180,6 +245,17 @@ const SpreadsheetView: React.FC = () => {
       },
     },
     { field: 'sku', headerName: 'SKU', editable: false, width: 140, pinned: 'left' as const },
+    {
+      field: 'woocommerceId',
+      headerName: 'Linked',
+      width: 100,
+      cellRenderer: (params: any) => {
+        const isLinked = !!params.value;
+        return isLinked 
+          ? `<span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;background:rgba(59,130,246,.1);color:#60a5fa;border:1px solid rgba(59,130,246,.3)">Live</span>`
+          : `<span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;background:rgba(100,116,139,.1);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">Staged</span>`;
+      },
+    },
     { field: 'price', headerName: 'Price', editable: true, width: 110, valueFormatter: p => p.value != null ? `$${Number(p.value).toFixed(2)}` : '' },
     { field: 'stock', headerName: 'Stock', editable: true, width: 90 },
     { field: 'category', headerName: 'Category', editable: true, flex: 1 },
@@ -218,6 +294,9 @@ const SpreadsheetView: React.FC = () => {
             <button onClick={handleTitleCase} className="px-3 py-1.5 hover:bg-white/10 rounded-xl text-xs font-bold text-slate-300 transition-all" title="Apply Title Case to selected rows">Aa Title</button>
             <button onClick={handleStripHtml} className="px-3 py-1.5 hover:bg-white/10 rounded-xl text-xs font-bold text-slate-300 transition-all" title="Strip HTML from description">{'</>'}Strip</button>
             <button onClick={handleForceSyncSelected} className="px-3 py-1.5 hover:bg-[#10b981]/10 rounded-xl text-xs font-bold text-[#10b981] transition-all" title="Force sync selected to all channels">⚡ Sync</button>
+            <button onClick={handlePushToWooSelected} className="px-3 py-1.5 hover:bg-blue-500/10 rounded-xl text-xs font-bold text-blue-400 transition-all" title="Push selected to WooCommerce Store">🚀 Push to Woo</button>
+            <button onClick={handleUnlinkSelected} className="px-3 py-1.5 hover:bg-slate-500/10 rounded-xl text-xs font-bold text-slate-400 transition-all" title="Disconnect selected from WooCommerce (safe)">🔗 Unlink</button>
+            <button onClick={handleDeleteFromWooSelected} className="px-3 py-1.5 hover:bg-rose-500/10 rounded-xl text-xs font-bold text-rose-400 transition-all" title="Permanently DELETE from WooCommerce Store">🗑️ Remove from Woo</button>
           </div>
 
           {/* Commit */}
