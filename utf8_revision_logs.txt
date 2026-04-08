@@ -1,0 +1,22 @@
+Default STARTUP TCP probe failed 1 time consecutively for container "lswoo-middleware-1" on port 8080. The instance was not started.
+Connection failed with status CANCELLED.
+Container called exit(1).
+Node.js v22.22.2
+}
+  originalPath: '(.*)'
+PathError [TypeError]: Missing parameter name at index 3: (.*); visit https://git.new/pathToRegexpError for info
+    at name (/app/node_modules/path-to-regexp/dist/index.js:96:19)
+    at parse (/app/node_modules/path-to-regexp/dist/index.js:113:68)
+    at pathToRegexp (/app/node_modules/path-to-regexp/dist/index.js:267:58)
+    at Object.match (/app/node_modules/path-to-regexp/dist/index.js:237:30)
+    at matcher (/app/node_modules/router/lib/layer.js:86:23)
+    at new Layer (/app/node_modules/router/lib/layer.js:93:62)
+    at Function.route (/app/node_modules/router/index.js:428:17)
+    at Function.route (/app/node_modules/express/lib/application.js:257:22)
+    at app.<computed> [as get] (/app/node_modules/express/lib/application.js:478:22)
+    at file:///app/dist/index.js:74:5 {
+                  ^
+            throw new PathError(`Missing parameter name at index ${index}`, str);
+/app/node_modules/path-to-regexp/dist/index.js:96
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ?? auth for agents: https://vestauth.com
+Starting new instance. Reason: DEPLOYMENT_ROLLOUT - Instance started due to traffic shifting between revisions due to deployment, traffic split adjustment, or deployment health check.

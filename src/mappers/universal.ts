@@ -50,8 +50,10 @@ export class UniversalProduct {
       sku: (raw.sku || raw.handle || String(raw.id)) as string,
       title: (raw.name || raw.variant_name || '') as string,
       description: (raw.description || '') as string,
-      price: parseFloat(String(raw.price || raw.retail_price || 0)),
-      quantity: parseInt(String((raw.inventory as any)?.[0]?.count || 0), 10),
+      price: parseFloat(String(raw.retail_price || raw.price || 0)),
+      quantity: Array.isArray(raw.inventory) 
+        ? raw.inventory.reduce((sum: number, inv: any) => sum + (parseInt(String(inv.count || 0), 10)), 0)
+        : parseInt(String((raw.inventory as any)?.count || 0), 10),
       category: typeof raw.type === 'object' && raw.type !== null 
         ? (raw.type as any).name 
         : (raw.type as string) || undefined,
@@ -131,8 +133,10 @@ export class UniversalProduct {
 
   /**
    * Transforms to WooCommerce REST API format.
+   * @param wooCategoryId Optional category ID to associate
+   * @param customMappings Optional generic field mappings (e.g. { tags: "category" })
    */
-  toWoo(wooCategoryId?: number): Record<string, unknown> {
+  toWoo(wooCategoryId?: number, customMappings?: Record<string, string>): Record<string, unknown> {
     const payload: Record<string, any> = {
       sku: this.data.sku,
       name: this.data.title,
@@ -140,10 +144,21 @@ export class UniversalProduct {
       regular_price: String(this.data.price),
       stock_quantity: this.data.quantity,
       manage_stock: true,
+      images: this.data.imageUrl ? [{ src: this.data.imageUrl }] : [],
     };
 
     if (wooCategoryId) {
       payload.categories = [{ id: wooCategoryId }];
+    }
+
+    // Apply custom dynamic mappings if provided
+    if (customMappings) {
+      for (const [lsField, wooField] of Object.entries(customMappings)) {
+        const val = (this.data as any)[lsField];
+        if (val !== undefined) {
+          payload[wooField] = val;
+        }
+      }
     }
 
     if (this.data.variantOptions && this.data.variantOptions.length > 0) {

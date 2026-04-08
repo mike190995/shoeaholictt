@@ -1,0 +1,202 @@
+{"host":"10.219.61.187","msg":"[Redis] Connected","service":"lswoo-middleware","time":1775518099475}
+connect ENOENT /cloudsql/senmizu:us-east1:middleware/.s.PGSQL.5432
+Invalid `prisma.credential.findUnique()` invocation:
+[Admin] Fetch types error: 
+connect ENOENT /cloudsql/senmizu:us-east1:middleware/.s.PGSQL.5432
+Invalid `prisma.credential.findUnique()` invocation:
+prisma:error 
+connect ENOENT /cloudsql/senmizu:us-east1:middleware/.s.PGSQL.5432
+Invalid `prisma.credential.findUnique()` invocation:
+[Admin] Lightspeed Search error: 
+connect ENOENT /cloudsql/senmizu:us-east1:middleware/.s.PGSQL.5432
+Invalid `prisma.credential.findUnique()` invocation:
+prisma:error 
+connect ENOENT /cloudsql/senmizu:us-east1:middleware/.s.PGSQL.5432
+Invalid `prisma.credential.findUnique()` invocation:
+[Admin] Fetch brands error: 
+connect ENOENT /cloudsql/senmizu:us-east1:middleware/.s.PGSQL.5432
+Invalid `prisma.credential.findUnique()` invocation:
+prisma:error 
+connect ENOENT /cloudsql/senmizu:us-east1:middleware/.s.PGSQL.5432
+Invalid `prisma.credential.findUnique()` invocation:
+prisma:error 
+connect ENOENT /cloudsql/senmizu:us-east1:middleware/.s.PGSQL.5432
+Invalid `prisma.syncLog.findMany()` invocation:
+prisma:error 
+connect ENOENT /cloudsql/senmizu:us-east1:middleware/.s.PGSQL.5432
+Invalid `prisma.syncLog.count()` invocation:
+prisma:error 
+connect ENOENT /cloudsql/senmizu:us-east1:middleware/.s.PGSQL.5432
+Invalid `prisma.syncLog.count()` invocation:
+prisma:error 
+connect ENOENT /cloudsql/senmizu:us-east1:middleware/.s.PGSQL.5432
+Invalid `prisma.product.count()` invocation:
+prisma:error 
+[Prisma] Creating lazy PrismaClient with pg adapter...
+Default STARTUP TCP probe succeeded after 1 attempt for container "lswoo-middleware-1" on port 8080.
+{"envKey":"WORKER_SERVICE_URL","msg":"[Secrets] Environment variable not set","service":"lswoo-middleware","time":1775518096732}
+{"err":"7 PERMISSION_DENIED: Permission 'secretmanager.versions.access' denied on resource (or it may not exist).","msg":"[Secrets] Failed to load from Secret Manager ? falling back to env","secretName":"WORKER_SERVICE_URL","service":"lswoo-middleware","time":1775518096732}
+   Environment: production
+? LSWOO Middleware running on port 8080
+{"envKey":"WORKER_SECRET","msg":"[Secrets] Environment variable not set","service":"lswoo-middleware","time":1775518096712}
+{"err":"7 PERMISSION_DENIED: Permission 'secretmanager.versions.access' denied on resource (or it may not exist).","msg":"[Secrets] Failed to load from Secret Manager ? falling back to env","secretName":"WORKER_SECRET","service":"lswoo-middleware","time":1775518096711}
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:1) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ?? secrets for agents: https://dotenvx.com/as2
+Starting new instance. Reason: AUTOSCALING - Instance started due to configured scaling factors (e.g. CPU utilization, request throughput, etc.) or no existing capacity for current traffic.
+Default STARTUP TCP probe succeeded after 1 attempt for container "lswoo-middleware-1" on port 8080.
+{"envKey":"WORKER_SERVICE_URL","msg":"[Secrets] Environment variable not set","service":"lswoo-middleware","time":1775516706991}
+{"err":"7 PERMISSION_DENIED: Permission 'secretmanager.versions.access' denied on resource (or it may not exist).","msg":"[Secrets] Failed to load from Secret Manager ? falling back to env","secretName":"WORKER_SERVICE_URL","service":"lswoo-middleware","time":1775516706989}
+   Environment: production
+? LSWOO Middleware running on port 8080
+{"envKey":"WORKER_SECRET","msg":"[Secrets] Environment variable not set","service":"lswoo-middleware","time":1775516706966}
+{"err":"7 PERMISSION_DENIED: Permission 'secretmanager.versions.access' denied on resource (or it may not exist).","msg":"[Secrets] Failed to load from Secret Manager ? falling back to env","secretName":"WORKER_SECRET","service":"lswoo-middleware","time":1775516706965}
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:1) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ? prevent committing .env to code: https://dotenvx.com/precommit
+Starting new instance. Reason: DEPLOYMENT_ROLLOUT - Instance started due to traffic shifting between revisions due to deployment, traffic split adjustment, or deployment health check.
+Default STARTUP TCP probe failed 1 time consecutively for container "lswoo-middleware-1" on port 8080. The instance was not started.
+Connection failed with status CANCELLED.
+Container called exit(1).
+Node.js v22.22.2
+}
+  originalPath: '(.*)'
+PathError [TypeError]: Missing parameter name at index 3: (.*); visit https://git.new/pathToRegexpError for info
+    at name (/app/node_modules/path-to-regexp/dist/index.js:96:19)
+    at parse (/app/node_modules/path-to-regexp/dist/index.js:113:68)
+    at pathToRegexp (/app/node_modules/path-to-regexp/dist/index.js:267:58)
+    at Object.match (/app/node_modules/path-to-regexp/dist/index.js:237:30)
+    at matcher (/app/node_modules/router/lib/layer.js:86:23)
+    at new Layer (/app/node_modules/router/lib/layer.js:93:62)
+    at Function.route (/app/node_modules/router/index.js:428:17)
+    at Function.route (/app/node_modules/express/lib/application.js:257:22)
+    at app.<computed> [as get] (/app/node_modules/express/lib/application.js:478:22)
+    at file:///app/dist/index.js:74:5 {
+                  ^
+            throw new PathError(`Missing parameter name at index ${index}`, str);
+/app/node_modules/path-to-regexp/dist/index.js:96
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ?? auth for agents: https://vestauth.com
+Starting new instance. Reason: DEPLOYMENT_ROLLOUT - Instance started due to traffic shifting between revisions due to deployment, traffic split adjustment, or deployment health check.
+Default STARTUP TCP probe failed 1 time consecutively for container "lswoo-middleware-1" on port 8080. The instance was not started.
+Connection failed with status CANCELLED.
+Container called exit(1).
+Node.js v22.22.2
+}
+  originalPath: '*'
+PathError [TypeError]: Missing parameter name at index 1: *; visit https://git.new/pathToRegexpError for info
+    at name (/app/node_modules/path-to-regexp/dist/index.js:96:19)
+    at parse (/app/node_modules/path-to-regexp/dist/index.js:113:68)
+    at pathToRegexp (/app/node_modules/path-to-regexp/dist/index.js:267:58)
+    at Object.match (/app/node_modules/path-to-regexp/dist/index.js:237:30)
+    at matcher (/app/node_modules/router/lib/layer.js:86:23)
+    at new Layer (/app/node_modules/router/lib/layer.js:93:62)
+    at Function.route (/app/node_modules/router/index.js:428:17)
+    at Function.route (/app/node_modules/express/lib/application.js:257:22)
+    at app.<computed> [as get] (/app/node_modules/express/lib/application.js:478:22)
+    at file:///app/dist/index.js:74:5 {
+                  ^
+            throw new PathError(`Missing parameter name at index ${index}`, str);
+/app/node_modules/path-to-regexp/dist/index.js:96
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ?? auth for agents: https://vestauth.com
+Starting new instance. Reason: DEPLOYMENT_ROLLOUT - Instance started due to traffic shifting between revisions due to deployment, traffic split adjustment, or deployment health check.
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)
+[ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16)

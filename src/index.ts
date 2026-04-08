@@ -84,6 +84,16 @@ app.get('/debug', (req, res) => {
   });
 });
 
+// ─── Global Catch-All for React SPA ────────────
+app.get('/*path', (req, res, next) => {
+  // If the request is for an API route or webhook that wasn't matched, skip to error handler (404 API)
+  if (req.path.startsWith('/api') || req.path.startsWith('/webhooks') || req.path.startsWith('/admin/api')) {
+    return next();
+  }
+  // Otherwise, serve index.html for client-side routing
+  res.sendFile(resolve(frontendDist, 'index.html'));
+});
+
 // ─── Global Error Handler ──────────────────────
 app.use(errorHandler);
 

@@ -33,7 +33,6 @@ const ProductMatrix: React.FC = () => {
     setSyncingSkus(prev => new Set(prev).add(sku));
     try {
       await forceSyncProduct(sku);
-      // Refresh after a short delay to pick up the updated status
       setTimeout(() => loadProducts(page, search), 1000);
     } catch (err) {
       console.error('Force sync failed:', err);
@@ -47,121 +46,155 @@ const ProductMatrix: React.FC = () => {
   };
 
   return (
-    <div className="p-8 min-h-screen bg-[#0f172a] text-slate-200">
-      <header className="mb-12 flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-black tracking-tight text-white">Product Matrix</h1>
-          <p className="text-slate-400 mt-2 font-medium">Global inventory synchronization and mapping control.</p>
+    <div className="p-10 space-y-10">
+      <header className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">📦</span>
+            <h1 className="text-3xl font-black text-white italic tracking-tighter uppercase">Catalog Matrix</h1>
+          </div>
+          <p className="text-slate-500 font-medium">Internal database mirror of all synchronized items.</p>
         </div>
-        <div className="flex gap-4">
-          <form onSubmit={handleSearch} className="relative">
+        
+        <form onSubmit={handleSearch} className="group relative w-full md:w-96">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none opacity-40 group-focus-within:opacity-100 transition-opacity">
+                <span>🔍</span>
+            </div>
             <input 
               type="text" 
-              placeholder="Search catalog..." 
+              placeholder="Query catalog..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-xl px-12 py-3 text-sm focus:outline-none focus:border-[#10b981] transition-all w-80"
+              className="w-full bg-white/5 border border-white/5 rounded-2xl pl-12 pr-4 py-3 text-xs font-bold uppercase tracking-widest focus:outline-none focus:bg-white/10 focus:border-white/20 transition-all placeholder:text-slate-700"
             />
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40 text-xl">🔍</span>
-          </form>
-        </div>
+        </form>
       </header>
 
-      <div className="bg-slate-900/50 backdrop-blur-2xl border border-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden">
+      <div className="glass-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-white/5 text-slate-400 uppercase text-[10px] font-black tracking-[0.2em]">
-                <th className="px-8 py-6">Product Details</th>
-                <th className="px-8 py-6">SKU</th>
-                <th className="px-8 py-6">Category</th>
-                <th className="px-8 py-6">Pricing</th>
-                <th className="px-8 py-6">Inventory</th>
-                <th className="px-8 py-6">Status</th>
-                <th className="px-8 py-6 text-right">Actions</th>
+              <tr className="bg-white/[0.03] text-slate-500 uppercase text-[10px] font-black tracking-[0.2em] border-b border-white/5">
+                <th className="px-8 py-5">Product Details</th>
+                <th className="px-8 py-5">Category</th>
+                <th className="px-8 py-5 text-blue-400">Price</th>
+                <th className="px-8 py-5">Stock</th>
+                <th className="px-8 py-5">Status</th>
+                <th className="px-8 py-5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-8 py-12 text-center text-slate-500 italic">
-                    <div className="flex flex-col items-center">
-                      <div className="w-8 h-8 border-2 border-[#10b981] border-t-transparent rounded-full animate-spin mb-4"></div>
-                      Indexing catalog...
+                  <td colSpan={6} className="px-8 py-20">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="w-8 h-8 border-2 border-slate-700 border-t-indigo-500 rounded-full animate-spin"></div>
+                      <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Querying Staging Node</span>
                     </div>
                   </td>
                 </tr>
-              ) : products.map(product => (
-                <tr key={product.id} className="group hover:bg-white/5 transition-all">
-                  <td className="px-8 py-6">
-                    <div className="flex items-center gap-4">
-                      {product.imageUrl && (
-                        <img src={product.imageUrl} alt="" className="w-10 h-10 rounded-xl object-cover border border-white/10" />
-                      )}
-                      <div>
-                        <div className="font-bold text-white group-hover:text-[#10b981] transition-colors">{product.name}</div>
-                        {product.brand && <div className="text-[10px] text-slate-500 font-bold tracking-widest uppercase mt-1">{product.brand}</div>}
+              ) : products.length === 0 ? (
+                <tr>
+                    <td colSpan={6} className="px-8 py-20 text-center">
+                        <span className="text-[10px] font-black text-slate-700 uppercase tracking-tighter italic">Zero matches found in database</span>
+                    </td>
+                </tr>
+              ) : products.map(product => {
+                const isLinked = !!product.woocommerceId;
+                return (
+                  <tr key={product.id} className="group hover:bg-white/[0.02] transition-colors">
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-5">
+                        <div className="relative">
+                            <div className="w-14 h-14 flex-shrink-0 bg-black/20 rounded-2xl overflow-hidden border border-white/5 shadow-inner">
+                                {product.imageUrl ? (
+                                    <img src={product.imageUrl} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-xs opacity-20">🖼️</div>
+                                )}
+                            </div>
+                            {isLinked && (
+                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-slate-900 flex items-center justify-center text-[8px] text-white">🔗</div>
+                            )}
+                        </div>
+                        <div>
+                          <div className="text-sm font-black text-white tracking-tight leading-none mb-1">{product.name || product.title}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono text-slate-500">{product.sku}</span>
+                            {isLinked && (
+                                <>
+                                    <span className="w-1 h-1 bg-slate-700 rounded-full"></span>
+                                    <span className="text-[9px] font-black text-blue-500/60 uppercase">Woo ID: {product.woocommerceId}</span>
+                                </>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6 tabular-nums font-medium text-slate-400">{product.sku}</td>
-                  <td className="px-8 py-6">
-                    {product.category && (
-                      <span className="text-[10px] font-bold bg-white/5 px-2 py-1 rounded text-slate-400 uppercase tracking-widest">{product.category}</span>
-                    )}
-                  </td>
-                  <td className="px-8 py-6 font-black text-white">${product.price.toFixed(2)}</td>
-                  <td className="px-8 py-6">
-                    <div className="flex items-center gap-2">
-                       <span className={`w-2 h-2 rounded-full ${product.stock > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
-                       <span className="font-black tabular-nums">{product.stock}</span>
-                       <span className="text-[10px] text-slate-500 font-bold uppercase ml-1">Units</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6">
-                    <span className={`px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest ${product.status === 'published' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
-                      {product.status}
-                    </span>
-                  </td>
-                  <td className="px-8 py-6 text-right">
-                    <button
-                      onClick={() => handleForceSync(product.sku)}
-                      disabled={syncingSkus.has(product.sku)}
-                      className="p-2 hover:bg-[#10b981]/10 rounded-lg transition-all text-[#10b981] font-bold text-xs uppercase tracking-tighter disabled:opacity-40"
-                    >
-                      {syncingSkus.has(product.sku) ? (
-                        <span className="flex items-center gap-2">
-                          <span className="w-3 h-3 border-2 border-[#10b981] border-t-transparent rounded-full animate-spin"></span>
-                          Syncing...
+                    </td>
+                    <td className="px-8 py-5">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{product.category || 'NO TYPE'}</span>
+                    </td>
+                    <td className="px-8 py-5 font-black text-blue-400 tabular-nums">${product.price.toFixed(2)}</td>
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-3">
+                         <div className={`w-1.5 h-1.5 rounded-full ${product.stock > 0 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-rose-500'}`}></div>
+                         <span className="text-sm font-bold tabular-nums text-slate-200">{product.stock}</span>
+                         <span className="text-[9px] text-slate-600 font-black uppercase tracking-tighter">Units</span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className="flex flex-col gap-1">
+                        <span className={`w-fit px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${
+                            product.status === 'published' 
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                                : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        }`}>
+                          {product.status}
                         </span>
-                      ) : 'Sync Now'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                        <span className={`w-fit px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${
+                            isLinked 
+                                ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
+                                : 'bg-white/5 text-slate-500 border-white/5'
+                        }`}>
+                          {isLinked ? 'LINKED' : 'STAGED'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5 text-right">
+                      <button
+                        onClick={() => handleForceSync(product.sku)}
+                        disabled={syncingSkus.has(product.sku)}
+                        className="glass-button-ghost text-[10px] uppercase font-black tracking-widest"
+                      >
+                        {syncingSkus.has(product.sku) ? '...' : 'Sync Now'}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination */}
-        <div className="px-8 py-6 bg-white/[0.02] border-t border-white/5 flex items-center justify-between">
-          <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-            Page {page} of {totalPages}
+        {/* Action Tray / Pagination */}
+        <div className="px-8 py-6 bg-white/[0.01] border-t border-white/5 flex items-center justify-between">
+          <div className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">
+            Catalog Index {page} <span className="text-slate-800">/</span> {totalPages}
           </div>
           <div className="flex gap-2">
             <button 
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-xs font-bold uppercase tracking-widest hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              className="glass-button-secondary py-1.5 px-4 text-[10px] uppercase tracking-widest disabled:opacity-30"
             >
-              Previous
+              Back
             </button>
             <button 
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-4 py-2 rounded-xl bg-[#10b981] text-white text-xs font-bold uppercase tracking-widest hover:bg-[#059669] disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-lg shadow-[#10b981]/10"
+              className="glass-button-primary py-1.5 px-4 text-[10px] uppercase tracking-widest bg-blue-600/80 disabled:opacity-30"
             >
-              Next
+              Forward
             </button>
           </div>
         </div>

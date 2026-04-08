@@ -1,3 +1,4 @@
+# Build Timestamp: 2026-04-07T13:26:00Z
 # ─── Stage 1: Root Node Modules ───────────────
 FROM node:22-alpine AS root-deps
 WORKDIR /app
@@ -15,7 +16,7 @@ FROM node:22-alpine AS frontend-build
 WORKDIR /app
 COPY --from=frontend-deps /app/frontend/node_modules ./frontend/node_modules
 COPY frontend ./frontend
-RUN cd frontend && npm run build
+RUN cd frontend && chmod -R +x node_modules/.bin && npm run build
 
 # ─── Stage 4: Build Backend ───────────────────
 FROM node:22-alpine AS build
@@ -25,7 +26,7 @@ COPY package.json package-lock.json tsconfig.json prisma.config.ts ./
 COPY prisma ./prisma
 COPY src ./src
 RUN DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy npx prisma generate
-RUN npm run build
+RUN chmod -R +x node_modules/.bin && npm run build
 
 # ─── Stage 5: Production Image ────────────────
 FROM node:22-alpine AS production
@@ -45,6 +46,8 @@ COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 
 # Cloud Run uses PORT env var
 ENV PORT=8080
+ENV NODE_ENV=production
+ENV REDIS_HOST=10.219.61.187
 EXPOSE 8080
 
 # Run as non-root user

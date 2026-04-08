@@ -1,0 +1,11 @@
+Default STARTUP TCP probe succeeded after 1 attempt for container "lswoo-middleware-1" on port 8080.
+   Environment: production
+? LSWOO Middleware running on port 8080
+{"envKey":"WORKER_SECRET","msg":"[Secrets] Environment variable not set","service":"lswoo-middleware","time":1775527505350}
+{"err":"7 PERMISSION_DENIED: Permission 'secretmanager.versions.access' denied on resource (or it may not exist).","msg":"[Secrets] Failed to load from Secret Manager ? falling back to env","secretName":"WORKER_SECRET","service":"lswoo-middleware","time":1775527505350}
+{"envKey":"WORKER_SERVICE_URL","msg":"[Secrets] Environment variable not set","service":"lswoo-middleware","time":1775527505298}
+{"err":"7 PERMISSION_DENIED: Permission 'secretmanager.versions.access' denied on resource (or it may not exist).","msg":"[Secrets] Failed to load from Secret Manager ? falling back to env","secretName":"WORKER_SERVICE_URL","service":"lswoo-middleware","time":1775527505297}
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:1) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ??  specify custom .env file path with { path: '/custom/path/.env' }
+Starting new instance. Reason: DEPLOYMENT_ROLLOUT - Instance started due to traffic shifting between revisions due to deployment, traffic split adjustment, or deployment health check.

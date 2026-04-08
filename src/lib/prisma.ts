@@ -12,6 +12,7 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
+import { secrets } from '../config/env.js';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -26,7 +27,7 @@ function getPrisma(): PrismaClient {
     return _prisma;
   }
 
-  const databaseUrl = process.env.DATABASE_URL!;
+  const databaseUrl = secrets.databaseUrl || process.env.DATABASE_URL!;
   console.log(`[Prisma] Creating lazy PrismaClient with pg adapter...`);
 
   const pool = new pg.Pool({ connectionString: databaseUrl });

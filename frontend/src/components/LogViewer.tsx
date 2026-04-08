@@ -104,11 +104,12 @@ const LogViewer: React.FC = () => {
 
   const getDirectionLabel = (direction: string) => {
     switch (direction) {
-      case 'woo_to_ls': return '🔵 Woo → LS';
-      case 'ls_to_woo': return '🟢 LS → Woo';
-      case 'site_to_ls': return '🟣 Site → LS';
-      case 'admin_to_all': return '⚡ Admin → All';
-      default: return direction;
+      case 'woo_to_ls': return '🔵 WOO → LS';
+      case 'ls_to_woo': return '🟢 LS → WOO';
+      case 'ls_to_db':  return '📥 LS → DB';
+      case 'site_to_ls': return '🟣 SITE → LS';
+      case 'admin_to_all': return '⚡ ADMIN → ALL';
+      default: return direction.toUpperCase();
     }
   };
 
@@ -152,6 +153,10 @@ const LogViewer: React.FC = () => {
                   </div>
                   <div className="w-36 text-xs font-bold text-slate-300">{getDirectionLabel(log.direction)}</div>
                   <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-black bg-white/5 px-2 py-0.5 rounded border border-white/10 text-slate-400 uppercase tracking-widest">{log.entityType}</span>
+                        <span className="text-[10px] font-mono text-slate-500">{log.entityId}</span>
+                    </div>
                     <div className="text-sm font-medium text-slate-200 leading-relaxed group-hover:text-white transition-colors">
                       {log.message}
                     </div>

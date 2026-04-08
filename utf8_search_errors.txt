@@ -1,0 +1,6 @@
+{"err":"7 PERMISSION_DENIED: Permission 'secretmanager.versions.access' denied on resource (or it may not exist).","msg":"[Secrets] Failed to load from Secret Manager ? falling back to env","secretName":"WORKER_SERVICE_URL","service":"lswoo-middleware","time":1775518096732}
+{"err":"7 PERMISSION_DENIED: Permission 'secretmanager.versions.access' denied on resource (or it may not exist).","msg":"[Secrets] Failed to load from Secret Manager ? falling back to env","secretName":"WORKER_SECRET","service":"lswoo-middleware","time":1775518096711}
+{"err":"7 PERMISSION_DENIED: Permission 'secretmanager.versions.access' denied on resource (or it may not exist).","msg":"[Secrets] Failed to load from Secret Manager ? falling back to env","secretName":"WORKER_SERVICE_URL","service":"lswoo-middleware","time":1775516706989}
+{"err":"7 PERMISSION_DENIED: Permission 'secretmanager.versions.access' denied on resource (or it may not exist).","msg":"[Secrets] Failed to load from Secret Manager ? falling back to env","secretName":"WORKER_SECRET","service":"lswoo-middleware","time":1775516706965}
+Default STARTUP TCP probe failed 1 time consecutively for container "lswoo-middleware-1" on port 8080. The instance was not started.
+Connection failed with status CANCELLED.

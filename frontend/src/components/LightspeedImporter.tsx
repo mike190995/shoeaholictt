@@ -3,8 +3,24 @@ import { AgGridReact } from 'ag-grid-react';
 import type { ColDef } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
-import { searchLightspeed, importFromLightspeed } from '../api/lightspeed';
+import { searchLightspeed, importFromLightspeed, fetchBrands, fetchTypes } from '../api/lightspeed';
 import type { Product } from '../api/products';
+
+// ── Custom React Cell Renderers ────────────────
+const StockRenderer: React.FC<any> = (params) => {
+  const stock = params.value || 0;
+  return (
+    <div className="flex items-center h-full">
+      <span className={`px-2 py-0.5 rounded-md text-[10px] font-black tracking-wider border ${
+        stock > 0 
+          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
+          : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+      }`}>
+        {stock} UNIT{stock !== 1 ? 'S' : ''}
+      </span>
+    </div>
+  );
+};
 
 export default function LightspeedImporter() {
   const [rowData, setRowData] = useState<Product[]>([]);
@@ -15,37 +31,65 @@ export default function LightspeedImporter() {
   const [selectedSkus, setSelectedSkus] = useState<string[]>([]);
   const [gridApi, setGridApi] = useState<any>(null);
 
-  // Load initial initial batch
+  // Filters
+  const [brands, setBrands] = useState<any[]>([]);
+  const [types, setTypes] = useState<any[]>([]);
+  const [filterBrandId, setFilterBrandId] = useState('');
+  const [filterTypeId, setFilterTypeId] = useState('');
+
   useEffect(() => {
     handleSearch('');
+    fetchBrands().then(data => setBrands(data.brands)).catch(console.error);
+    fetchTypes().then(data => setTypes(data.types)).catch(console.error);
   }, []);
 
   const handleSearch = async (query: string) => {
     setLoading(true);
     setMessage(null);
     try {
-      const data = await searchLightspeed(query, 50);
+      const data = await searchLightspeed({ 
+        search: query, 
+        brandId: filterBrandId || undefined, 
+        typeId: filterTypeId || undefined 
+      }, 50);
       setRowData(data.products || []);
+      if (data.products?.length === 0 && query) {
+        setMessage({ type: 'error', text: `No products found matching "${query}". Try searching by Name if SKU doesn't work.` });
+      }
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message });
+      setMessage({ type: 'error', text: err.details || err.message });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleImport = async () => {
+  const handleImportSelected = async () => {
     if (selectedSkus.length === 0) return;
-    
     setImporting(true);
     setMessage(null);
     try {
       const res = await importFromLightspeed(selectedSkus);
       if (res.success) {
-        setMessage({ type: 'success', text: res.message });
-        // Deselect all
+        setMessage({ type: 'success', text: `Successfully pulled ${res.imported} products into staging.` });
         if (gridApi) gridApi.deselectAll();
       } else {
-        setMessage({ type: 'error', text: 'Import failed or partially failed.' });
+        setMessage({ type: 'error', text: 'Import failed. Check logs for details.' });
+      }
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleImportAll = async () => {
+    if (!window.confirm('This will trigger a background synchronization of the entire Lightspeed catalog. Continue?')) return;
+    setImporting(true);
+    setMessage(null);
+    try {
+      const res = await importFromLightspeed(undefined, undefined, true);
+      if (res.success) {
+        setMessage({ type: 'success', text: 'Full catalog import initiated successfully in the background. Check the Dashboard for progress.' });
       }
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message });
@@ -63,84 +107,144 @@ export default function LightspeedImporter() {
   }, [gridApi]);
 
   const columnDefs = useMemo<ColDef<Product>[]>(() => [
-    { field: 'sku', headerName: 'LS SKU', flex: 1, checkboxSelection: true, headerCheckboxSelection: true },
-    { field: 'name', headerName: 'Title', flex: 2 },
-    { field: 'price', headerName: 'Price', flex: 1, valueFormatter: (p) => `$${Number(p.value).toFixed(2)}` },
-    { field: 'stock', headerName: 'QOH', flex: 1 },
-    { field: 'category', headerName: 'Category', flex: 1 },
-    { field: 'brand', headerName: 'Brand', flex: 1 },
+    {
+      headerName: '',
+      field: 'imageUrl',
+      width: 70,
+      cellRenderer: (params: any) => params.value ? (
+        <div className="flex items-center justify-center h-full">
+            <img 
+                src={params.value} 
+                className="w-10 h-10 object-cover rounded-lg border border-white/10 shadow-sm" 
+                alt="thumb"
+                onError={(e: any) => { e.target.src = 'https://placehold.co/100x100?text=No+Img' }}
+            />
+        </div>
+      ) : (
+        <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center text-[10px] text-slate-700">NO IMG</div>
+      )
+    },
+    { 
+        field: 'sku', 
+        headerName: 'SKU', 
+        flex: 1, 
+        checkboxSelection: true, 
+        headerCheckboxSelection: true,
+        cellClass: 'font-mono text-[11px] text-slate-500' 
+    },
+    { field: 'name', headerName: 'Title', flex: 2, cellClass: 'font-bold text-slate-200' },
+    { field: 'price', headerName: 'Price', flex: 1, valueFormatter: (p) => `$${Number(p.value).toFixed(2)}`, cellClass: 'font-bold text-blue-400' },
+    { field: 'stock', headerName: 'Inventory', flex: 1, cellRenderer: StockRenderer },
+    { field: 'category', headerName: 'Type', flex: 1, cellClass: 'text-slate-500 text-xs' },
   ], []);
 
-  const defaultColDef = useMemo<ColDef>(() => ({
-    sortable: true,
-    filter: true,
-    resizable: true,
-  }), []);
-
   return (
-    <div className="p-8 h-full flex flex-col">
-      <div className="flex justify-between items-start mb-8">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-white mb-2">📥 Import Node</h1>
-          <p className="text-slate-400 font-medium">Search the live Lightspeed Retail catalog and selectively pull products into the staging database.</p>
+    <div className="flex flex-col h-screen max-h-screen overflow-hidden p-6 gap-6">
+      {/* Premium Header */}
+      <header className="flex justify-between items-end">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <span className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-lg shadow-lg shadow-emerald-500/20">📥</span>
+            <h1 className="text-2xl font-black tracking-tight text-white uppercase italic">Import Node</h1>
+          </div>
+          <p className="text-slate-500 font-medium text-sm">Fetch live data from Lightspeed X-Series and clone to staging.</p>
         </div>
-      </div>
 
-      {message && (
-        <div className={`p-4 rounded-xl mb-6 font-medium ${message.type === 'error' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
-          {message.text}
-        </div>
-      )}
-
-      {/* Toolbar */}
-      <div className="flex gap-4 mb-6">
-        <div className="flex-1 bg-slate-900 rounded-2xl border border-white/10 p-2 flex items-center">
-          <span className="text-slate-500 px-3">🔍</span>
-          <input
-            type="text"
-            placeholder="Search Lightspeed by SKU... (Leave empty for recent catalog items)"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
-            className="bg-transparent border-none text-white focus:outline-none flex-1 font-medium placeholder:text-slate-600"
-          />
+        <div className="flex gap-3">
           <button
-            onClick={() => handleSearch(searchQuery)}
-            disabled={loading}
-            className="px-6 py-2 bg-[#38bdf8] text-slate-900 font-bold rounded-xl hover:bg-[#7dd3fc] disabled:opacity-50 transition-colors"
+            onClick={handleImportAll}
+            disabled={importing}
+            className="px-6 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 active:scale-95"
           >
-            {loading ? 'Searching...' : 'Search'}
+            Pull Entire Catalog
+          </button>
+          <button
+            onClick={handleImportSelected}
+            disabled={selectedSkus.length === 0 || importing}
+            className={`px-8 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
+              selectedSkus.length > 0 && !importing
+                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 active:scale-95' 
+                : 'bg-white/5 text-slate-600 cursor-not-allowed'
+            }`}
+          >
+            {importing ? 'Importing...' : `Pull Selected (${selectedSkus.length})`}
           </button>
         </div>
+      </header>
 
-        <button
-          onClick={handleImport}
-          disabled={selectedSkus.length === 0 || importing}
-          className="px-8 bg-emerald-500 text-white font-bold tracking-tight rounded-2xl hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2"
-        >
-          {importing ? (
-            <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-          ) : '📥'}
-          Pull {selectedSkus.length} to Middleware
-        </button>
+      {/* Tool Tray */}
+      <div className="flex flex-col gap-4">
+        <div className="flex gap-3 items-center">
+            <div className="flex-1 glass-panel px-4 py-2 rounded-2xl flex items-center gap-3">
+                <span className="text-slate-500">🔍</span>
+                <input
+                    type="text"
+                    placeholder="Search SKU or Title..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
+                    className="bg-transparent border-none text-white focus:outline-none flex-1 font-bold text-sm placeholder:text-slate-700"
+                />
+            </div>
+
+            <select 
+                value={filterBrandId} 
+                onChange={(e) => {
+                    setFilterBrandId(e.target.value);
+                    handleSearch(searchQuery);
+                }}
+                className="bg-white/5 border border-white/10 text-slate-300 text-xs font-bold rounded-xl px-4 py-3 focus:outline-none transition-all hover:bg-white/10"
+            >
+                <option value="">All Brands</option>
+                {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+
+            <select 
+                value={filterTypeId} 
+                onChange={(e) => {
+                    setFilterTypeId(e.target.value);
+                    handleSearch(searchQuery);
+                }}
+                className="bg-white/5 border border-white/10 text-slate-300 text-xs font-bold rounded-xl px-4 py-3 focus:outline-none transition-all hover:bg-white/10"
+            >
+                <option value="">All Categories</option>
+                {types.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+
+            <button
+                onClick={() => handleSearch(searchQuery)}
+                disabled={loading}
+                className="glass-button-primary bg-blue-600/80"
+            >
+                {loading ? 'Searching...' : 'Search'}
+            </button>
+        </div>
+
+        {message && (
+          <div className={`px-5 py-3 rounded-2xl border text-xs font-bold animate-in fade-in slide-in-from-left-4 duration-300 ${
+            message.type === 'error' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+          }`}>
+            {message.type === 'error' ? '⚠️ ' : '✅ '}{message.text}
+          </div>
+        )}
       </div>
 
-      {/* AG Grid */}
-      <div className="flex-1 ag-theme-alpine-dark rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
-        <AgGridReact
-          rowData={rowData}
-          columnDefs={columnDefs}
-          defaultColDef={defaultColDef}
-          rowSelection="multiple"
-          animateRows={true}
-          onGridReady={(params) => setGridApi(params.api)}
-          onSelectionChanged={onSelectionChanged}
-          overlayLoadingTemplate='<span class="ag-overlay-loading-center">Loading live catalog...</span>'
-          overlayNoRowsTemplate='<span class="ag-overlay-no-rows-center">No products found in Lightspeed</span>'
-          rowHeight={60}
-          headerHeight={50}
-        />
-      </div>
+      {/* Main Grid View */}
+      <main className="flex-1 glass-card overflow-hidden flex flex-col p-4">
+        <div className="flex-1 ag-theme-alpine-dark ag-theme-glass">
+            <AgGridReact
+              rowData={rowData}
+              columnDefs={columnDefs}
+              onGridReady={(params) => setGridApi(params.api)}
+              onSelectionChanged={onSelectionChanged}
+              rowSelection="multiple"
+              rowHeight={56}
+              headerHeight={48}
+              animateRows={true}
+              overlayNoRowsTemplate='<span class="text-slate-600 font-bold uppercase tracking-widest text-[10px]">No catalog data found</span>'
+            />
+        </div>
+      </main>
     </div>
   );
 }

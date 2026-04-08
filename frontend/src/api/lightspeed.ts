@@ -1,8 +1,28 @@
 import type { ProductsResponse } from './products';
 
-export async function searchLightspeed(search?: string, limit: number = 50): Promise<ProductsResponse> {
+export interface FilterOptions {
+  search?: string;
+  brandId?: string;
+  typeId?: string;
+}
+
+export async function fetchBrands() {
+  const response = await fetch('/admin/api/lightspeed/brands');
+  if (!response.ok) throw new Error('Failed to fetch brands');
+  return response.json();
+}
+
+export async function fetchTypes() {
+  const response = await fetch('/admin/api/lightspeed/types');
+  if (!response.ok) throw new Error('Failed to fetch types');
+  return response.json();
+}
+
+export async function searchLightspeed(options: FilterOptions, limit: number = 50): Promise<ProductsResponse> {
   const params = new URLSearchParams({ limit: String(limit) });
-  if (search) params.set('search', search);
+  if (options.search) params.set('search', options.search);
+  if (options.brandId) params.set('brandId', options.brandId);
+  if (options.typeId) params.set('typeId', options.typeId);
 
   const response = await fetch(`/admin/api/lightspeed/search?${params}`);
   if (!response.ok) {
@@ -11,11 +31,15 @@ export async function searchLightspeed(search?: string, limit: number = 50): Pro
   return response.json();
 }
 
-export async function importFromLightspeed(skus: string[]): Promise<{ success: boolean; message: string; imported: number; errors: string[] }> {
+export async function importFromLightspeed(
+  skus?: string[], 
+  filter?: { brandId?: string; typeId?: string; onlyOnline?: boolean },
+  all?: boolean
+): Promise<{ success: boolean; message: string; imported: number; errors: string[] }> {
   const response = await fetch('/admin/api/lightspeed/import', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ skus }),
+    body: JSON.stringify({ skus, filter, all }),
   });
   
   if (!response.ok) {

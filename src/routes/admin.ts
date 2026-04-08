@@ -275,16 +275,31 @@ adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
     // Resolve Category Mapping
     let wooCategoryId: number | undefined;
     if (product.category) {
-      const mapping = await prisma.categoryMapping.findUnique({
-        where: { lsCategory: product.category }
-      });
-      if (mapping) {
-        wooCategoryId = mapping.wooCategoryId;
-        console.log(`[Admin] Resolved category mapping for "${product.category}" -> ${wooCategoryId}`);
+      try {
+        const mapping = await prisma.categoryMapping.findUnique({
+          where: { lsCategory: product.category }
+        });
+        if (mapping) {
+          wooCategoryId = mapping.wooCategoryId;
+          console.log(`[Admin] Resolved category mapping for "${product.category}" -> ${wooCategoryId}`);
+        }
+      } catch (mappingErr: any) {
+        console.warn(`[Admin] Category mapping warning (ignoring): ${mappingErr.message}`);
       }
     }
 
-    const wooPayload = universal.toWoo(wooCategoryId);
+    // Resolve Dynamic Field Mappings
+    const fieldMappings: Record<string, string> = {};
+    try {
+      const dbMappings = await (prisma as any).fieldMapping.findMany();
+      dbMappings.forEach((m: any) => {
+        fieldMappings[m.lsField] = m.wooField;
+      });
+    } catch (fieldErr: any) {
+      console.warn(`[Admin] Field mapping warning (ignoring): ${fieldErr.message}`);
+    }
+
+    const wooPayload = universal.toWoo(wooCategoryId, fieldMappings);
     const wooClient = createWooCommerceClient();
     
     // 3. Push to WooCommerce
@@ -472,6 +487,41 @@ adminRouter.post('/api/categories/mapping', async (req, res) => {
   }
 });
 
+// ─── Field Mapping Management ─────────────────────
+adminRouter.get('/api/fields/mapping', async (req, res) => {
+  try {
+    const mappings = await (prisma as any).fieldMapping.findMany({
+      orderBy: { lsField: 'asc' },
+    });
+    res.json(mappings);
+  } catch (err: any) {
+    console.error('[Admin] Get field mappings error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch field mappings' });
+  }
+});
+
+adminRouter.post('/api/fields/mapping', async (req, res) => {
+  try {
+    const { lsField, wooField } = req.body;
+
+    if (!lsField || !wooField) {
+      res.status(400).json({ error: 'lsField and wooField are required' });
+      return;
+    }
+
+    const mapping = await (prisma as any).fieldMapping.upsert({
+      where: { lsField },
+      update: { wooField },
+      create: { lsField, wooField },
+    });
+
+    res.json({ success: true, mapping });
+  } catch (err: any) {
+    console.error('[Admin] Save field mapping error:', err.message);
+    res.status(500).json({ error: 'Failed to save field mapping' });
+  }
+});
+
 // ─── Bulk Retry Failed Logs ──────────────────────
 adminRouter.post('/api/logs/bulk-retry', async (req, res) => {
   try {
@@ -571,58 +621,202 @@ adminRouter.post('/api/products/batch', async (req, res) => {
 });
 
 // ─── Lightspeed Importer APIs ──────────────────────
+adminRouter.get('/api/lightspeed/brands', async (req, res) => {
+  try {
+    const lsClient = await createLightspeedClient();
+    const response = await lsClient.get('/brands');
+    res.json({ brands: response.data.data || [] });
+  } catch (err: any) {
+    console.error('[Admin] Fetch brands error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch Lightspeed brands' });
+  }
+});
+
+adminRouter.get('/api/lightspeed/types', async (req, res) => {
+  try {
+    const lsClient = await createLightspeedClient();
+    const response = await lsClient.get('/product_types');
+    res.json({ types: response.data.data || [] });
+  } catch (err: any) {
+    console.error('[Admin] Fetch types error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch Lightspeed product types' });
+  }
+});
+
 adminRouter.get('/api/lightspeed/search', async (req, res) => {
   try {
     const search = req.query.search as string | undefined;
     const limit = parseInt(req.query.limit as string) || 50;
+    const brandId = req.query.brandId as string | undefined;
+    const typeId = req.query.typeId as string | undefined;
     
     const lsClient = await createLightspeedClient();
     
-    // Query Lightspeed directly
-    const params: any = { page_size: limit };
+    let rawProducts: any[] = [];
+
     if (search) {
-      params.sku = search; // Lightspeed X-Series search by SKU
+      console.log(`[Admin] Searching Lightspeed for: "${search}"`);
+      // Use the dedicated /search endpoint for text-based queries
+      // This supports partial matching on SKU, name, etc.
+      const searchParams: any = { type: 'products', page_size: limit };
+      // Try by SKU first (must be lowercase for /search endpoint) 
+      searchParams.sku = search.toLowerCase();
+      
+      try {
+        let searchResponse = await lsClient.get('/search', { params: searchParams });
+        rawProducts = searchResponse.data.data || [];
+        console.log(`[Admin] /search SKU results: ${rawProducts.length}`);
+      } catch (searchErr: any) {
+        console.error(`[Admin] /search SKU error:`, searchErr.message);
+        // Fallback to name search if search endpoint fails
+      }
+      
+      // If no results by SKU, try by product name using the base /products endpoint
+      if (rawProducts.length === 0) {
+        const nameParams: any = { page_size: limit, name: search };
+        console.log(`[Admin] Falling back to /products name search: "${search}"`);
+        try {
+          const nameResponse = await lsClient.get('/products', { params: nameParams });
+          rawProducts = nameResponse.data.data || [];
+          console.log(`[Admin] /products name result count: ${rawProducts.length}`);
+        } catch (nameErr: any) {
+          console.error(`[Admin] /products name search error:`, nameErr.message);
+        }
+      }
+    } else {
+      // No search term — browse mode with optional filters
+      const params: any = { page_size: limit };
+      if (brandId) params.brand_id = brandId;
+      if (typeId) params.product_type_id = typeId;
+      
+      const response = await lsClient.get('/products', { params });
+      rawProducts = response.data.data || [];
     }
-    
-    const response = await lsClient.get('/products', { params });
-    const rawProducts = response.data.data || [];
     
     // Map to Universal Canonical Model format
     const { UniversalProduct } = await import('../mappers/universal.js');
     
     const mapped = rawProducts.map((raw: any) => {
-      const universal = UniversalProduct.fromLightspeed(raw);
-      return {
-        id: universal.data.metadata?.lightspeedId || '',
-        name: universal.data.title,
-        sku: universal.data.sku,
-        price: universal.data.price,
-        stock: universal.data.quantity,
-        category: universal.data.category || 'Uncategorized',
-        brand: universal.data.brand || '',
-        imageUrl: universal.data.imageUrl || '',
-        status: 'remote', // Indicate this is not in the local DB yet
-        lastSynced: new Date().toISOString()
-      };
-    });
+      try {
+        const universal = UniversalProduct.fromLightspeed(raw);
+        return {
+          id: universal.data.metadata?.lightspeedId || raw.id || '',
+          name: universal.data.title,
+          sku: universal.data.sku,
+          price: universal.data.price,
+          stock: universal.data.quantity,
+          category: universal.data.category || 'Uncategorized',
+          brand: universal.data.brand || '',
+          imageUrl: universal.data.imageUrl || '',
+          status: 'remote',
+          lastSynced: new Date().toISOString()
+        };
+      } catch (mapErr: any) {
+        console.warn('[Admin] Failed to map product:', raw.id, mapErr.message);
+        return null;
+      }
+    }).filter(Boolean);
 
     res.json({
       products: mapped,
       pagination: { page: 1, limit, total: mapped.length, totalPages: 1 }
     });
   } catch (err: any) {
-    console.error('[Admin] Lightspeed Search error:', err.message);
-    res.status(500).json({ error: 'Failed to search Lightspeed catalog' });
+    console.error('[Admin] Lightspeed Search error:', err.message, err.response?.data);
+    res.status(500).json({ error: 'Failed to search Lightspeed catalog', details: err.message });
   }
 });
 
 adminRouter.post('/api/lightspeed/import', async (req, res) => {
   try {
-    const { skus } = req.body as { skus: string[] };
+    const { skus, filter, all } = req.body as { 
+      skus?: string[], 
+      filter?: { brandId?: string, typeId?: string, onlyOnline?: boolean },
+      all?: boolean 
+    };
     
-    if (!Array.isArray(skus) || skus.length === 0) {
-      res.status(400).json({ error: 'skus must be a non-empty array' });
+    if (!skus && !filter && !all) {
+      res.status(400).json({ error: 'Must provide skus, a filter, or set all: true' });
       return;
+    }
+
+    // If it's a "Pull All" request, handle in background to avoid timeout
+    if (all) {
+      const syncLog = await prisma.syncLog.create({
+        data: {
+          direction: 'ls_to_db',
+          entityType: 'catalog',
+          entityId: 'full_import',
+          status: 'pending',
+          message: 'Full catalog import initiated from admin dashboard'
+        }
+      });
+
+      // Fire and forget background import
+      (async () => {
+        try {
+          const lsClient = await createLightspeedClient();
+          const { UniversalProduct } = await import('../mappers/universal.js');
+          
+          let after: string | undefined = undefined;
+          let imported = 0;
+          let fetching = true;
+          
+          while (fetching) {
+            const response: any = await lsClient.get('/products', { 
+              params: { page_size: 100, ...(after ? { after } : {}) } 
+            });
+            const rawItems = response.data.data || [];
+            
+            for (const item of rawItems) {
+              try {
+                const universal = UniversalProduct.fromLightspeed(item);
+                const dbData = universal.toPostgres() as any;
+                await prisma.product.upsert({
+                  where: { sku: universal.data.sku },
+                  update: dbData,
+                  create: dbData,
+                });
+                imported++;
+              } catch (e: any) {
+                console.error(`[Import] Failed item: ${item.sku}`, e.message);
+              }
+            }
+
+            const version: any = response.data.version;
+            if (version?.max && rawItems.length > 0) {
+              after = version.max;
+            } else {
+              fetching = false;
+            }
+          }
+
+          await prisma.syncLog.update({
+            where: { id: syncLog.id },
+            data: { 
+              status: 'completed', 
+              completedAt: new Date(),
+              message: `Full import complete: ${imported} products synchronized.`
+            }
+          });
+        } catch (err: any) {
+          console.error('[Import] Background task failed:', err.message);
+          await prisma.syncLog.update({
+            where: { id: syncLog.id },
+            data: { 
+              status: 'failed', 
+              error: err.message,
+              completedAt: new Date()
+            }
+          });
+        }
+      })();
+
+      return res.json({ 
+        success: true, 
+        message: 'Full catalog import started in background.',
+        syncLogId: syncLog.id 
+      });
     }
 
     const lsClient = await createLightspeedClient();
@@ -630,21 +824,84 @@ adminRouter.post('/api/lightspeed/import', async (req, res) => {
     
     let imported = 0;
     const errors: string[] = [];
+    const productsToUpsert: any[] = [];
 
-    for (const sku of skus) {
-      try {
-        const response = await lsClient.get('/products', { params: { sku } });
-        const raw = response.data.data?.[0];
-        
-        if (!raw) {
-          errors.push(`SKU ${sku} not found in Lightspeed`);
-          continue;
+    // Mode 1: Import specific SKUs
+    if (skus && skus.length > 0) {
+      for (const sku of skus) {
+        try {
+          const response = await lsClient.get('/products', { params: { sku } });
+          let raw = response.data.data?.[0];
+          
+          if (!raw) {
+            // Fallback: Use the comprehensive /search endpoint which matches variants better
+            const searchRes = await lsClient.get('/search', { params: { type: 'products', sku: sku.toLowerCase() } });
+            raw = searchRes.data.data?.[0];
+            
+            // If still not found by sku, perhaps the sku provided was actually a Lightspeed ID
+            if (!raw) {
+               try {
+                 const idRes = await lsClient.get(`/products/${sku}`);
+                 raw = idRes.data.data;
+               } catch (idErr) {
+                 // ignore
+               }
+            }
+          }
+          
+          if (!raw) {
+            errors.push(`SKU ${sku} not found in Lightspeed`);
+            continue;
+          }
+          productsToUpsert.push(raw);
+        } catch (err: any) {
+          errors.push(`Failed to fetch SKU ${sku}: ${err.message}`);
         }
+      }
+    } 
+    // Mode 2: Batch import by filter
+    else if (filter) {
+      let after: string | undefined = undefined;
+      const params: any = { page_size: 100 };
+      if (filter.brandId) params.brand_id = filter.brandId;
+      if (filter.typeId) params.product_type_id = filter.typeId;
+      
+      let fetching = true;
+      let sanityCheck = 0;
+      
+      while (fetching && sanityCheck < 50) { // arbitrary cap to avoid true infinite loops
+        sanityCheck++;
+        if (after) params.after = after;
+        
+        const response = await lsClient.get('/products', { params });
+        const rawItems = response.data.data || [];
+        
+        for (const item of rawItems) {
+          // If onlyOnline is requested, verify active channels
+          if (filter.onlyOnline) {
+             // Lightspeed sometimes puts channels differently. Usually ecwid_enabled_webstore represents ecom. Or is_active in some versions.
+             // We'll check the top level active flag or ecwid flag if exist, or let's assume it has an active online store flag if available in payload.
+             // X-Series often uses `active: true`. `has_active_channels` might not be standard. We'll check `active`.
+             if (!item.active) continue;
+          }
+          productsToUpsert.push(item);
+        }
+        
+        const version = response.data.version;
+        if (version && version.max && rawItems.length > 0) {
+          after = version.max;
+        } else {
+          fetching = false;
+        }
+      }
+    }
 
+    // Upsert all collected products
+    for (const raw of productsToUpsert) {
+      try {
         const universal = UniversalProduct.fromLightspeed(raw);
         const data = universal.toPostgres() as any;
 
-        // Upsert into local Prisma DB staging area
         await prisma.product.upsert({
           where: { sku: universal.data.sku },
           update: data,
@@ -653,13 +910,13 @@ adminRouter.post('/api/lightspeed/import', async (req, res) => {
         
         imported++;
       } catch (err: any) {
-        errors.push(`Failed to import SKU ${sku}: ${err.message}`);
+        errors.push(`Failed to upsert product ${raw.sku || 'Unknown'}: ${err.message}`);
       }
     }
 
     res.json({
       success: true,
-      message: `Imported ${imported}/${skus.length} products.`,
+      message: `Imported ${imported} products.`,
       imported,
       errors
     });

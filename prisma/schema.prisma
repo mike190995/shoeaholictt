@@ -61,6 +61,7 @@ model SyncLog {
   entityType  String   @map("entity_type")  // "product" | "order" | "sale"
   entityId    String   @map("entity_id")
   status      String   @default("pending")  // "pending" | "success" | "failed"
+  message     String?
   payload     Json?
   error       String?
   createdAt   DateTime @default(now()) @map("created_at")
@@ -82,4 +83,17 @@ model CategoryMapping {
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@map("category_mappings")
+}
+
+// ─────────────────────────────────────────────
+// Field Mappings — Dynamic Logic Mirroring
+// ─────────────────────────────────────────────
+model FieldMapping {
+  id            Int      @id @default(autoincrement())
+  lsField       String   @unique @map("ls_field") // source
+  wooField      String   @map("woo_field")        // target
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("field_mappings")
 }

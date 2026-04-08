@@ -43,7 +43,6 @@ interface SecretsConfig {
   lightspeedClientId: string;
   lightspeedClientSecret: string;
   lightspeedAccountId: string;
-  lightspeedRedirectUri: string;
   wooBaseUrl: string;
   wooConsumerKey: string;
   wooConsumerSecret: string;
@@ -56,7 +55,6 @@ export const secrets: SecretsConfig = {
   lightspeedClientId: '',
   lightspeedClientSecret: '',
   lightspeedAccountId: '',
-  lightspeedRedirectUri: '',
   wooBaseUrl: '',
   wooConsumerKey: '',
   wooConsumerSecret: '',
@@ -77,7 +75,6 @@ export async function initSecrets(): Promise<void> {
     ['lightspeedClientId',     'LS_CLIENT_ID',         'LS_CLIENT_ID'],
     ['lightspeedClientSecret', 'LS_CLIENT_SECRET',     'LS_CLIENT_SECRET'],
     ['lightspeedAccountId',    'LS_ACCOUNT_ID',        'LS_ACCOUNT_ID'],
-    ['lightspeedRedirectUri',  'LS_REDIRECT_URI',      'LS_REDIRECT_URI'],
     ['wooBaseUrl',             'WOO_BASE_URL',         'WOO_BASE_URL'],
     ['wooConsumerKey',         'WOO_CONSUMER_KEY',     'WOO_CONSUMER_KEY'],
     ['wooConsumerSecret',      'WOO_CONSUMER_SECRET',  'WOO_CONSUMER_SECRET'],

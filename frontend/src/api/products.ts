@@ -110,6 +110,38 @@ class MiddlewareClient {
 
 export const api = new MiddlewareClient();
 
+export async function fetchCategoryMappings() {
+  const response = await fetch('/admin/api/categories/mapping');
+  if (!response.ok) throw new Error('Failed to fetch category mappings');
+  return response.json();
+}
+
+export async function saveCategoryMapping(lsCategory: string, wooCategoryId: number) {
+  const response = await fetch('/admin/api/categories/mapping', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lsCategory, wooCategoryId }),
+  });
+  if (!response.ok) throw new Error('Failed to save category mapping');
+  return response.json();
+}
+
+export async function fetchFieldMappings() {
+  const response = await fetch('/admin/api/fields/mapping');
+  if (!response.ok) throw new Error('Failed to fetch field mappings');
+  return response.json();
+}
+
+export async function saveFieldMapping(lsField: string, wooField: string) {
+  const response = await fetch('/admin/api/fields/mapping', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lsField, wooField }),
+  });
+  if (!response.ok) throw new Error('Failed to save field mapping');
+  return response.json();
+}
+
 // Backwards compatibility exports to prevent immediate breakages
 export const fetchProducts = api.fetchProducts.bind(api);
 export const forceSyncProduct = api.forceSyncProduct.bind(api);
@@ -117,5 +149,3 @@ export const batchUpdateProducts = api.batchUpdateProducts.bind(api);
 export const pushProductToWoo = api.pushProductToWoo.bind(api);
 export const unlinkProduct = api.unlinkProduct.bind(api);
 export const deleteProductFromWoo = api.deleteProductFromWoo.bind(api);
-export const fetchCategoryMappings = api.fetchCategoryMappings.bind(api);
-export const saveCategoryMapping = api.saveCategoryMapping.bind(api);

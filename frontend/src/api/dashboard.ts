@@ -14,6 +14,9 @@ export interface SyncLog {
   id: string;
   status: string;
   message: string;
+  direction: string;
+  entityType: string;
+  entityId: string;
   createdAt: string;
 }
 
