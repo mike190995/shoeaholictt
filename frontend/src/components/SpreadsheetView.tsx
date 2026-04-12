@@ -8,7 +8,7 @@ import { ProductCellSchema } from '../lib/validation';
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 // ── Smart Filter Definitions ─────────────────────
-type FilterType = 'all' | 'orphaned' | 'enrichment' | 'low_stock' | 'has_photo' | 'no_photo';
+type FilterType = 'all' | 'orphaned' | 'enrichment' | 'low_stock' | 'has_photo' | 'no_photo' | 'online' | 'instore';
 
 function isDefaultImage(url?: string): boolean {
   if (!url) return true;
@@ -28,6 +28,10 @@ function applyFilter(products: Product[], filter: FilterType): Product[] {
       return products.filter(p => !isDefaultImage(p.imageUrl));
     case 'no_photo':
       return products.filter(p => isDefaultImage(p.imageUrl));
+    case 'online':
+      return products.filter(p => p.tags && p.tags.some(t => t.toLowerCase() === 'online'));
+    case 'instore':
+      return products.filter(p => p.tags && p.tags.some(t => t.toLowerCase() === 'instore' || t.toLowerCase() === 'in-store'));
     default:
       return products;
   }
@@ -50,31 +54,45 @@ const BadgeRenderer: React.FC<any> = (params) => {
       </div>
     );
   }
+  return null;
+};
   
-  const isPublished = value === 'published';
+const StatusRenderer: React.FC<any> = (params) => {
+  const isPublished = params.value === 'published';
   return (
     <div className="flex items-center h-full">
-      <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${
+      <div className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border flex items-center gap-1.5 ${
         isPublished 
-          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
-          : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.1)]' 
+          : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
       }`}>
-        {value}
-      </span>
+        <span className={`w-1.5 h-1.5 rounded-full ${isPublished ? 'bg-emerald-400 animate-pulse' : 'bg-amber-500'}`}></span>
+        {params.value}
+      </div>
     </div>
   );
 };
 
 const ImageRenderer: React.FC<any> = (params) => {
-  if (!params.value) return <span className="text-slate-600 text-[10px] font-bold">None</span>;
+  const url = params.data?.thumbnailUrl || params.value;
+  const hasImage = url && !url.includes('placeholder') && !url.includes('no-image');
+  
   return (
-    <div className="flex items-center h-full py-1">
-      <img 
-        src={params.value} 
-        alt="Product" 
-        className="w-10 h-10 rounded-xl object-cover border border-white/10 shadow-lg"
-        onError={(e) => (e.currentTarget.style.display = 'none')}
-      />
+    <div className="flex items-center justify-center h-full py-1">
+      {hasImage ? (
+        <div className="relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur opacity-0 group-hover:opacity-40 transition duration-300"></div>
+          <img 
+            src={url} 
+            className="relative w-10 h-10 object-cover rounded-lg border border-white/10 shadow-lg transition-transform group-hover:scale-110" 
+            alt="" 
+          />
+        </div>
+      ) : (
+        <div className="w-10 h-10 bg-slate-800/50 rounded-lg flex items-center justify-center text-[10px] text-slate-500 font-black border border-white/5 uppercase">
+          {params.data?.sku?.substring(0, 2) || 'NA'}
+        </div>
+      )}
     </div>
   );
 };
@@ -100,6 +118,7 @@ const SpreadsheetView: React.FC = () => {
   const [filter, setFilter] = useState<FilterType>('all');
   const [dirtyRows, setDirtyRows] = useState<Map<string, Partial<Product>>>(new Map());
   const [committing, setCommitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const gridApiRef = useRef<GridApi | null>(null);
 
@@ -108,13 +127,25 @@ const SpreadsheetView: React.FC = () => {
     setTimeout(() => setToast(null), duration);
   };
 
-  useEffect(() => {
+  const loadProducts = useCallback(async (query?: string) => {
     setLoading(true);
-    fetchProducts(1, undefined)
-      .then(data => setAllProducts(data.products))
-      .catch(() => showToast('Failed to load products', 'error'))
-      .finally(() => setLoading(false));
+    try {
+      const data = await fetchProducts(1, query);
+      setAllProducts(data.products);
+    } catch {
+      showToast('Failed to load products', 'error');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
+
+  const handleSearch = () => {
+    loadProducts(searchQuery || undefined);
+  };
 
   const filteredProducts = useMemo(() => applyFilter(allProducts, filter), [allProducts, filter]);
 
@@ -213,6 +244,12 @@ const SpreadsheetView: React.FC = () => {
       cellRenderer: ImageRenderer,
       suppressNavigable: true,
     },
+    {
+      field: 'status',
+      headerName: 'Status',
+      width: 110,
+      cellRenderer: StatusRenderer,
+    },
   ], []);
 
   return (
@@ -245,19 +282,51 @@ const SpreadsheetView: React.FC = () => {
         </div>
       </header>
 
-      {/* Filter Bar */}
-      <div className="flex gap-2 p-1 bg-white/[0.03] border border-white/5 rounded-2xl w-fit">
-        {(['all', 'orphaned', 'enrichment', 'low_stock', 'has_photo', 'no_photo'] as FilterType[]).map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-              filter === f ? 'bg-white/10 text-white shadow-inner' : 'text-slate-500 hover:text-slate-300'
-            }`}
-          >
-            {f.replace('_', ' ')}
-          </button>
-        ))}
+      {/* Tool Tray */}
+      <div className="flex gap-4 items-center">
+        {/* Search Bar */}
+        <div className="flex-1 glass-panel px-4 py-2 rounded-2xl flex items-center gap-3">
+            <span className="text-slate-500 text-sm">🔍</span>
+            <input
+                type="text"
+                placeholder="Search staging by SKU or Name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="bg-transparent border-none text-white focus:outline-none flex-1 font-bold text-sm placeholder:text-slate-700"
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => { setSearchQuery(''); loadProducts(); }}
+                className="text-slate-600 hover:text-slate-400 text-xs font-black p-1"
+              >
+                ESC
+              </button>
+            )}
+        </div>
+
+        {/* Filter Bar */}
+        <div className="flex gap-2 p-1 bg-white/[0.03] border border-white/5 rounded-2xl w-fit flex-wrap">
+          {(['all', 'orphaned', 'enrichment', 'low_stock', 'has_photo', 'no_photo', 'online', 'instore'] as FilterType[]).map(f => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                filter === f ? 'bg-white/10 text-white shadow-inner' : 'text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              {f.replace(/_/g, ' ')}
+            </button>
+          ))}
+        </div>
+
+        <button
+            onClick={handleSearch}
+            disabled={loading}
+            className="glass-button-primary bg-blue-600/80 !px-8"
+        >
+            Search
+        </button>
       </div>
 Line 251: 
 

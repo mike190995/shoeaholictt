@@ -3,7 +3,7 @@ import { dirname, join } from 'path';
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { enqueueTask } from '../lib/tasks.js';
-import { createLightspeedClient } from '../services/lightspeed.js';
+import { createLightspeedClient, fetchInventoryForProduct } from '../services/lightspeed.js';
 import { createWooCommerceClient, createWooProduct, updateWooProduct, deleteWooProduct } from '../services/woocommerce.js';
 import { getRedisClient } from '../lib/redis.js';
 import { UniversalProduct } from '../mappers/universal.js';
@@ -24,7 +24,8 @@ async function checkSystemHealth() {
     const lsClient = await createLightspeedClient();
     await lsClient.get('/products', { params: { page_size: 1 } });
     health.lightspeed = 'connected';
-  } catch {
+  } catch (err: any) {
+    console.warn('[HealthCheck] Lightspeed check failed:', err.response?.data || err.message);
     health.lightspeed = 'error';
   }
 
@@ -41,13 +42,17 @@ async function checkSystemHealth() {
   try {
     const redis = await getRedisClient();
     if (redis) {
-      await redis.ping();
+      // Race the ping against a 2s timeout to prevent dashboard hangs
+      await Promise.race([
+        redis.ping(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1000))
+      ]);
       health.redis = 'active';
     } else {
       health.redis = 'inactive';
     }
   } catch {
-    health.redis = 'inactive';
+    health.redis = 'degraded';
   }
 
   // Cloud Tasks — we can't ping it directly, but we can check if the client initializes
@@ -85,7 +90,12 @@ adminRouter.get('/api/products', async (req, res) => {
     const search = req.query.search as string | undefined;
 
     const where = search
-      ? { title: { contains: search, mode: 'insensitive' as const } }
+      ? { 
+          OR: [
+            { title: { contains: search, mode: 'insensitive' as const } },
+            { sku: { contains: search, mode: 'insensitive' as const } }
+          ]
+        }
       : {};
 
     const [products, total] = await Promise.all([
@@ -107,7 +117,9 @@ adminRouter.get('/api/products', async (req, res) => {
       stock: p.quantity,
       category: p.category,
       brand: p.brand,
+      tags: p.tags,
       imageUrl: p.imageUrl,
+      thumbnailUrl: (p.metadata as any)?.thumbnailUrl || p.imageUrl,
       status: p.quantity > 0 ? 'published' : 'draft',
       woocommerceId: (p.metadata as any)?.woocommerceId || null,
       lastSynced: p.updatedAt,
@@ -251,11 +263,56 @@ adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
       return;
     }
 
+    // 0. Deep Fetch from Lightspeed to get high-res images and latest stock
+    const lsId = (product.metadata as any)?.lightspeedId;
+    console.log(`[Admin] Performing JIT Deep Sync for SKU: ${sku} (LS ID: ${lsId || 'N/A'})`);
+    const lsClient = await createLightspeedClient();
+    
+    let rawLsProduct: any = null;
+    try {
+      if (lsId) {
+        // ID filter on collection endpoint supports embeds (direct ID endpoint does not always)
+        const lsIdResponse = await lsClient.get('/products', { params: { id: lsId, embed: 'images,inventory' } });
+        rawLsProduct = lsIdResponse.data.data?.[0];
+      } else {
+        // Fallback to SKU lookup
+        const lsSkuResponse = await lsClient.get('/products', { params: { sku, embed: 'images,inventory' } });
+        rawLsProduct = lsSkuResponse.data.data?.[0];
+      }
+    } catch (lsErr: any) {
+      console.warn(`[Admin] Deep sync fetch failed for ${sku}:`, lsErr.message);
+    }
+
+    let finalProduct = product;
+    if (rawLsProduct) {
+      console.log(`[Admin] Found latest LS data for ${sku}. Inventory count items: ${rawLsProduct.inventory?.length || 0}`);
+      const universalSync = UniversalProduct.fromLightspeed(rawLsProduct);
+      const dbData = universalSync.toPostgres() as any;
+      
+      // Preserve local metadata (like woocommerceId) during deep sync
+      const mergedMetadata = {
+        ...(product.metadata as any || {}),
+        ...(dbData.metadata || {})
+      };
+
+      // Update local mirror before optimizing/pushing
+      finalProduct = await prisma.product.update({
+        where: { sku },
+        data: {
+          ...dbData,
+          metadata: mergedMetadata
+        }
+      });
+      console.log(`[Admin] Staging DB updated for ${sku}. New quantity: ${finalProduct.quantity}`);
+    } else {
+      console.warn(`[Admin] No product found in Lightspeed for deep sync: ${sku}`);
+    }
+
     // 1. Image Optimization Pipeline
-    let finalImageUrl = product.imageUrl;
-    if (product.imageUrl) {
+    let finalImageUrl = finalProduct.imageUrl;
+    if (finalProduct.imageUrl) {
       console.log(`[Admin] Optimizing image for SKU: ${sku}`);
-      const optimizedUrl = await optimizeAndUploadImage(product.imageUrl, sku);
+      const optimizedUrl = await optimizeAndUploadImage(finalProduct.imageUrl, sku);
       if (optimizedUrl) {
         finalImageUrl = optimizedUrl;
         // Update local DB mirror with the optimized URL
@@ -268,7 +325,7 @@ adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
 
     // 2. Prepare Universal Model & WooCommerce Payload
     const universal = UniversalProduct.fromDatabase({ 
-      ...product, 
+      ...finalProduct, 
       imageUrl: finalImageUrl 
     });
     
@@ -303,7 +360,7 @@ adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
     const wooClient = createWooCommerceClient();
     
     // 3. Push to WooCommerce
-    const metadata = (product.metadata as Record<string, any>) || {};
+    const metadata = (finalProduct.metadata as Record<string, any>) || {};
     let wooId = metadata.woocommerceId ? Number(metadata.woocommerceId) : null;
     let action: 'created' | 'updated';
 
@@ -620,6 +677,45 @@ adminRouter.post('/api/products/batch', async (req, res) => {
   }
 });
 
+// ─── Diagnostics & Error Formatting ──────────────
+const formatError = (err: any): string => {
+  if (err?.response?.data) return JSON.stringify(err.response.data);
+  return String(err?.stack || err?.message || JSON.stringify(err) || err);
+};
+
+adminRouter.get('/api/health', async (req, res) => {
+  const status: Record<string, 'ok' | 'error'> = { db: 'ok', redis: 'ok', lightspeed: 'ok' };
+  const details: Record<string, any> = {};
+
+  try {
+    // 1. Check DB & OAuth Token
+    const cred = await prisma.credential.findFirst({ where: { platform: 'lightspeed' } });
+    if (!cred) {
+      status.db = 'error';
+      details.db = 'no_lightspeed_credential_found';
+    }
+  } catch (err: any) {
+    status.db = 'error';
+    details.db = formatError(err);
+  }
+
+  try {
+    // 2. Check Redis
+    const redis = await getRedisClient();
+    if (redis) {
+      await redis.ping();
+    } else {
+      status.redis = 'error';
+      details.redis = 'Redis client returned null';
+    }
+  } catch (err: any) {
+    status.redis = 'error';
+    details.redis = formatError(err);
+  }
+
+  res.json({ status, details });
+});
+
 // ─── Lightspeed Importer APIs ──────────────────────
 adminRouter.get('/api/lightspeed/brands', async (req, res) => {
   try {
@@ -627,19 +723,21 @@ adminRouter.get('/api/lightspeed/brands', async (req, res) => {
     const response = await lsClient.get('/brands');
     res.json({ brands: response.data.data || [] });
   } catch (err: any) {
-    console.error('[Admin] Fetch brands error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch Lightspeed brands' });
+    console.error('[Admin] Fetch brands error:', formatError(err));
+    res.status(500).json({ error: 'Failed to fetch Lightspeed brands', details: err?.message });
   }
 });
 
 adminRouter.get('/api/lightspeed/types', async (req, res) => {
   try {
     const lsClient = await createLightspeedClient();
-    const response = await lsClient.get('/product_types');
-    res.json({ types: response.data.data || [] });
+    const response = await lsClient.get('/product_categories');
+    // The new API structure stores categories in response.data.data.categories
+    const categories = response.data?.data?.categories || response.data?.data || [];
+    res.json({ types: categories });
   } catch (err: any) {
-    console.error('[Admin] Fetch types error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch Lightspeed product types' });
+    console.error('[Admin] Fetch categories/types error:', formatError(err));
+    res.status(500).json({ error: 'Failed to fetch Lightspeed categories', details: err?.message });
   }
 });
 
@@ -649,35 +747,69 @@ adminRouter.get('/api/lightspeed/search', async (req, res) => {
     const limit = parseInt(req.query.limit as string) || 50;
     const brandId = req.query.brandId as string | undefined;
     const typeId = req.query.typeId as string | undefined;
+    const active = req.query.active as string | undefined; // "0" or "1"
+    const channel = req.query.channel as string | undefined; // "online" or "instore"
     
     const lsClient = await createLightspeedClient();
     
+    const extractProducts = (res: any) => {
+      const body = res?.data;
+      if (!body) return [];
+      if (Array.isArray(body.data)) return body.data;
+      if (body.data && typeof body.data === 'object' && body.data.id) return [body.data];
+      if (Array.isArray(body)) return body;
+      if (typeof body === 'object' && body.id) return [body];
+      return [];
+    };
+
     let rawProducts: any[] = [];
 
     if (search) {
       console.log(`[Admin] Searching Lightspeed for: "${search}"`);
-      // Use the dedicated /search endpoint for text-based queries
-      // This supports partial matching on SKU, name, etc.
-      const searchParams: any = { type: 'products', page_size: limit };
-      // Try by SKU first (must be lowercase for /search endpoint) 
-      searchParams.sku = search.toLowerCase();
       
-      try {
-        let searchResponse = await lsClient.get('/search', { params: searchParams });
-        rawProducts = searchResponse.data.data || [];
-        console.log(`[Admin] /search SKU results: ${rawProducts.length}`);
-      } catch (searchErr: any) {
-        console.error(`[Admin] /search SKU error:`, searchErr.message);
-        // Fallback to name search if search endpoint fails
+      // If it looks like a SKU, prefer the /products endpoint for better inventory embedding
+      const looksLikeSku = /^\d+$/.test(search) || search.length < 15;
+      
+      if (looksLikeSku) {
+        const skuParams: any = { page_size: limit, sku: search, embed: 'inventory' };
+        if (active !== undefined) skuParams.active = active;
+        if (channel === 'online') skuParams.ecwid_enabled_webstore = '1';
+        else if (channel === 'instore') skuParams.ecwid_enabled_webstore = '0';
+        
+        console.log(`[Admin] Trying reliable /products SKU lookup for: ${search}`);
+        try {
+          const skuResponse = await lsClient.get('/products', { params: skuParams });
+          rawProducts = extractProducts(skuResponse);
+          console.log(`[Admin] /products SKU results: ${rawProducts.length}`);
+        } catch (skuErr: any) {
+          console.error(`[Admin] /products SKU search error:`, skuErr.message);
+        }
+      }
+
+      // If no results by SKU (or if it didn't look like one), try fuzzy /search
+      if (rawProducts.length === 0) {
+        const searchParams: any = { type: 'products', page_size: limit, embed: 'inventory' };
+        if (active !== undefined) searchParams.active = active;
+        if (channel === 'online') searchParams.ecwid_enabled_webstore = '1';
+        else if (channel === 'instore') searchParams.ecwid_enabled_webstore = '0';
+        searchParams.sku = search.toLowerCase();
+        
+        try {
+          let searchResponse = await lsClient.get('/search', { params: searchParams });
+          rawProducts = extractProducts(searchResponse);
+          console.log(`[Admin] /search fuzzy results: ${rawProducts.length}`);
+        } catch (searchErr: any) {
+          console.error(`[Admin] /search error:`, searchErr.message);
+        }
       }
       
       // If no results by SKU, try by product name using the base /products endpoint
       if (rawProducts.length === 0) {
-        const nameParams: any = { page_size: limit, name: search };
+        const nameParams: any = { page_size: limit, name: search, embed: 'inventory' };
         console.log(`[Admin] Falling back to /products name search: "${search}"`);
         try {
           const nameResponse = await lsClient.get('/products', { params: nameParams });
-          rawProducts = nameResponse.data.data || [];
+          rawProducts = extractProducts(nameResponse);
           console.log(`[Admin] /products name result count: ${rawProducts.length}`);
         } catch (nameErr: any) {
           console.error(`[Admin] /products name search error:`, nameErr.message);
@@ -685,19 +817,26 @@ adminRouter.get('/api/lightspeed/search', async (req, res) => {
       }
     } else {
       // No search term — browse mode with optional filters
-      const params: any = { page_size: limit };
+      const params: any = { page_size: limit, embed: 'inventory' };
       if (brandId) params.brand_id = brandId;
       if (typeId) params.product_type_id = typeId;
+      if (active !== undefined) params.active = active;
+      if (channel === 'online') params.ecwid_enabled_webstore = '1';
+      else if (channel === 'instore') params.ecwid_enabled_webstore = '0';
       
       const response = await lsClient.get('/products', { params });
-      rawProducts = response.data.data || [];
+      rawProducts = extractProducts(response);
     }
     
     // Map to Universal Canonical Model format
-    const { UniversalProduct } = await import('../mappers/universal.js');
-    
-    const mapped = rawProducts.map((raw: any) => {
+    const mapped = (await Promise.all(rawProducts.map(async (raw: any) => {
       try {
+        // Enforce enrichment for variant products that often missing embedded inventory
+        if (!raw.inventory || raw.inventory.length === 0) {
+          console.log(`[Admin] Fetching enriched inventory for: ${raw.sku} (${raw.id})`);
+          raw.inventory = await fetchInventoryForProduct(lsClient, raw.id);
+        }
+
         const universal = UniversalProduct.fromLightspeed(raw);
         return {
           id: universal.data.metadata?.lightspeedId || raw.id || '',
@@ -708,6 +847,7 @@ adminRouter.get('/api/lightspeed/search', async (req, res) => {
           category: universal.data.category || 'Uncategorized',
           brand: universal.data.brand || '',
           imageUrl: universal.data.imageUrl || '',
+          thumbnailUrl: universal.data.thumbnailUrl || '',
           status: 'remote',
           lastSynced: new Date().toISOString()
         };
@@ -715,15 +855,15 @@ adminRouter.get('/api/lightspeed/search', async (req, res) => {
         console.warn('[Admin] Failed to map product:', raw.id, mapErr.message);
         return null;
       }
-    }).filter(Boolean);
+    }))).filter(Boolean);
 
     res.json({
       products: mapped,
       pagination: { page: 1, limit, total: mapped.length, totalPages: 1 }
     });
   } catch (err: any) {
-    console.error('[Admin] Lightspeed Search error:', err.message, err.response?.data);
-    res.status(500).json({ error: 'Failed to search Lightspeed catalog', details: err.message });
+    console.error('[Admin] Lightspeed Search error:', formatError(err));
+    res.status(500).json({ error: 'Failed to search Lightspeed catalog', details: err?.message });
   }
 });
 
@@ -731,7 +871,13 @@ adminRouter.post('/api/lightspeed/import', async (req, res) => {
   try {
     const { skus, filter, all } = req.body as { 
       skus?: string[], 
-      filter?: { brandId?: string, typeId?: string, onlyOnline?: boolean },
+      filter?: { 
+        brandId?: string, 
+        typeId?: string, 
+        onlyOnline?: boolean,
+        active?: string,
+        channel?: string
+      },
       all?: boolean 
     };
     
@@ -756,7 +902,11 @@ adminRouter.post('/api/lightspeed/import', async (req, res) => {
       (async () => {
         try {
           const lsClient = await createLightspeedClient();
+          const { fetchFullInventoryMap } = await import('../services/lightspeed.js');
           const { UniversalProduct } = await import('../mappers/universal.js');
+          
+          // Step 1: Pre-fetch full inventory map to avoid individual calls inside the loop
+          const inventoryMap = await fetchFullInventoryMap(lsClient);
           
           let after: string | undefined = undefined;
           let imported = 0;
@@ -764,12 +914,15 @@ adminRouter.post('/api/lightspeed/import', async (req, res) => {
           
           while (fetching) {
             const response: any = await lsClient.get('/products', { 
-              params: { page_size: 100, ...(after ? { after } : {}) } 
+              params: { page_size: 100, embed: 'inventory', ...(after ? { after } : {}) } 
             });
             const rawItems = response.data.data || [];
             
             for (const item of rawItems) {
               try {
+                // Enrich item with pre-calculated inventory from our map
+                (item as any).inventory_level = inventoryMap.get(item.id) || 0;
+                
                 const universal = UniversalProduct.fromLightspeed(item);
                 const dbData = universal.toPostgres() as any;
                 await prisma.product.upsert({
@@ -820,6 +973,7 @@ adminRouter.post('/api/lightspeed/import', async (req, res) => {
     }
 
     const lsClient = await createLightspeedClient();
+    const { fetchInventoryForProduct } = await import('../services/lightspeed.js');
     const { UniversalProduct } = await import('../mappers/universal.js');
     
     let imported = 0;
@@ -830,12 +984,12 @@ adminRouter.post('/api/lightspeed/import', async (req, res) => {
     if (skus && skus.length > 0) {
       for (const sku of skus) {
         try {
-          const response = await lsClient.get('/products', { params: { sku } });
+          const response = await lsClient.get('/products', { params: { sku, embed: 'inventory' } });
           let raw = response.data.data?.[0];
           
           if (!raw) {
             // Fallback: Use the comprehensive /search endpoint which matches variants better
-            const searchRes = await lsClient.get('/search', { params: { type: 'products', sku: sku.toLowerCase() } });
+            const searchRes = await lsClient.get('/search', { params: { type: 'products', sku: sku.toLowerCase(), embed: 'inventory' } });
             raw = searchRes.data.data?.[0];
             
             // If still not found by sku, perhaps the sku provided was actually a Lightspeed ID
@@ -853,6 +1007,13 @@ adminRouter.post('/api/lightspeed/import', async (req, res) => {
             errors.push(`SKU ${sku} not found in Lightspeed`);
             continue;
           }
+
+          // Enrich with real inventory if embedded is missing
+          if (!raw.inventory || raw.inventory.length === 0) {
+            console.log(`[Import] Fetching enriched inventory for variant: ${sku} (${raw.id})`);
+            raw.inventory = await fetchInventoryForProduct(lsClient, raw.id);
+          }
+
           productsToUpsert.push(raw);
         } catch (err: any) {
           errors.push(`Failed to fetch SKU ${sku}: ${err.message}`);
@@ -862,9 +1023,12 @@ adminRouter.post('/api/lightspeed/import', async (req, res) => {
     // Mode 2: Batch import by filter
     else if (filter) {
       let after: string | undefined = undefined;
-      const params: any = { page_size: 100 };
+      const params: any = { page_size: 100, embed: 'inventory' };
       if (filter.brandId) params.brand_id = filter.brandId;
       if (filter.typeId) params.product_type_id = filter.typeId;
+      if (filter.active !== undefined) params.active = filter.active;
+      if (filter.channel === 'online') params.ecwid_enabled_webstore = '1';
+      else if (filter.channel === 'instore') params.ecwid_enabled_webstore = '0';
       
       let fetching = true;
       let sanityCheck = 0;

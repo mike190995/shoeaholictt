@@ -36,6 +36,8 @@ export default function LightspeedImporter() {
   const [types, setTypes] = useState<any[]>([]);
   const [filterBrandId, setFilterBrandId] = useState('');
   const [filterTypeId, setFilterTypeId] = useState('');
+  const [filterActive, setFilterActive] = useState('1'); // Default to Active
+  const [filterChannel, setFilterChannel] = useState(''); // Default to All
 
   useEffect(() => {
     handleSearch('');
@@ -50,7 +52,9 @@ export default function LightspeedImporter() {
       const data = await searchLightspeed({ 
         search: query, 
         brandId: filterBrandId || undefined, 
-        typeId: filterTypeId || undefined 
+        typeId: filterTypeId || undefined,
+        active: filterActive || undefined,
+        channel: filterChannel || undefined
       }, 50);
       setRowData(data.products || []);
       if (data.products?.length === 0 && query) {
@@ -111,18 +115,36 @@ export default function LightspeedImporter() {
       headerName: '',
       field: 'imageUrl',
       width: 70,
-      cellRenderer: (params: any) => params.value ? (
-        <div className="flex items-center justify-center h-full">
-            <img 
-                src={params.value} 
-                className="w-10 h-10 object-cover rounded-lg border border-white/10 shadow-sm" 
-                alt="thumb"
-                onError={(e: any) => { e.target.src = 'https://placehold.co/100x100?text=No+Img' }}
-            />
-        </div>
-      ) : (
-        <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center text-[10px] text-slate-700">NO IMG</div>
-      )
+      cellRenderer: (params: any) => {
+        const url = params.data?.thumbnailUrl || params.value;
+        const hasImage = url && !url.includes('placeholder') && !url.includes('no-image');
+        
+        return hasImage ? (
+          <div className="flex items-center justify-center h-full">
+              <img 
+                  src={url} 
+                  className="w-10 h-10 object-cover rounded-lg border border-white/10 shadow-sm" 
+                  alt=""
+                  onError={(e: any) => { 
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+              />
+              <div 
+                style={{ display: 'none' }}
+                className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center text-[10px] text-slate-500 font-black border border-white/5"
+              >
+                {params.data?.sku?.substring(0, 2).toUpperCase() || '??'}
+              </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center text-[10px] text-slate-600 font-black border border-white/5">
+              {params.data?.sku?.substring(0, 2).toUpperCase() || 'NA'}
+            </div>
+          </div>
+        );
+      }
     },
     { 
         field: 'sku', 
@@ -209,6 +231,32 @@ export default function LightspeedImporter() {
             >
                 <option value="">All Categories</option>
                 {types.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+
+            <select 
+                value={filterActive} 
+                onChange={(e) => {
+                    setFilterActive(e.target.value);
+                    handleSearch(searchQuery);
+                }}
+                className="bg-white/5 border border-white/10 text-slate-300 text-xs font-bold rounded-xl px-4 py-3 focus:outline-none transition-all hover:bg-white/10"
+            >
+                <option value="">All Statuses</option>
+                <option value="1">Active Only</option>
+                <option value="0">Inactive Only</option>
+            </select>
+
+            <select 
+                value={filterChannel} 
+                onChange={(e) => {
+                    setFilterChannel(e.target.value);
+                    handleSearch(searchQuery);
+                }}
+                className="bg-white/5 border border-white/10 text-slate-300 text-xs font-bold rounded-xl px-4 py-3 focus:outline-none transition-all hover:bg-white/10"
+            >
+                <option value="">All Channels</option>
+                <option value="online">Online Store</option>
+                <option value="instore">In-Store Only</option>
             </select>
 
             <button

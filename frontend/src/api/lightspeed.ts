@@ -4,6 +4,8 @@ export interface FilterOptions {
   search?: string;
   brandId?: string;
   typeId?: string;
+  active?: string;
+  channel?: string;
 }
 
 export async function fetchBrands() {
@@ -23,6 +25,8 @@ export async function searchLightspeed(options: FilterOptions, limit: number = 5
   if (options.search) params.set('search', options.search);
   if (options.brandId) params.set('brandId', options.brandId);
   if (options.typeId) params.set('typeId', options.typeId);
+  if (options.active) params.set('active', options.active);
+  if (options.channel) params.set('channel', options.channel);
 
   const response = await fetch(`/admin/api/lightspeed/search?${params}`);
   if (!response.ok) {
@@ -33,7 +37,13 @@ export async function searchLightspeed(options: FilterOptions, limit: number = 5
 
 export async function importFromLightspeed(
   skus?: string[], 
-  filter?: { brandId?: string; typeId?: string; onlyOnline?: boolean },
+  filter?: { 
+    brandId?: string; 
+    typeId?: string; 
+    onlyOnline?: boolean;
+    active?: string;
+    channel?: string;
+  },
   all?: boolean
 ): Promise<{ success: boolean; message: string; imported: number; errors: string[] }> {
   const response = await fetch('/admin/api/lightspeed/import', {

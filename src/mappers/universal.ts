@@ -16,6 +16,8 @@ const UniversalProductSchema = z.object({
   quantity: z.number().int().nonnegative(),
   category: z.string().optional(),
   imageUrl: z.string().url().optional(),
+  thumbnailUrl: z.string().url().optional(),
+  galleryImages: z.array(z.string().url()).optional(),
   variantParentId: z.string().optional(),
   handle: z.string().optional(),
   brand: z.string().optional(),
@@ -50,14 +52,58 @@ export class UniversalProduct {
       sku: (raw.sku || raw.handle || String(raw.id)) as string,
       title: (raw.name || raw.variant_name || '') as string,
       description: (raw.description || '') as string,
-      price: parseFloat(String(raw.retail_price || raw.price || 0)),
-      quantity: Array.isArray(raw.inventory) 
-        ? raw.inventory.reduce((sum: number, inv: any) => sum + (parseInt(String(inv.count || 0), 10)), 0)
-        : parseInt(String((raw.inventory as any)?.count || 0), 10),
+      price: parseFloat(String(raw.retail_price || raw.price || raw.price_including_tax || raw.price_excluding_tax || 0)),
+      quantity: (() => {
+        // 1. Primary Strategy: Sum up the detailed inventory array if it exists.
+        // Detailed outlet data is the single source of truth for variants and multi-location setups.
+        if (Array.isArray(raw.inventory) && raw.inventory.length > 0) {
+          return raw.inventory.reduce((sum: number, inv: any) => {
+            // Available = On Hand (inventory_level) MINUS Committed (committed_count)
+            const onHand = parseFloat(String(inv.inventory_level ?? inv.current_amount ?? inv.count ?? 0));
+            const committed = parseFloat(String(inv.committed_count || 0));
+            const available = Math.max(0, onHand - committed);
+            
+            return sum + Math.floor(available);
+          }, 0);
+        }
+
+        // 2. Fallback: Trust the top-level summary provided by Lightspeed IF the array is missing.
+        const summaryCount = raw.inventory_level ?? raw.inventory_count ?? raw.count ?? (raw as any).total_inventory_level;
+        if (summaryCount !== undefined) {
+          return Math.max(0, Math.floor(parseFloat(String(summaryCount))));
+        }
+
+        return 0;
+      })(),
       category: typeof raw.type === 'object' && raw.type !== null 
         ? (raw.type as any).name 
         : (raw.type as string) || undefined,
-      imageUrl: (raw.image_url as string) || undefined,
+      imageUrl: (() => {
+        const variantImg = (raw.image_url || raw.image_thumbnail_url) as string;
+        const isValid = (img: string) => img && !img.includes('placeholder') && !img.includes('no-image');
+        
+        if (isValid(variantImg)) return variantImg;
+        
+        if (Array.isArray(raw.images) && raw.images.length > 0) {
+          const firstImg = raw.images[0];
+          const url = (typeof firstImg === 'object' && firstImg !== null) ? (firstImg as any).url : String(firstImg);
+          if (isValid(url)) return url;
+        }
+        return undefined;
+      })(),
+      galleryImages: (() => {
+        const gallery: string[] = [];
+        const isValid = (img: string) => img && !img.includes('placeholder') && !img.includes('no-image');
+        
+        if (Array.isArray(raw.images)) {
+          for (const img of raw.images) {
+            const url = (typeof img === 'object' && img !== null) ? (img as any).url : String(img);
+            if (isValid(url)) gallery.push(url);
+          }
+        }
+        return gallery;
+      })(),
+      thumbnailUrl: (raw.image_thumbnail_url as string) || undefined,
       variantParentId: (raw.variant_parent_id as string) || undefined,
       handle: (raw.handle as string) || undefined,
       brand: typeof raw.brand === 'object' && raw.brand !== null ? (raw.brand as any).name : (raw.brand as string) || undefined,
@@ -84,6 +130,7 @@ export class UniversalProduct {
       quantity: parseInt(String(raw.stock_quantity || 0), 10),
       category: undefined,
       imageUrl: (raw.images as any)?.[0]?.src || undefined,
+      thumbnailUrl: (raw.images as any)?.[0]?.src || undefined,
       metadata: { woocommerceId: raw.id },
     });
     return new UniversalProduct(parsed);
@@ -103,6 +150,8 @@ export class UniversalProduct {
       quantity: parseInt(String(raw.quantity || 0), 10),
       category: raw.category || undefined,
       imageUrl: raw.imageUrl || undefined,
+      thumbnailUrl: (raw.metadata as any)?.thumbnailUrl || undefined,
+      galleryImages: (raw.metadata as any)?.galleryImages || undefined,
       metadata: raw.metadata || undefined,
     });
     return new UniversalProduct(parsed);
@@ -126,6 +175,8 @@ export class UniversalProduct {
       tags: this.data.tags || [],
       metadata: {
         ...this.data.metadata,
+        thumbnailUrl: this.data.thumbnailUrl,
+        galleryImages: this.data.galleryImages || [],
         variantOptions: this.data.variantOptions || []
       },
     };
@@ -144,7 +195,18 @@ export class UniversalProduct {
       regular_price: String(this.data.price),
       stock_quantity: this.data.quantity,
       manage_stock: true,
-      images: this.data.imageUrl ? [{ src: this.data.imageUrl }] : [],
+      images: (() => {
+        const mainImg = this.data.imageUrl || this.data.thumbnailUrl;
+        const allImages: Array<{src: string}> = [];
+        if (mainImg) allImages.push({ src: mainImg });
+        
+        if (this.data.galleryImages) {
+          for (const url of this.data.galleryImages) {
+            if (url !== mainImg) allImages.push({ src: url });
+          }
+        }
+        return allImages;
+      })(),
     };
 
     if (wooCategoryId) {

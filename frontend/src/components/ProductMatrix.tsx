@@ -107,11 +107,23 @@ const ProductMatrix: React.FC = () => {
                       <div className="flex items-center gap-5">
                         <div className="relative">
                             <div className="w-14 h-14 flex-shrink-0 bg-black/20 rounded-2xl overflow-hidden border border-white/5 shadow-inner">
-                                {product.imageUrl ? (
-                                    <img src={product.imageUrl} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-xs opacity-20">🖼️</div>
-                                )}
+                                {product.imageUrl && !product.imageUrl.includes('placeholder') && !product.imageUrl.includes('no-image') ? (
+                                    <img 
+                                      src={product.imageUrl} 
+                                      alt="" 
+                                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                        if (e.currentTarget.nextSibling) (e.currentTarget.nextSibling as HTMLElement).style.display = 'flex';
+                                      }}
+                                    />
+                                ) : null}
+                                <div 
+                                  style={{ display: product.imageUrl && !product.imageUrl.includes('placeholder') && !product.imageUrl.includes('no-image') ? 'none' : 'flex' }}
+                                  className="w-full h-full items-center justify-center text-[10px] font-black text-slate-600"
+                                >
+                                  {product.sku?.substring(0, 2).toUpperCase() || '—'}
+                                </div>
                             </div>
                             {isLinked && (
                                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-slate-900 flex items-center justify-center text-[8px] text-white">🔗</div>

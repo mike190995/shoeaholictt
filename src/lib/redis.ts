@@ -34,11 +34,21 @@ export async function getRedisClient(): Promise<Redis | null> {
       connectTimeout: 3000,
     });
 
+    // Architecture §2D: Prevent unhandled 'error' events from crashing the process
+    redis.on('error', (err) => {
+      log.warn({ err: err.message }, '[Redis] Error event');
+      // If we're not already in fallback mode and it's a connection error, switch
+      if (!useMemoryFallback && (err.message.includes('ECONNREFUSED') || err.message.includes('ETIMEDOUT'))) {
+        log.error('[Redis] Connection failed during runtime — switching to memory fallback');
+        useMemoryFallback = true;
+      }
+    });
+
     try {
       await redis.connect();
       log.info({ host: config.redisHost }, '[Redis] Connected');
     } catch {
-      log.warn('[Redis] Connection failed — using in-memory fallback');
+      log.warn('[Redis] Initial connection failed — using in-memory fallback');
       useMemoryFallback = true;
       redis = null;
       return null;

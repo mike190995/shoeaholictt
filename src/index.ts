@@ -11,6 +11,7 @@ import { authRouter } from './routes/auth.js';
 import { workerRouter } from './routes/worker.js';
 import { adminRouter } from './routes/admin.js';
 import { syncRouter } from './routes/sync.js';
+import { adminAuth } from './middleware/adminAuth.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { log } from './lib/logger.js';
 
@@ -58,8 +59,8 @@ app.use('/api', apiRouter);
 app.use('/webhooks', webhookRouter); 
 app.use('/auth', authRouter);        
 app.use('/worker', workerRouter);    
-app.use('/admin', adminRouter);      // Admin GUI (Fixed for Express 5)
-app.use('/sync', syncRouter);        
+app.use('/admin', adminAuth, adminRouter);      // Admin GUI (Fixed for Express 5)
+app.use('/sync', adminAuth, syncRouter);        
 
 app.get('/debug', (req, res) => {
   const routes: string[] = [];

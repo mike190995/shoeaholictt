@@ -6,7 +6,9 @@ export interface Product {
   stock: number;
   category?: string;
   brand?: string;
+  tags?: string[];
   imageUrl?: string;
+  thumbnailUrl?: string;
   status: string;
   woocommerceId?: number | null;
   lastSynced: string;

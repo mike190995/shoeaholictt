@@ -24,8 +24,12 @@ export async function createLightspeedClient(): Promise<AxiosInstance> {
     throw new Error('Lightspeed X-Series not authenticated. Please run /auth/lightspeed first.');
   }
 
+  const baseURL = credential.accountId.includes('.') 
+    ? `https://${credential.accountId}/api/2.0` 
+    : `https://${credential.accountId}.vendhq.com/api/2.0`;
+
   const client = axios.create({
-    baseURL: `https://${credential.accountId}.vendhq.com/api/2.0`,
+    baseURL,
     headers: {
       'Content-Type': 'application/json',
     },
@@ -111,7 +115,11 @@ export async function refreshLightspeedToken(): Promise<{
     tokenParams.append('refresh_token', credential.refreshToken);
     tokenParams.append('grant_type', 'refresh_token');
 
-    const response = await axios.post(`https://${credential.accountId}.vendhq.com/api/1.0/token`, tokenParams, {
+    const tokenUrl = credential.accountId.includes('.') 
+      ? `https://${credential.accountId}/api/1.0/token` 
+      : `https://${credential.accountId}.vendhq.com/api/1.0/token`;
+
+    const response = await axios.post(tokenUrl, tokenParams, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
 
@@ -133,3 +141,52 @@ export async function refreshLightspeedToken(): Promise<{
     return null;
   }
 }
+
+/**
+ * Fetches inventory for a specific product ID across all outlets.
+ * This is the ONLY reliable way to get immediate stock levels.
+ */
+export async function fetchInventoryForProduct(client: AxiosInstance, productId: string): Promise<any[]> {
+  try {
+    const res = await client.get(`/products/${productId}/inventory`);
+    return res.data.data || [];
+  } catch (err: any) {
+    log.error({ productId, err: err.response?.data || err.message }, '[Lightspeed] Failed to fetch inventory for product');
+    return [];
+  }
+}
+
+/**
+ * Fetches the ENTIRE inventory table and builds a map of product_id -> total stock.
+ * Use this for bulk operations to avoid 1000s of individual API calls.
+ */
+export async function fetchFullInventoryMap(client: AxiosInstance): Promise<Map<string, number>> {
+  const inventoryMap = new Map<string, number>();
+  let after = null;
+  let page = 0;
+
+  log.info('[Lightspeed] Building full inventory map...');
+
+  while (page < 200) {
+    page++;
+    const params: any = { page_size: 500 };
+    if (after) params.after = after;
+
+    const res = await client.get('/inventory', { params });
+    const records = res.data.data;
+    if (!Array.isArray(records) || records.length === 0) break;
+
+    for (const rec of records) {
+      const current = inventoryMap.get(rec.product_id) || 0;
+      // Summing inventory_level across all outlets
+      inventoryMap.set(rec.product_id, current + (rec.inventory_level || 0));
+    }
+
+    const version = res.data.version;
+    if (version?.max) after = version.max; else break;
+  }
+
+  log.info({ pages: page, uniqueProducts: inventoryMap.size }, '[Lightspeed] Full inventory map built');
+  return inventoryMap;
+}
+
