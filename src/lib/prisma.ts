@@ -31,6 +31,17 @@ function getPrisma(): PrismaClient {
   console.log(`[Prisma] Creating lazy PrismaClient with pg adapter...`);
 
   const pool = new pg.Pool({ connectionString: databaseUrl });
+  
+  // Test connection immediately to identify Cloud SQL proxy issues
+  pool.connect()
+    .then(client => {
+      console.log(`[Database] Successfully connected to PostgreSQL via ${databaseUrl.includes('cloudsql') ? 'Unix Socket' : 'TCP'}`);
+      client.release();
+    })
+    .catch(err => {
+      console.error(`[Critical] Database connection failed: ${err.message}`);
+    });
+
   const adapter = new PrismaPg(pool as any);
 
   _prisma = new PrismaClient({

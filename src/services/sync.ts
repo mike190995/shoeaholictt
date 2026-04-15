@@ -121,10 +121,11 @@ export async function processSyncTask(task: any): Promise<void> {
       
       log.info({ sku: universal.data.sku }, '[Sync] Starting bilateral sync (Admin → All)');
       
-      // 1. Push to WooCommerce
+      // 1. Push to WooCommerce (Full Sync)
       try {
-        await updateWooCommerceStock(universal.data.sku, universal.data.quantity);
-        log.info({ sku: universal.data.sku }, '[Sync] Updated WooCommerce');
+        // We pass the full toWoo() data here to ensure Title/Description/Images are updated
+        await updateWooCommerceStock(universal.data.sku, universal.data.quantity, universal.toWoo());
+        log.info({ sku: universal.data.sku }, '[Sync] Full sync to WooCommerce complete');
       } catch (err: any) {
         log.error({ sku: universal.data.sku, error: err.message }, '[Sync] Failed to update WooCommerce');
       }

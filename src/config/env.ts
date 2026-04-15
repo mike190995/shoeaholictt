@@ -48,6 +48,7 @@ interface SecretsConfig {
   wooConsumerSecret: string;
   workerServiceUrl: string;
   workerSecret: string;
+  sessionSecret: string;
 }
 
 export const secrets: SecretsConfig = {
@@ -60,6 +61,7 @@ export const secrets: SecretsConfig = {
   wooConsumerSecret: '',
   workerServiceUrl: '',
   workerSecret: '',
+  sessionSecret: '',
 };
 
 /**
@@ -80,6 +82,7 @@ export async function initSecrets(): Promise<void> {
     ['wooConsumerSecret',      'WOO_CONSUMER_SECRET',  'WOO_CONSUMER_SECRET'],
     ['workerServiceUrl',       'WORKER_SERVICE_URL',   'WORKER_SERVICE_URL'],
     ['workerSecret',           'WORKER_SECRET',        'WORKER_SECRET'],
+    ['sessionSecret',          'SESSION_SECRET',       'SESSION_SECRET'],
   ];
 
   const results = await Promise.allSettled(

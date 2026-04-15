@@ -109,25 +109,93 @@ export async function updateWooProduct(
 }
 
 /**
+ * Fetch a WooCommerce variation by SKU.
+ */
+export async function getWooVariationBySku(
+  client: AxiosInstance,
+  parentId: number,
+  sku: string
+): Promise<Record<string, unknown> | null> {
+  const response = await client.get(`/products/${parentId}/variations`, {
+    params: { sku, per_page: 1 },
+  });
+
+  const variations = response.data as unknown[];
+  return variations.length > 0 ? (variations[0] as Record<string, unknown>) : null;
+}
+
+/**
+ * Create a new WooCommerce variation for a parent product.
+ */
+export async function createWooVariation(
+  client: AxiosInstance,
+  parentId: number,
+  data: Record<string, any>
+): Promise<number> {
+  const response = await client.post(`/products/${parentId}/variations`, data);
+  const variation = response.data as Record<string, any>;
+  if (!variation.id) {
+    throw new Error(`WooCommerce API did not return a variation ID for parent ${parentId}`);
+  }
+  return Number(variation.id);
+}
+
+/**
+ * Update a WooCommerce variation.
+ */
+export async function updateWooVariation(
+  client: AxiosInstance,
+  parentId: number,
+  variationId: number,
+  data: Record<string, any>
+): Promise<void> {
+  await client.put(`/products/${parentId}/variations/${variationId}`, data);
+}
+
+/**
  * Top-level Orchestration Wrapper
  * Finds product ID by SKU, then updates its content and stock.
+ * Handles both Simple Products and Variations.
  */
-export async function updateWooCommerceStock(sku: string, quantity: number, fullData?: Record<string, any>): Promise<void> {
+export async function updateWooCommerceStock(
+  sku: string, 
+  quantity: number, 
+  fullData?: Record<string, any>,
+  parentId?: number // If provided, treat as a variation update
+): Promise<void> {
   const client = createWooCommerceClient();
-  const product = await getWooProductBySku(client, sku);
   
-  if (!product || !product.id) {
-    throw new Error(`WooCommerce product not found for SKU: ${sku}`);
-  }
-  
-  if (fullData) {
-    console.log(`[WooService] Performing full update for SKU: ${sku}`);
-    await updateWooProduct(client, Number(product.id), {
-      ...fullData,
+  if (parentId) {
+    // VARIATION logic
+    console.log(`[WooService] Routing to VARIATION update for SKU: ${sku} (Parent: ${parentId})`);
+    const variation = await getWooVariationBySku(client, parentId, sku);
+    
+    if (!variation || !variation.id) {
+      throw new Error(`WooCommerce variation not found for SKU: ${sku} under Parent: ${parentId}`);
+    }
+
+    await updateWooVariation(client, parentId, Number(variation.id), {
+      ...(fullData || {}),
       stock_quantity: quantity,
       manage_stock: true,
     });
   } else {
-    await updateWooStock(client, Number(product.id), quantity);
+    // SIMPLE PRODUCT logic
+    const product = await getWooProductBySku(client, sku);
+    
+    if (!product || !product.id) {
+      throw new Error(`WooCommerce product not found for SKU: ${sku}`);
+    }
+    
+    if (fullData) {
+      console.log(`[WooService] Performing full update for SIMPLE product SKU: ${sku}`);
+      await updateWooProduct(client, Number(product.id), {
+        ...fullData,
+        stock_quantity: quantity,
+        manage_stock: true,
+      });
+    } else {
+      await updateWooStock(client, Number(product.id), quantity);
+    }
   }
 }

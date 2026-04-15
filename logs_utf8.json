@@ -1,0 +1,2003 @@
+﻿[
+  {
+    "insertId": "69d6afbf000d0501d88dc521",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:42:56.187649057Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch brands error: ",
+    "timestamp": "2026-04-08T19:42:55.853249Z"
+  },
+  {
+    "insertId": "69d6afbf000cfbd0b1afaa2c",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:42:56.187649057Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch types error: ",
+    "timestamp": "2026-04-08T19:42:55.850896Z"
+  },
+  {
+    "insertId": "69d6afbf000ce805e9d1b54b",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:42:55.850802739Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Lightspeed Search error: ",
+    "timestamp": "2026-04-08T19:42:55.845829Z"
+  },
+  {
+    "insertId": "69d6afae0003120977d504d6",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:42:38.534653413Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch brands error: ",
+    "timestamp": "2026-04-08T19:42:38.201225Z"
+  },
+  {
+    "insertId": "69d6afae000306f45d99db73",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:42:38.534653413Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Lightspeed Search error: ",
+    "timestamp": "2026-04-08T19:42:38.198388Z"
+  },
+  {
+    "insertId": "69d6afae0002fa627f21cc56",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:42:38.198079086Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch types error: ",
+    "timestamp": "2026-04-08T19:42:38.195170Z"
+  },
+  {
+    "insertId": "69d6af9b000d7d3320c82be8",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:42:20.201613033Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Lightspeed Search error: ",
+    "timestamp": "2026-04-08T19:42:19.884019Z"
+  },
+  {
+    "insertId": "69d6af9b000d424ce8b9a970",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:42:20.201613033Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch types error: ",
+    "timestamp": "2026-04-08T19:42:19.868940Z"
+  },
+  {
+    "insertId": "69d6af9b000d2ce560b8deb7",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:42:19.868774513Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch brands error: ",
+    "timestamp": "2026-04-08T19:42:19.863461Z"
+  },
+  {
+    "insertId": "69d6af7a00064e527be8c527",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:41:46.684388845Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch types error: ",
+    "timestamp": "2026-04-08T19:41:46.413266Z"
+  },
+  {
+    "insertId": "69d6af7a00064590c6336191",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:41:46.684388845Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Lightspeed Search error: ",
+    "timestamp": "2026-04-08T19:41:46.411024Z"
+  },
+  {
+    "insertId": "69d6af7a00063679b740b3d5",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:41:46.684388845Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch brands error: ",
+    "timestamp": "2026-04-08T19:41:46.407161Z"
+  },
+  {
+    "insertId": "69d6af790005810ec3bbcfde",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:41:45.686751198Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Lightspeed Search error: ",
+    "timestamp": "2026-04-08T19:41:45.360718Z"
+  },
+  {
+    "insertId": "69d6af7900056ad4f2f39ebb",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:41:45.686751198Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch brands error: ",
+    "timestamp": "2026-04-08T19:41:45.355028Z"
+  },
+  {
+    "insertId": "69d6af7900054a254fb631a3",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:41:45.351529833Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch types error: ",
+    "timestamp": "2026-04-08T19:41:45.346661Z"
+  },
+  {
+    "insertId": "69d6af0e000eef210c31eea4",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:39:59.315490205Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch types error: ",
+    "timestamp": "2026-04-08T19:39:58.978721Z"
+  },
+  {
+    "insertId": "69d6af0e000ee4aa47abe96a",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:39:59.315490205Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Lightspeed Search error: ",
+    "timestamp": "2026-04-08T19:39:58.976042Z"
+  },
+  {
+    "insertId": "69d6af0e000ed1ae7d540de9",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:39:58.975925993Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch brands error: ",
+    "timestamp": "2026-04-08T19:39:58.971182Z"
+  },
+  {
+    "insertId": "69d6aedc000dfe9dade64e18",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:39:08.921409355Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Products error: ",
+    "timestamp": "2026-04-08T19:39:08.917149Z"
+  },
+  {
+    "insertId": "69d6aea60004bdf7b5ce516f",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:38:14.465164923Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch brands error: ",
+    "timestamp": "2026-04-08T19:38:14.310775Z"
+  },
+  {
+    "insertId": "69d6aea60004a98d63afaedd",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:38:14.465164923Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch types error: ",
+    "timestamp": "2026-04-08T19:38:14.305549Z"
+  },
+  {
+    "insertId": "69d6aea60004955a532f720e",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:38:14.465164923Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Lightspeed Search error: ",
+    "timestamp": "2026-04-08T19:38:14.300378Z"
+  },
+  {
+    "insertId": "69d6aea50002915e853d0349",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:38:13.465076952Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Products error: ",
+    "timestamp": "2026-04-08T19:38:13.168286Z"
+  },
+  {
+    "insertId": "69d6aea300062901317c9858",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:38:11.470208101Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch types error: ",
+    "timestamp": "2026-04-08T19:38:11.403713Z"
+  },
+  {
+    "insertId": "69d6aea3000618e59d223334",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:38:11.470208101Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch brands error: ",
+    "timestamp": "2026-04-08T19:38:11.399589Z"
+  },
+  {
+    "insertId": "69d6aea3000612846d754854",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:38:11.470208101Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Lightspeed Search error: ",
+    "timestamp": "2026-04-08T19:38:11.397956Z"
+  },
+  {
+    "insertId": "69d6ae98000322f2632dfde4",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:38:00.482296051Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch brands error: ",
+    "timestamp": "2026-04-08T19:38:00.205554Z"
+  },
+  {
+    "insertId": "69d6ae98000311b33b882e9b",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:38:00.482296051Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch types error: ",
+    "timestamp": "2026-04-08T19:38:00.201139Z"
+  },
+  {
+    "insertId": "69d6ae980003024b96929db8",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:38:00.482296051Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Lightspeed Search error: ",
+    "timestamp": "2026-04-08T19:38:00.197195Z"
+  },
+  {
+    "insertId": "69d6ae970007bb9dc5b7d5ae",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:37:59.811055444Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch types error: ",
+    "timestamp": "2026-04-08T19:37:59.506781Z"
+  },
+  {
+    "insertId": "69d6ae9700074e47cc7a39c9",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:37:59.811055444Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Lightspeed Search error: ",
+    "timestamp": "2026-04-08T19:37:59.478791Z"
+  },
+  {
+    "insertId": "69d6ae9700073bcb5f4c5378",
+    "labels": {
+      "instanceId": "008c15ff0821eab3f27c72854814422abf230f06e43441125bf78a0078555439ba8d42991a58faa11d115ab59a37f40d23682b78fd2f1d5537103260b88ff52fceb4752775771e1741a9119ff4545d"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:37:59.479490522Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775676400786",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch brands error: ",
+    "timestamp": "2026-04-08T19:37:59.474059Z"
+  },
+  {
+    "insertId": "69d6a98a000453b2c354ec52",
+    "labels": {
+      "instanceId": "008c15ff083150ddcc6be429c35ee92efc8fc51a233c9f0f8809bcc6dd5d00f019d6443fa7f4ecb60bc8b070eebd7e9b53bce829f398c5f63e86d194fd31934c614fd832d8fe4e1309802f8d97cdab"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:16:26.325344370Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775675373048",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Lightspeed Search error: ",
+    "timestamp": "2026-04-08T19:16:26.283570Z"
+  },
+  {
+    "insertId": "69d6a98a0004458d9e6bcfdc",
+    "labels": {
+      "instanceId": "008c15ff083150ddcc6be429c35ee92efc8fc51a233c9f0f8809bcc6dd5d00f019d6443fa7f4ecb60bc8b070eebd7e9b53bce829f398c5f63e86d194fd31934c614fd832d8fe4e1309802f8d97cdab"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:16:26.325344370Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775675373048",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch types error: ",
+    "timestamp": "2026-04-08T19:16:26.279949Z"
+  },
+  {
+    "insertId": "69d6a98a000440f4bc8ba287",
+    "labels": {
+      "instanceId": "008c15ff083150ddcc6be429c35ee92efc8fc51a233c9f0f8809bcc6dd5d00f019d6443fa7f4ecb60bc8b070eebd7e9b53bce829f398c5f63e86d194fd31934c614fd832d8fe4e1309802f8d97cdab"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:16:26.325344370Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775675373048",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch brands error: ",
+    "timestamp": "2026-04-08T19:16:26.278772Z"
+  },
+  {
+    "insertId": "69d6a985000f385ba4df466d",
+    "labels": {
+      "instanceId": "008c15ff083150ddcc6be429c35ee92efc8fc51a233c9f0f8809bcc6dd5d00f019d6443fa7f4ecb60bc8b070eebd7e9b53bce829f398c5f63e86d194fd31934c614fd832d8fe4e1309802f8d97cdab"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:16:22.332983714Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775675373048",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch types error: ",
+    "timestamp": "2026-04-08T19:16:21.997467Z"
+  },
+  {
+    "insertId": "69d6a985000f2bb838bad7a6",
+    "labels": {
+      "instanceId": "008c15ff083150ddcc6be429c35ee92efc8fc51a233c9f0f8809bcc6dd5d00f019d6443fa7f4ecb60bc8b070eebd7e9b53bce829f398c5f63e86d194fd31934c614fd832d8fe4e1309802f8d97cdab"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:16:22.332983714Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775675373048",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Lightspeed Search error: ",
+    "timestamp": "2026-04-08T19:16:21.994232Z"
+  },
+  {
+    "insertId": "69d6a985000f257eee338aba",
+    "labels": {
+      "instanceId": "008c15ff083150ddcc6be429c35ee92efc8fc51a233c9f0f8809bcc6dd5d00f019d6443fa7f4ecb60bc8b070eebd7e9b53bce829f398c5f63e86d194fd31934c614fd832d8fe4e1309802f8d97cdab"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:16:22.002597207Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775675373048",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch brands error: ",
+    "timestamp": "2026-04-08T19:16:21.992638Z"
+  },
+  {
+    "insertId": "69d6a9720002f3f617e9b0c8",
+    "labels": {
+      "instanceId": "008c15ff083150ddcc6be429c35ee92efc8fc51a233c9f0f8809bcc6dd5d00f019d6443fa7f4ecb60bc8b070eebd7e9b53bce829f398c5f63e86d194fd31934c614fd832d8fe4e1309802f8d97cdab"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:16:02.387010973Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775675373048",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Products error: ",
+    "timestamp": "2026-04-08T19:16:02.193526Z"
+  },
+  {
+    "insertId": "69d6a97000068ceec8ec4530",
+    "labels": {
+      "instanceId": "008c15ff083150ddcc6be429c35ee92efc8fc51a233c9f0f8809bcc6dd5d00f019d6443fa7f4ecb60bc8b070eebd7e9b53bce829f398c5f63e86d194fd31934c614fd832d8fe4e1309802f8d97cdab"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:16:00.724153188Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775675373048",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch brands error: ",
+    "timestamp": "2026-04-08T19:16:00.429294Z"
+  },
+  {
+    "insertId": "69d6a970000681bf16622be6",
+    "labels": {
+      "instanceId": "008c15ff083150ddcc6be429c35ee92efc8fc51a233c9f0f8809bcc6dd5d00f019d6443fa7f4ecb60bc8b070eebd7e9b53bce829f398c5f63e86d194fd31934c614fd832d8fe4e1309802f8d97cdab"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:16:00.724153188Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775675373048",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Lightspeed Search error: ",
+    "timestamp": "2026-04-08T19:16:00.426431Z"
+  },
+  {
+    "insertId": "69d6a97000066d5eba482f47",
+    "labels": {
+      "instanceId": "008c15ff083150ddcc6be429c35ee92efc8fc51a233c9f0f8809bcc6dd5d00f019d6443fa7f4ecb60bc8b070eebd7e9b53bce829f398c5f63e86d194fd31934c614fd832d8fe4e1309802f8d97cdab"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:16:00.724153188Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775675373048",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch types error: ",
+    "timestamp": "2026-04-08T19:16:00.421214Z"
+  },
+  {
+    "insertId": "69d6a96d000e7d7734be97f9",
+    "labels": {
+      "instanceId": "008c15ff083150ddcc6be429c35ee92efc8fc51a233c9f0f8809bcc6dd5d00f019d6443fa7f4ecb60bc8b070eebd7e9b53bce829f398c5f63e86d194fd31934c614fd832d8fe4e1309802f8d97cdab"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:15:58.059121443Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775675373048",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Products error: ",
+    "timestamp": "2026-04-08T19:15:57.949623Z"
+  },
+  {
+    "insertId": "69d6a96b000631abe688ee5d",
+    "labels": {
+      "instanceId": "008c15ff083150ddcc6be429c35ee92efc8fc51a233c9f0f8809bcc6dd5d00f019d6443fa7f4ecb60bc8b070eebd7e9b53bce829f398c5f63e86d194fd31934c614fd832d8fe4e1309802f8d97cdab"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:15:55.727132441Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775675373048",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch brands error: ",
+    "timestamp": "2026-04-08T19:15:55.405931Z"
+  },
+  {
+    "insertId": "69d6a96b00061afe3331e5a3",
+    "labels": {
+      "instanceId": "008c15ff083150ddcc6be429c35ee92efc8fc51a233c9f0f8809bcc6dd5d00f019d6443fa7f4ecb60bc8b070eebd7e9b53bce829f398c5f63e86d194fd31934c614fd832d8fe4e1309802f8d97cdab"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:15:55.727132441Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775675373048",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Fetch types error: ",
+    "timestamp": "2026-04-08T19:15:55.400126Z"
+  },
+  {
+    "insertId": "69d6a96b0005f6a0609a9bd4",
+    "labels": {
+      "instanceId": "008c15ff083150ddcc6be429c35ee92efc8fc51a233c9f0f8809bcc6dd5d00f019d6443fa7f4ecb60bc8b070eebd7e9b53bce829f398c5f63e86d194fd31934c614fd832d8fe4e1309802f8d97cdab"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T19:15:55.395616718Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-1775675373048",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Lightspeed Search error: ",
+    "timestamp": "2026-04-08T19:15:55.390816Z"
+  },
+  {
+    "insertId": "69d6a3dd000d6b01ecb5fa28",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T18:52:13.882231048Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] rawProducts is not an array: object {",
+    "timestamp": "2026-04-08T18:52:13.879361Z"
+  },
+  {
+    "insertId": "69d6a3dd000d69903469ba88",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:52:13.905414346Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] /products SKU results: null",
+    "timestamp": "2026-04-08T18:52:13.878992Z"
+  },
+  {
+    "insertId": "69d6a3dd000b4cf3b5e6597f",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:52:13.905414346Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Trying reliable /products SKU lookup for: 14458",
+    "timestamp": "2026-04-08T18:52:13.740595Z"
+  },
+  {
+    "insertId": "69d6a3dd000b4cdc5784ca2a",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:52:13.905414346Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Searching Lightspeed for: \"14458\"",
+    "timestamp": "2026-04-08T18:52:13.740572Z"
+  },
+  {
+    "insertId": "69d6a3db000e1c595b1cbc70",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:52:12.239633571Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] /products name result count: 0",
+    "timestamp": "2026-04-08T18:52:11.924761Z"
+  },
+  {
+    "insertId": "69d6a3db000c4f56bc761140",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:52:11.904917716Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Falling back to /products name search: \"144583\"",
+    "timestamp": "2026-04-08T18:52:11.806742Z"
+  },
+  {
+    "insertId": "69d6a3db000c4f3a38e6cb6e",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:52:11.904917716Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] /search fuzzy results: 0",
+    "timestamp": "2026-04-08T18:52:11.806714Z"
+  },
+  {
+    "insertId": "69d6a3db000a6f6234d48aba",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:52:11.904917716Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] /products SKU results: 0",
+    "timestamp": "2026-04-08T18:52:11.683874Z"
+  },
+  {
+    "insertId": "69d6a3db0008adf05e097184",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:52:11.571780798Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Trying reliable /products SKU lookup for: 144583",
+    "timestamp": "2026-04-08T18:52:11.568816Z"
+  },
+  {
+    "insertId": "69d6a3db0008add46a799a81",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:52:11.571780798Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Searching Lightspeed for: \"144583\"",
+    "timestamp": "2026-04-08T18:52:11.568788Z"
+  },
+  {
+    "insertId": "69d6a3c000062ef880b2113b",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T18:51:44.625288666Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] rawProducts is not an array: object {",
+    "timestamp": "2026-04-08T18:51:44.405240Z"
+  },
+  {
+    "insertId": "69d6a3c000062d6be4211916",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:44.718070920Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] /products SKU results: null",
+    "timestamp": "2026-04-08T18:51:44.404843Z"
+  },
+  {
+    "insertId": "69d6a3c00003f3425c550ab6",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:44.383570832Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Trying reliable /products SKU lookup for: 14458",
+    "timestamp": "2026-04-08T18:51:44.258882Z"
+  },
+  {
+    "insertId": "69d6a3c00003f327dfc154a9",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:44.383570832Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Searching Lightspeed for: \"14458\"",
+    "timestamp": "2026-04-08T18:51:44.258855Z"
+  },
+  {
+    "insertId": "69d6a3bd00016fe486efb067",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:41.395182521Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] /products name result count: 0",
+    "timestamp": "2026-04-08T18:51:41.094180Z"
+  },
+  {
+    "insertId": "69d6a3bc000efb21e0f10809",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:41.055541563Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Falling back to /products name search: \"144\"",
+    "timestamp": "2026-04-08T18:51:40.981793Z"
+  },
+  {
+    "insertId": "69d6a3bc000efaff38342ef5",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:41.055541563Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] /search fuzzy results: 0",
+    "timestamp": "2026-04-08T18:51:40.981759Z"
+  },
+  {
+    "insertId": "69d6a3bc000cda89632d0b13",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:41.055541563Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] /products SKU results: 0",
+    "timestamp": "2026-04-08T18:51:40.842377Z"
+  },
+  {
+    "insertId": "69d6a3bc0008be644cd1cae6",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:40.727447450Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Trying reliable /products SKU lookup for: 144",
+    "timestamp": "2026-04-08T18:51:40.573028Z"
+  },
+  {
+    "insertId": "69d6a3bc0008be339d764026",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:40.727447450Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Searching Lightspeed for: \"144\"",
+    "timestamp": "2026-04-08T18:51:40.572979Z"
+  },
+  {
+    "insertId": "69d6a3b700047aa35454db54",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T18:51:35.300379383Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] rawProducts is not an array: object {",
+    "timestamp": "2026-04-08T18:51:35.293539Z"
+  },
+  {
+    "insertId": "69d6a3b700046c9899b1ba77",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:35.396844951Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] /products SKU results: null",
+    "timestamp": "2026-04-08T18:51:35.289944Z"
+  },
+  {
+    "insertId": "69d6a3b700022073de13693e",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:35.396844951Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Trying reliable /products SKU lookup for: 14458",
+    "timestamp": "2026-04-08T18:51:35.139379Z"
+  },
+  {
+    "insertId": "69d6a3b70002205004027331",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:35.396844951Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Searching Lightspeed for: \"14458\"",
+    "timestamp": "2026-04-08T18:51:35.139344Z"
+  },
+  {
+    "insertId": "69d6a3b20004c8917232c2ba",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:30.399850599Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] /products name result count: 0",
+    "timestamp": "2026-04-08T18:51:30.313489Z"
+  },
+  {
+    "insertId": "69d6a3b20002fc5bbd519836",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:30.399850599Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Falling back to /products name search: \"144\"",
+    "timestamp": "2026-04-08T18:51:30.195675Z"
+  },
+  {
+    "insertId": "69d6a3b20002fc34c258aeeb",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:30.399850599Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] /search fuzzy results: 0",
+    "timestamp": "2026-04-08T18:51:30.195636Z"
+  },
+  {
+    "insertId": "69d6a3b2000027dcd952cae7",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:30.069351134Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] /products SKU results: 0",
+    "timestamp": "2026-04-08T18:51:30.010204Z"
+  },
+  {
+    "insertId": "69d6a3b1000b1d33cc2e5b3f",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:30.069351134Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Trying reliable /products SKU lookup for: 144",
+    "timestamp": "2026-04-08T18:51:29.728371Z"
+  },
+  {
+    "insertId": "69d6a3b1000b1cd401e53e0c",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T18:51:29.733762670Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Searching Lightspeed for: \"144\"",
+    "timestamp": "2026-04-08T18:51:29.728276Z"
+  },
+  {
+    "insertId": "69d6a38f0005d53f790ac081",
+    "labels": {
+      "instanceId": "008c15ff08ee504d3a0b81a9e4ddda35ba2e3cb51d0b2cc3b701b35a58fb88144c545bc76e546192a1e371a5b17e1b140596080cab5388aff1decccfd28ce02d1f7132791ac0a332cecb11aa5bafc8a21bcbb4d134cb75cbd204c5"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T18:50:55.385935797Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00050-ltb",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Force sync error: 5 NOT_FOUND: Queue does not exist. If you just created the queue, wait at least a minute for the queue to initialize.",
+    "timestamp": "2026-04-08T18:50:55.382271Z"
+  },
+  {
+    "insertId": "69d6884e00051ebcba7e6f1a",
+    "labels": {
+      "instanceId": "008c15ff08eb8df28035ee7ce78ad6beca647fd1539c6f504abd76d7d446dedc980e5eaae2c0b483fb7e0ac8d9eb3af1df2a4561f2a7327d77cf4bd32875ed987b7ec46653063288890399f6f23f8c"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T16:54:38.339299694Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00048-9w7",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Push to WooCommerce error: ",
+    "timestamp": "2026-04-08T16:54:38.335548Z"
+  },
+  {
+    "insertId": "69d6884e00050785232988e7",
+    "labels": {
+      "instanceId": "008c15ff08eb8df28035ee7ce78ad6beca647fd1539c6f504abd76d7d446dedc980e5eaae2c0b483fb7e0ac8d9eb3af1df2a4561f2a7327d77cf4bd32875ed987b7ec46653063288890399f6f23f8c"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:54:38.451703812Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00048-9w7",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Found latest LS data for 14458. Inventory count items: 0",
+    "timestamp": "2026-04-08T16:54:38.329605Z"
+  },
+  {
+    "insertId": "69d6884d0006fb756611771e",
+    "labels": {
+      "instanceId": "008c15ff08eb8df28035ee7ce78ad6beca647fd1539c6f504abd76d7d446dedc980e5eaae2c0b483fb7e0ac8d9eb3af1df2a4561f2a7327d77cf4bd32875ed987b7ec46653063288890399f6f23f8c"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:54:37.785899959Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00048-9w7",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Performing JIT Deep Sync for SKU: 14458 (LS ID: 39f0745c-7826-44bf-96f4-a900adaba517)",
+    "timestamp": "2026-04-08T16:54:37.457589Z"
+  },
+  {
+    "insertId": "69d686e60005a2d31a208dfd",
+    "labels": {
+      "instanceId": "008c15ff08eb8df28035ee7ce78ad6beca647fd1539c6f504abd76d7d446dedc980e5eaae2c0b483fb7e0ac8d9eb3af1df2a4561f2a7327d77cf4bd32875ed987b7ec46653063288890399f6f23f8c"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T16:48:38.375139764Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00048-9w7",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] rawProducts is not an array: object {",
+    "timestamp": "2026-04-08T16:48:38.369363Z"
+  },
+  {
+    "insertId": "69d686e600058d00b7840ac6",
+    "labels": {
+      "instanceId": "008c15ff08eb8df28035ee7ce78ad6beca647fd1539c6f504abd76d7d446dedc980e5eaae2c0b483fb7e0ac8d9eb3af1df2a4561f2a7327d77cf4bd32875ed987b7ec46653063288890399f6f23f8c"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:48:38.440793743Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00048-9w7",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] /products SKU results: null",
+    "timestamp": "2026-04-08T16:48:38.363776Z"
+  },
+  {
+    "insertId": "69d686e600009ad6290fa67c",
+    "labels": {
+      "instanceId": "008c15ff08eb8df28035ee7ce78ad6beca647fd1539c6f504abd76d7d446dedc980e5eaae2c0b483fb7e0ac8d9eb3af1df2a4561f2a7327d77cf4bd32875ed987b7ec46653063288890399f6f23f8c"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:48:38.108254475Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00048-9w7",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Trying reliable /products SKU lookup for: 14464",
+    "timestamp": "2026-04-08T16:48:38.039638Z"
+  },
+  {
+    "insertId": "69d686e600009a8858f312bf",
+    "labels": {
+      "instanceId": "008c15ff08eb8df28035ee7ce78ad6beca647fd1539c6f504abd76d7d446dedc980e5eaae2c0b483fb7e0ac8d9eb3af1df2a4561f2a7327d77cf4bd32875ed987b7ec46653063288890399f6f23f8c"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:48:38.108254475Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00048-9w7",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Searching Lightspeed for: \"14464\"",
+    "timestamp": "2026-04-08T16:48:38.039560Z"
+  },
+  {
+    "insertId": "69d6868e0006c5d73cfa5976",
+    "labels": {
+      "instanceId": "008c15ff08eb8df28035ee7ce78ad6beca647fd1539c6f504abd76d7d446dedc980e5eaae2c0b483fb7e0ac8d9eb3af1df2a4561f2a7327d77cf4bd32875ed987b7ec46653063288890399f6f23f8c"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T16:47:10.449024431Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00048-9w7",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Push to WooCommerce error: ",
+    "timestamp": "2026-04-08T16:47:10.443863Z"
+  },
+  {
+    "insertId": "69d6868e000640a29dc119aa",
+    "labels": {
+      "instanceId": "008c15ff08eb8df28035ee7ce78ad6beca647fd1539c6f504abd76d7d446dedc980e5eaae2c0b483fb7e0ac8d9eb3af1df2a4561f2a7327d77cf4bd32875ed987b7ec46653063288890399f6f23f8c"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:47:10.480028583Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00048-9w7",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Found latest LS data for 14464. Inventory count items: 0",
+    "timestamp": "2026-04-08T16:47:10.409762Z"
+  },
+  {
+    "insertId": "69d6868a000604654be60ff1",
+    "labels": {
+      "instanceId": "008c15ff08eb8df28035ee7ce78ad6beca647fd1539c6f504abd76d7d446dedc980e5eaae2c0b483fb7e0ac8d9eb3af1df2a4561f2a7327d77cf4bd32875ed987b7ec46653063288890399f6f23f8c"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:47:06.483312342Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00048-9w7",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Performing JIT Deep Sync for SKU: 14464 (LS ID: 08e1bbc0-45f5-483b-b07e-7cd14d77ce5c)",
+    "timestamp": "2026-04-08T16:47:06.394341Z"
+  },
+  {
+    "insertId": "69d681980004241862a0257b",
+    "labels": {
+      "instanceId": "008c15ff08bf323235adc78ebdd579fba405114ee989b144052e62f76e28e961957ef39db7d612ffb577b74b69a685f099f93e4f92ebf8b32a0629bb22fb7a1cde1101ca21132086fae9a464"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:26:00.604983217Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00046-mh2",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] /products name result count: 30",
+    "timestamp": "2026-04-08T16:26:00.271384Z"
+  },
+  {
+    "insertId": "69d6819800002fb08ced590d",
+    "labels": {
+      "instanceId": "008c15ff08bf323235adc78ebdd579fba405114ee989b144052e62f76e28e961957ef39db7d612ffb577b74b69a685f099f93e4f92ebf8b32a0629bb22fb7a1cde1101ca21132086fae9a464"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:26:00.272628292Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00046-mh2",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Falling back to /products name search: \"SUMMER\"",
+    "timestamp": "2026-04-08T16:26:00.012208Z"
+  },
+  {
+    "insertId": "69d6819800002f9d1a8406e1",
+    "labels": {
+      "instanceId": "008c15ff08bf323235adc78ebdd579fba405114ee989b144052e62f76e28e961957ef39db7d612ffb577b74b69a685f099f93e4f92ebf8b32a0629bb22fb7a1cde1101ca21132086fae9a464"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:26:00.272628292Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00046-mh2",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] /search fuzzy results: 0",
+    "timestamp": "2026-04-08T16:26:00.012189Z"
+  },
+  {
+    "insertId": "69d68197000d95ed438a7749",
+    "labels": {
+      "instanceId": "008c15ff08bf323235adc78ebdd579fba405114ee989b144052e62f76e28e961957ef39db7d612ffb577b74b69a685f099f93e4f92ebf8b32a0629bb22fb7a1cde1101ca21132086fae9a464"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:25:59.940870535Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00046-mh2",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] /products SKU results: 0",
+    "timestamp": "2026-04-08T16:25:59.890349Z"
+  },
+  {
+    "insertId": "69d681970009cbe089f1c6bf",
+    "labels": {
+      "instanceId": "008c15ff08bf323235adc78ebdd579fba405114ee989b144052e62f76e28e961957ef39db7d612ffb577b74b69a685f099f93e4f92ebf8b32a0629bb22fb7a1cde1101ca21132086fae9a464"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:25:59.940870535Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00046-mh2",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Trying reliable /products SKU lookup for: SUMMER",
+    "timestamp": "2026-04-08T16:25:59.642016Z"
+  },
+  {
+    "insertId": "69d681970009cb9b00aacfa4",
+    "labels": {
+      "instanceId": "008c15ff08bf323235adc78ebdd579fba405114ee989b144052e62f76e28e961957ef39db7d612ffb577b74b69a685f099f93e4f92ebf8b32a0629bb22fb7a1cde1101ca21132086fae9a464"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:25:59.940870535Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00046-mh2",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Searching Lightspeed for: \"SUMMER\"",
+    "timestamp": "2026-04-08T16:25:59.641947Z"
+  },
+  {
+    "insertId": "69d681880008cd130387b7b5",
+    "labels": {
+      "instanceId": "008c15ff08bf323235adc78ebdd579fba405114ee989b144052e62f76e28e961957ef39db7d612ffb577b74b69a685f099f93e4f92ebf8b32a0629bb22fb7a1cde1101ca21132086fae9a464"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T16:25:44.580754111Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00046-mh2",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] rawProducts is not an array: object {",
+    "timestamp": "2026-04-08T16:25:44.576787Z"
+  },
+  {
+    "insertId": "69d681880008bdda5f8536a1",
+    "labels": {
+      "instanceId": "008c15ff08bf323235adc78ebdd579fba405114ee989b144052e62f76e28e961957ef39db7d612ffb577b74b69a685f099f93e4f92ebf8b32a0629bb22fb7a1cde1101ca21132086fae9a464"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:25:44.621229505Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00046-mh2",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] /products SKU results: null",
+    "timestamp": "2026-04-08T16:25:44.572890Z"
+  },
+  {
+    "insertId": "69d68188000403c283b9d1bd",
+    "labels": {
+      "instanceId": "008c15ff08bf323235adc78ebdd579fba405114ee989b144052e62f76e28e961957ef39db7d612ffb577b74b69a685f099f93e4f92ebf8b32a0629bb22fb7a1cde1101ca21132086fae9a464"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:25:44.286736848Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00046-mh2",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Trying reliable /products SKU lookup for: 14464",
+    "timestamp": "2026-04-08T16:25:44.263106Z"
+  },
+  {
+    "insertId": "69d68188000403b527bc0fb5",
+    "labels": {
+      "instanceId": "008c15ff08bf323235adc78ebdd579fba405114ee989b144052e62f76e28e961957ef39db7d612ffb577b74b69a685f099f93e4f92ebf8b32a0629bb22fb7a1cde1101ca21132086fae9a464"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:25:44.286736848Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00046-mh2",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Searching Lightspeed for: \"14464\"",
+    "timestamp": "2026-04-08T16:25:44.263093Z"
+  },
+  {
+    "insertId": "69d67fef000ef321b9311c8e",
+    "labels": {
+      "instanceId": "008c15ff0821207020555051061f7675bb19feec3bd1fe0de7892f2257f353075683e0f1ff0cf33d9c5173f7928d7af70e742d769dda165efed7e1b5814a070db4fa681a9b94bc021a4685b35d4474"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-04-08T16:18:55.982631614Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00044-98j",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Push to WooCommerce error: Request failed with status code 400",
+    "timestamp": "2026-04-08T16:18:55.979745Z"
+  },
+  {
+    "insertId": "69d67fee000cc2a9b40c49d9",
+    "labels": {
+      "instanceId": "008c15ff0821207020555051061f7675bb19feec3bd1fe0de7892f2257f353075683e0f1ff0cf33d9c5173f7928d7af70e742d769dda165efed7e1b5814a070db4fa681a9b94bc021a4685b35d4474"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:18:55.010486518Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00044-98j",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Pushing NEW product to WooCommerce: 14464",
+    "timestamp": "2026-04-08T16:18:54.836265Z"
+  },
+  {
+    "insertId": "69d67fee000c4bda131ad2b3",
+    "labels": {
+      "instanceId": "008c15ff0821207020555051061f7675bb19feec3bd1fe0de7892f2257f353075683e0f1ff0cf33d9c5173f7928d7af70e742d769dda165efed7e1b5814a070db4fa681a9b94bc021a4685b35d4474"
+    },
+    "logName": "projects/senmizu/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-04-08T16:18:55.010486518Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "lswoo-middleware",
+        "location": "us-east1",
+        "project_id": "senmizu",
+        "revision_name": "lswoo-middleware-00044-98j",
+        "service_name": "lswoo-middleware"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "[Admin] Staging DB updated for 14464. New quantity: 0",
+    "timestamp": "2026-04-08T16:18:54.805850Z"
+  }
+]
+

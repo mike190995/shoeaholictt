@@ -48,9 +48,14 @@ export class UniversalProduct {
    * X-Series format: { id, sku, handle, price, inventory: { count }, ... }
    */
   static fromLightspeed(raw: Record<string, unknown>): UniversalProduct {
+    // Strategy: prioritize the full variant_name if it exists, as it usually contains
+    // the base name + attributes (Size/Color).
+    const titleCandidates = [raw.variant_name, raw.name, raw.handle].filter(Boolean) as string[];
+    const title = titleCandidates.length > 0 ? titleCandidates[0] : '';
+
     return new UniversalProduct({
       sku: (raw.sku || raw.handle || String(raw.id)) as string,
-      title: (raw.name || raw.variant_name || '') as string,
+      title,
       description: (raw.description || '') as string,
       price: parseFloat(String(raw.retail_price || raw.price || raw.price_including_tax || raw.price_excluding_tax || 0)),
       quantity: (() => {
@@ -186,8 +191,9 @@ export class UniversalProduct {
    * Transforms to WooCommerce REST API format.
    * @param wooCategoryId Optional category ID to associate
    * @param customMappings Optional generic field mappings (e.g. { tags: "category" })
+   * @param mediaMap Optional map of image URLs to existing WooCommerce Media IDs for deduplication
    */
-  toWoo(wooCategoryId?: number, customMappings?: Record<string, string>): Record<string, unknown> {
+  toWoo(wooCategoryId?: number, customMappings?: Record<string, string>, mediaMap?: Map<string, number>): Record<string, unknown> {
     const payload: Record<string, any> = {
       sku: this.data.sku,
       name: this.data.title,
@@ -197,12 +203,21 @@ export class UniversalProduct {
       manage_stock: true,
       images: (() => {
         const mainImg = this.data.imageUrl || this.data.thumbnailUrl;
-        const allImages: Array<{src: string}> = [];
-        if (mainImg) allImages.push({ src: mainImg });
+        const allImages: Array<{src?: string, id?: number}> = [];
+        
+        if (mainImg) {
+          const existingId = mediaMap?.get(mainImg);
+          if (existingId) allImages.push({ id: existingId });
+          else allImages.push({ src: mainImg });
+        }
         
         if (this.data.galleryImages) {
           for (const url of this.data.galleryImages) {
-            if (url !== mainImg) allImages.push({ src: url });
+            if (url !== mainImg) {
+              const existingId = mediaMap?.get(url);
+              if (existingId) allImages.push({ id: existingId });
+              else allImages.push({ src: url });
+            }
           }
         }
         return allImages;

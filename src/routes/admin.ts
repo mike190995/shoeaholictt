@@ -4,7 +4,16 @@ import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { enqueueTask } from '../lib/tasks.js';
 import { createLightspeedClient, fetchInventoryForProduct } from '../services/lightspeed.js';
-import { createWooCommerceClient, createWooProduct, updateWooProduct, deleteWooProduct } from '../services/woocommerce.js';
+import { 
+  createWooCommerceClient, 
+  createWooProduct, 
+  updateWooProduct, 
+  deleteWooProduct, 
+  getWooProductBySku,
+  createWooVariation,
+  updateWooVariation,
+  getWooVariationBySku
+} from '../services/woocommerce.js';
 import { getRedisClient } from '../lib/redis.js';
 import { UniversalProduct } from '../mappers/universal.js';
 import { optimizeAndUploadImage } from '../lib/images.js';
@@ -214,18 +223,48 @@ adminRouter.post('/api/logs/:id/retry', async (req, res) => {
   }
 });
 
-// ─── Force Sync Product ──────────────────────────
+// ─── Bilateral Force Sync ────────────────────────
 adminRouter.post('/api/products/:sku/force-sync', async (req, res) => {
   try {
     const { sku } = req.params;
-    const product = await prisma.product.findUnique({ where: { sku } });
+    let product = await prisma.product.findUnique({ where: { sku } });
 
-    if (!product) {
-      res.status(404).json({ error: `Product not found for SKU: ${sku}` });
-      return;
+    // Step 0: Fetch latest state from Lightspeed (Source of Truth)
+    const lsClient = await createLightspeedClient();
+    const { fetchInventoryForProduct } = await import('../services/lightspeed.js');
+    
+    // Discovery
+    const searchRes = await lsClient.get('/products', { params: { sku, embed: 'inventory' } });
+    let raw = searchRes.data.data?.[0];
+    
+    if (!raw) {
+      const fuzzyRes = await lsClient.get('/search', { params: { type: 'products', sku: sku.toLowerCase() } });
+      raw = fuzzyRes.data.data?.[0];
     }
 
-    // Create a sync log for this admin action
+    if (raw) {
+      // Enrichment
+      if (!raw.inventory || raw.inventory.length === 0) {
+        raw.inventory = await fetchInventoryForProduct(lsClient, raw.id);
+      }
+      
+      const universal = UniversalProduct.fromLightspeed(raw);
+      const data = universal.toPostgres() as any;
+      
+      // Update local mirror
+      product = await prisma.product.upsert({
+        where: { sku },
+        update: data,
+        create: data
+      });
+      console.log(`[Sync] Updated local DB for SKU ${sku} from Lightspeed.`);
+    }
+
+    if (!product) {
+       return res.status(404).json({ error: `Product not found in LS or DB for SKU: ${sku}` });
+    }
+
+    // Step 1: Enqueue bilateral push (to Woo & back to LS if modified)
     const syncLog = await prisma.syncLog.create({
       data: {
         direction: 'admin_to_all',
@@ -236,19 +275,103 @@ adminRouter.post('/api/products/:sku/force-sync', async (req, res) => {
       },
     });
 
-    // Enqueue the force sync task
     if (process.env.NODE_ENV === 'production') {
       await enqueueTask('admin_to_all', { syncLogId: syncLog.id, ...product as any });
-    } else {
-      console.log(`[Admin] Dev mode: simulating force-sync for SKU ${sku}, syncLogId=${syncLog.id}`);
-      // In dev, mark as completed immediately
-      await prisma.syncLog.update({ where: { id: syncLog.id }, data: { status: 'completed' } });
     }
 
-    res.json({ success: true, message: `Force sync enqueued for SKU: ${sku}`, syncLogId: syncLog.id });
+    res.json({ success: true, message: `Bilateral sync initiated for ${sku}. Latest inventory pulled.`, syncLogId: syncLog.id });
   } catch (err: any) {
     console.error('[Admin] Force sync error:', err.message);
-    res.status(500).json({ error: 'Failed to force sync product' });
+    res.status(500).json({ error: 'Failed to initiate bilateral sync' });
+  }
+});
+
+/**
+ * POST /api/sync/full
+ * Master catalog pull — fetches all products from Lightspeed and updates the staging DB.
+ * Used by the EJS "Execute Master Protocol" button.
+ */
+adminRouter.post('/api/sync/full', async (req, res) => {
+  try {
+    const syncLog = await prisma.syncLog.create({
+      data: {
+        direction: 'ls_to_db',
+        entityType: 'catalog',
+        entityId: 'full_import',
+        status: 'pending',
+        message: 'Full catalog import initiated from admin dashboard'
+      }
+    });
+
+    // Fire and forget — full scan runs in background
+    (async () => {
+      try {
+        const lsClient = await createLightspeedClient();
+        const { fetchFullInventoryMap } = await import('../services/lightspeed.js');
+
+        // Pre-fetch entire inventory table to avoid per-product calls
+        const inventoryMap = await fetchFullInventoryMap(lsClient);
+
+        let after: string | undefined = undefined;
+        let imported = 0;
+        let fetching = true;
+
+        while (fetching) {
+          const response: any = await lsClient.get('/products', {
+            params: { page_size: 100, embed: 'inventory', ...(after ? { after } : {}) }
+          });
+          const rawItems: any[] = response.data.data || [];
+
+          for (const item of rawItems) {
+            try {
+              (item as any).inventory_level = inventoryMap.get(item.id) || 0;
+              const universal = UniversalProduct.fromLightspeed(item);
+              const data = universal.toPostgres() as any;
+              await prisma.product.upsert({
+                where: { sku: universal.data.sku },
+                update: data,
+                create: data,
+              });
+              imported++;
+            } catch (e: any) {
+              console.error(`[SyncFull] Failed item: ${item.sku}`, e.message);
+            }
+          }
+
+          const version: any = response.data.version;
+          if (version?.max && rawItems.length > 0) {
+            after = version.max;
+          } else {
+            fetching = false;
+          }
+        }
+
+        await prisma.syncLog.update({
+          where: { id: syncLog.id },
+          data: {
+            status: 'completed',
+            completedAt: new Date(),
+            message: `Full import complete: ${imported} products synchronized.`
+          }
+        });
+        console.log(`[SyncFull] Done. ${imported} products imported.`);
+      } catch (err: any) {
+        console.error('[SyncFull] Background task failed:', err.message);
+        await prisma.syncLog.update({
+          where: { id: syncLog.id },
+          data: { status: 'failed', error: err.message, completedAt: new Date() }
+        });
+      }
+    })();
+
+    res.json({
+      success: true,
+      message: 'Full catalog pull started in the background. Check Sync Logs for progress.',
+      syncLogId: syncLog.id
+    });
+  } catch (err: any) {
+    console.error('[SyncFull] Failed to start:', err.message);
+    res.status(500).json({ error: 'Failed to start full catalog pull' });
   }
 });
 
@@ -271,13 +394,32 @@ adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
     let rawLsProduct: any = null;
     try {
       if (lsId) {
-        // ID filter on collection endpoint supports embeds (direct ID endpoint does not always)
-        const lsIdResponse = await lsClient.get('/products', { params: { id: lsId, embed: 'images,inventory' } });
-        rawLsProduct = lsIdResponse.data.data?.[0];
-      } else {
-        // Fallback to SKU lookup
-        const lsSkuResponse = await lsClient.get('/products', { params: { sku, embed: 'images,inventory' } });
-        rawLsProduct = lsSkuResponse.data.data?.[0];
+        try {
+          // Fetch direct ID (do not use ID in query params for the collection endpoint!)
+          const lsIdResponse = await lsClient.get(`/products/${lsId}`, { params: { embed: 'images,inventory' } });
+          rawLsProduct = lsIdResponse.data.data;
+        } catch (idErr: any) {
+          console.warn(`[Admin] Fetch by direct ID failed for ${lsId}, falling back to SKU lookup. Error:`, idErr.message);
+        }
+      }
+      
+      if (!rawLsProduct) {
+        // Fallback to SKU lookup using the Search API
+        // SEARCH API (2.0) is the reliable way to find the ID for a SKU
+        console.log(`[Admin] Fetch by ID missing/failed. Discovering ID via Search for SKU: ${sku}`);
+        const lsSearchResponse = await lsClient.get('/search', { params: { type: 'products', sku } });
+        const discoveredItem = lsSearchResponse.data.data?.[0];
+        
+        if (discoveredItem && discoveredItem.id) {
+          console.log(`[Admin] Discovered ID ${discoveredItem.id} for SKU ${sku}. Performing detailed fetch...`);
+          const lsDetailResponse = await lsClient.get(`/products/${discoveredItem.id}`, { params: { embed: 'images,inventory' } });
+          rawLsProduct = lsDetailResponse.data.data;
+        }
+        
+        if (rawLsProduct && rawLsProduct.name === 'Discount' && sku !== 'vend-discount') {
+          console.warn(`[Admin] Search/Fetch resulted in "Discount" for SKU ${sku}. Skipping update.`);
+          rawLsProduct = null;
+        }
       }
     } catch (lsErr: any) {
       console.warn(`[Admin] Deep sync fetch failed for ${sku}:`, lsErr.message);
@@ -285,10 +427,29 @@ adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
 
     let finalProduct = product;
     if (rawLsProduct) {
-      console.log(`[Admin] Found latest LS data for ${sku}. Inventory count items: ${rawLsProduct.inventory?.length || 0}`);
+      // Enrichment: If embedded inventory is missing or empty, fetch it explicitly
+      if (!rawLsProduct.inventory || rawLsProduct.inventory.length === 0) {
+        console.log(`[Admin] JIT Sync: Fetching enriched inventory for variant: ${sku} (ID: ${rawLsProduct.id})`);
+        const { fetchInventoryForProduct } = await import('../services/lightspeed.js');
+        rawLsProduct.inventory = await fetchInventoryForProduct(lsClient, rawLsProduct.id);
+      }
+
+      console.log(`[Admin] Found latest LS details for ${sku} (ID: ${rawLsProduct.id}). Inventory entries: ${rawLsProduct.inventory?.length || 0}`);
+      
+      // DIAGNOSTIC LOGGING: Show the first few fields to see why name/price/stock are 0
+      console.log(`[Diagnostic] SKU: ${sku} Raw Name: "${rawLsProduct.name}", Variant Name: "${rawLsProduct.variant_name}", Price: ${rawLsProduct.retail_price}, Inv: ${JSON.stringify(rawLsProduct.inventory?.[0] || 'NONE')}`);
+
       const universalSync = UniversalProduct.fromLightspeed(rawLsProduct);
       const dbData = universalSync.toPostgres() as any;
       
+      // TITLE SAFEGUARD: If the new title is generic but we have a good one, keep the old one.
+      const isGeneric = (t: string) => !t || t.toLowerCase() === 'discount' || t.toLowerCase() === 'test';
+      const useOldTitle = isGeneric(dbData.title) && !isGeneric(product.title);
+      
+      if (useOldTitle) {
+        console.warn(`[Admin] Safeguard triggered: Keeping descriptive title "${product.title}" over generic "${dbData.title}" for SKU ${sku}`);
+      }
+
       // Preserve local metadata (like woocommerceId) during deep sync
       const mergedMetadata = {
         ...(product.metadata as any || {}),
@@ -296,10 +457,14 @@ adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
       };
 
       // Update local mirror before optimizing/pushing
+      // CRITICAL: We omit 'sku' from dbData and optionally title based on safeguard.
+      const { sku: _lsSku, ...updateData } = dbData;
+      if (useOldTitle) delete (updateData as any).title;
+
       finalProduct = await prisma.product.update({
         where: { sku },
         data: {
-          ...dbData,
+          ...updateData,
           metadata: mergedMetadata
         }
       });
@@ -323,7 +488,27 @@ adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
       }
     }
 
-    // 2. Prepare Universal Model & WooCommerce Payload
+    // 2. Prepare WooCommerce Payload & Image Deduplication Map
+    const mediaMap = new Map<string, number>();
+    const wooClient = createWooCommerceClient();
+
+    // Strategy: Search for existing Media IDs for our images in other already-pushed products
+    const imageUrls = [finalProduct.imageUrl, ...((finalProduct.metadata as any)?.galleryImages || [])].filter(Boolean);
+    if (imageUrls.length > 0) {
+      const candidates = await prisma.product.findMany({
+        where: {
+          imageUrl: { in: imageUrls }
+        },
+        select: { imageUrl: true, metadata: true }
+      });
+      candidates.forEach(c => {
+        const metadata = (c.metadata as any) || {};
+        if (c.imageUrl && metadata.wooImageId) {
+          mediaMap.set(c.imageUrl, Number(metadata.wooImageId));
+        }
+      });
+    }
+
     const universal = UniversalProduct.fromDatabase({ 
       ...finalProduct, 
       imageUrl: finalImageUrl 
@@ -356,23 +541,76 @@ adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
       console.warn(`[Admin] Field mapping warning (ignoring): ${fieldErr.message}`);
     }
 
-    const wooPayload = universal.toWoo(wooCategoryId, fieldMappings);
-    const wooClient = createWooCommerceClient();
+    const wooPayload = universal.toWoo(wooCategoryId, fieldMappings, mediaMap);
     
     // 3. Push to WooCommerce
     const metadata = (finalProduct.metadata as Record<string, any>) || {};
     let wooId = metadata.woocommerceId ? Number(metadata.woocommerceId) : null;
-    let action: 'created' | 'updated';
+    const isVariant = !!finalProduct.variantParentId;
+    let wooParentId: number | null = null;
 
-    if (!wooId) {
-      console.log(`[Admin] Pushing NEW product to WooCommerce: ${sku}`);
-      wooId = await createWooProduct(wooClient, wooPayload);
-      action = 'created';
-    } else {
-      console.log(`[Admin] Updating EXISTING product in WooCommerce: ${sku} (ID: ${wooId})`);
-      await updateWooProduct(wooClient, wooId, wooPayload);
-      action = 'updated';
+    // Handle variant parenting
+    if (isVariant) {
+      console.log(`[Admin] Variant detected for ${sku}. Parent LS ID: ${finalProduct.variantParentId}`);
+      const parent = await prisma.product.findUnique({
+        where: { lightspeedId: finalProduct.variantParentId! }
+      });
+      if (parent) {
+        wooParentId = (parent.metadata as any)?.woocommerceId ? Number((parent.metadata as any).woocommerceId) : null;
+        console.log(`[Admin] Found parent WooCommerce ID: ${wooParentId}`);
+      }
     }
+
+    // Recovery Step: If ID is missing locally, search Woo by SKU
+    if (!wooId) {
+      console.log(`[Admin] No local Woo ID for ${sku} — checking remote search...`);
+      const existingRemote = wooParentId 
+        ? await getWooVariationBySku(wooClient, wooParentId, sku)
+        : await getWooProductBySku(wooClient, sku);
+        
+      if (existingRemote && existingRemote.id) {
+        wooId = Number(existingRemote.id);
+        console.log(`[Admin] Recovered ID for ${sku} via SKU search: ${wooId}`);
+      }
+    }
+
+    let action: 'created' | 'updated';
+    let wooResponse: any = null;
+    const endpoint = wooParentId ? `/products/${wooParentId}/variations` : '/products';
+
+    try {
+      if (!wooId) {
+        console.log(`[Admin] Pushing NEW ${wooParentId ? 'variation' : 'product'} to WooCommerce: ${sku}`);
+        const res = await wooClient.post(endpoint, wooPayload);
+        wooResponse = res.data;
+        wooId = Number(wooResponse.id);
+        action = 'created';
+      } else {
+        const updatePath = wooParentId ? `${endpoint}/${wooId}` : `${endpoint}/${wooId}`;
+        console.log(`[Admin] Updating EXISTING ${wooParentId ? 'variation' : 'product'}: ${sku} (ID: ${wooId})`);
+        try {
+          const res = await wooClient.put(updatePath, wooPayload);
+          wooResponse = res.data;
+          action = 'updated';
+        } catch (updateErr: any) {
+          if (updateErr.response?.status === 404) {
+            console.warn(`[Admin] ID ${wooId} not found (404). Re-creating...`);
+            const res = await wooClient.post(endpoint, wooPayload);
+            wooResponse = res.data;
+            wooId = Number(wooResponse.id);
+            action = 'created';
+          } else {
+            throw updateErr;
+          }
+        }
+      }
+    } catch (pushErr: any) {
+      console.error(`[Admin] WooCommerce push failed for ${sku}:`, pushErr.response?.data || pushErr.message);
+      throw pushErr;
+    }
+
+    // Capture the Media IDs returned by Woo for future deduplication mapping
+    const wooImageId = wooResponse.images?.[0]?.id;
 
     // Update local database with the ID and sync timestamp
     const updatedProduct = await prisma.product.update({
@@ -381,6 +619,7 @@ adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
         metadata: {
           ...metadata,
           woocommerceId: wooId,
+          wooImageId: wooImageId || metadata.wooImageId, // Save for deduplication
           lastPushToWoo: new Date().toISOString(),
         },
       },
@@ -1022,6 +1261,12 @@ adminRouter.post('/api/lightspeed/import', async (req, res) => {
     } 
     // Mode 2: Batch import by filter
     else if (filter) {
+      const { fetchFullInventoryMap } = await import('../services/lightspeed.js');
+      
+      // Step 1: Pre-fetch full inventory map to avoid individual calls inside the loop
+      // This is fast (~1-2 mins) and ensures variants are never zero-ed out.
+      const inventoryMap = await fetchFullInventoryMap(lsClient);
+
       let after: string | undefined = undefined;
       const params: any = { page_size: 100, embed: 'inventory' };
       if (filter.brandId) params.brand_id = filter.brandId;
@@ -1042,12 +1287,11 @@ adminRouter.post('/api/lightspeed/import', async (req, res) => {
         
         for (const item of rawItems) {
           // If onlyOnline is requested, verify active channels
-          if (filter.onlyOnline) {
-             // Lightspeed sometimes puts channels differently. Usually ecwid_enabled_webstore represents ecom. Or is_active in some versions.
-             // We'll check the top level active flag or ecwid flag if exist, or let's assume it has an active online store flag if available in payload.
-             // X-Series often uses `active: true`. `has_active_channels` might not be standard. We'll check `active`.
-             if (!item.active) continue;
-          }
+          if (filter.onlyOnline && !item.active) continue;
+
+          // Enrichment: Override embedded (potentially broken) inventory with mapping data
+          (item as any).inventory_level = inventoryMap.get(item.id) || 0;
+
           productsToUpsert.push(item);
         }
         
@@ -1091,6 +1335,8 @@ adminRouter.post('/api/lightspeed/import', async (req, res) => {
 });
 
 // ─── View Routes ─────────────────────────────────
+
+// Dashboard
 adminRouter.get('/', async (req, res) => {
   try {
     const [productCount, recentLogs] = await Promise.all([
@@ -1112,14 +1358,50 @@ adminRouter.get('/', async (req, res) => {
   }
 });
 
-adminRouter.get('/products', async (req, res) => {
-  res.render('products', { title: 'Product Matrix', activeTab: 'products' });
+// Catalog — full product listing with pagination
+adminRouter.get('/catalog', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = 50;
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { updatedAt: 'desc' },
+      }),
+      prisma.product.count(),
+    ]);
+
+    res.render('products', { 
+      title: 'Catalog', 
+      activeTab: 'products',
+      products,
+      page,
+      total,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (err) {
+    res.status(500).send('Error loading catalog');
+  }
 });
 
+// Legacy /products alias → redirect to /catalog
+adminRouter.get('/products', (req, res) => {
+  res.redirect('/admin/catalog');
+});
+
+// Import Node — redirect to the React SPA importer page
+adminRouter.get('/import', (req, res) => {
+  res.redirect('/importer');
+});
+
+// Manual Override Controls
 adminRouter.get('/sync', async (req, res) => {
-  res.render('sync', { title: 'Manual Controls', activeTab: 'sync' });
+  res.render('sync', { title: 'Manual Override', activeTab: 'sync' });
 });
 
+// Sync Logs
 adminRouter.get('/logs', async (req, res) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
@@ -1139,7 +1421,7 @@ adminRouter.get('/logs', async (req, res) => {
     ]);
 
     res.render('logs', {
-      title: 'Audit Trail',
+      title: 'Sync Logs',
       activeTab: 'logs',
       logs,
       page,
@@ -1152,3 +1434,4 @@ adminRouter.get('/logs', async (req, res) => {
 });
 
 export default adminRouter;
+

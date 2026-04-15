@@ -1,61 +1,66 @@
+<%- include('partials/header') %>
 <div class="space-y-10 px-4 sm:px-0">
   
   <!-- Single Item Reconciliation -->
-  <div class="glass rounded-[2rem] p-8 relative overflow-hidden">
+  <div class="glass-card p-10 relative overflow-hidden group">
     <div class="relative z-10">
-      <div class="flex items-center space-x-3 mb-6">
-        <div class="p-2 rounded-xl bg-blue-500/10 text-blue-500">
+      <div class="flex items-center space-x-3 mb-8">
+        <div class="p-3 rounded-2xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
           <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
           </svg>
         </div>
-        <h3 class="text-2xl font-bold text-white tracking-tight">Precision Sync</h3>
+        <h3 class="text-3xl font-black text-white italic tracking-tighter uppercase">Precision Sync Node</h3>
       </div>
-      <p class="text-gray-400 font-medium mb-8">Force immediate bilateral reconciliation for a specific node in the ecosystem.</p>
+      <p class="text-slate-500 font-medium mb-10 max-w-2xl leading-relaxed">Force immediate bilateral reconciliation for a specific product via SKU.</p>
       
-      <div class="flex flex-col sm:flex-row items-end gap-4">
+      <div class="flex flex-col sm:flex-row items-end gap-6">
         <div class="flex-1 w-full">
-          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Lightspeed ID or Store SKU</label>
-          <input type="text" id="single-sync-input" placeholder="e.g. SHIRT-123 or a6b89..." class="w-full glass bg-white/5 border-white/10 rounded-2xl px-6 py-3 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all">
+          <label class="block text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-4 ml-1">Target SKU Identifier</label>
+          <input type="text" id="single-sync-input" placeholder="e.g. 14342" class="w-full glass bg-black/20 border-white/10 rounded-2xl px-6 py-4 text-white font-mono placeholder:text-slate-700 outline-none focus:border-blue-500/50 transition-all">
         </div>
-        <button onclick="triggerSingleSync()" id="btn-single-sync" class="glass bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-blue-500/20 transition-all min-w-[140px]">
+        <button onclick="triggerSingleSync()" id="btn-single-sync" class="glass bg-blue-600 hover:bg-blue-500 text-white px-10 py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-500/20 transition-all active:scale-95 whitespace-nowrap">
           Sync Node
         </button>
       </div>
       
-      <div id="single-sync-result" class="mt-6 hidden rounded-[1.5rem] p-4 border transition-all animate-in fade-in slide-in-from-top-2 duration-300"></div>
+      <div id="single-sync-result" class="mt-8 hidden rounded-[1.5rem] p-6 border transition-all"></div>
     </div>
-    <div class="absolute right-0 top-0 w-64 h-64 bg-blue-600/10 blur-3xl -z-0 pointer-events-none"></div>
+    <div class="absolute right-[-5%] top-[-5%] w-80 h-80 bg-blue-600/10 blur-[120px] -z-0 pointer-events-none group-hover:bg-blue-600/20 transition-all duration-700"></div>
   </div>
 
   <!-- Master Catalog Force -->
-  <div class="glass border-red-500/20 rounded-[2rem] p-8 relative overflow-hidden">
+  <div class="glass-card border-red-500/10 p-10 relative overflow-hidden group">
     <div class="relative z-10">
-      <div class="flex items-center space-x-3 mb-6">
-        <div class="p-2 rounded-xl bg-red-500/10 text-red-500">
+      <div class="flex items-center space-x-3 mb-8">
+        <div class="p-3 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20">
           <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
           </svg>
         </div>
-        <h3 class="text-2xl font-bold text-white tracking-tight text-red-100">Master Override</h3>
+        <h3 class="text-3xl font-black text-white italic tracking-tighter uppercase">Master Override</h3>
       </div>
       
-      <div class="glass bg-red-500/5 border-red-500/10 rounded-2xl p-6 mb-8">
+      <div class="glass bg-red-500/5 border-red-500/10 rounded-[1.5rem] p-8 mb-10">
         <p class="text-red-400 text-sm font-medium leading-relaxed">
-          <span class="font-bold text-red-500">CRITICAL ACTION:</span> This triggers a deep-scan of the entire Lightspeed ecosystem and forces a mass-update to the WooCommerce store. Existing data may be overwritten.
+          <span class="font-black text-red-500 uppercase tracking-widest text-xs inline-block mb-1">Critical Action Alert</span><br>
+          This triggers a deep-scan of the entire Lightspeed catalog and forces a mass-update to the staging database. Existing mapping weights may be recalibrated.
         </p>
       </div>
       
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
-        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-[0.1em]">Estimated latency: 3-10 minutes (Batch Dependent)</p>
-        <button onclick="triggerFullSync()" id="btn-full-sync" class="glass bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white border-red-500/30 px-8 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-8">
+        <div class="flex items-center space-x-3">
+          <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+          <p class="text-[10px] text-slate-600 font-black uppercase tracking-[0.2em]">Est Latency: 3-10m // Full Catalog Protocol</p>
+        </div>
+        <button onclick="triggerFullSync()" id="btn-full-sync" class="glass bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white border-red-500/30 px-10 py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 shadow-lg shadow-red-500/10">
           Execute Master Protocol
         </button>
       </div>
       
-      <div id="full-sync-result" class="mt-8 hidden rounded-[1.5rem] p-6 border bg-black/20 font-mono text-xs leading-relaxed animate-in zoom-in-95 duration-500"></div>
+      <div id="full-sync-result" class="mt-10 hidden rounded-[1.5rem] p-8 border bg-black/40 font-mono text-xs leading-relaxed"></div>
     </div>
-    <div class="absolute right-0 top-0 w-64 h-64 bg-red-600/10 blur-3xl -z-0 pointer-events-none"></div>
+    <div class="absolute right-[-5%] top-[-5%] w-80 h-80 bg-red-600/10 blur-[120px] -z-0 pointer-events-none group-hover:bg-red-600/20 transition-all duration-700"></div>
   </div>
 
 </div>
@@ -66,31 +71,30 @@
     const btn = document.getElementById('btn-single-sync');
     const resDiv = document.getElementById('single-sync-result');
     
-    if (!input) return alert('Input required.');
+    if (!input) return alert('Please enter a SKU.');
     
     btn.disabled = true;
     btn.innerText = 'EXECUTING...';
     resDiv.classList.add('hidden');
 
     try {
-      const resp = await fetch('/admin/api/sync/single', {
+      const resp = await fetch(`/admin/api/products/${encodeURIComponent(input)}/force-sync`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: input })
+        headers: { 'Content-Type': 'application/json' }
       });
       const data = await resp.json();
       
       resDiv.classList.remove('hidden');
       if (data.success) {
         resDiv.className = 'mt-6 rounded-[1.5rem] p-4 border border-green-500/20 bg-green-500/5 text-green-400 text-xs font-bold uppercase tracking-widest';
-        resDiv.innerHTML = `&bull; NODE_STATUS: SYNCED <br> &bull; MESSAGE: ${data.message}`;
+        resDiv.innerHTML = `✓ NODE SYNCED &nbsp;|&nbsp; ${data.message}`;
         document.getElementById('single-sync-input').value = '';
       } else {
         resDiv.className = 'mt-6 rounded-[1.5rem] p-4 border border-red-500/20 bg-red-500/5 text-red-400 text-xs font-bold uppercase tracking-widest';
-        resDiv.innerText = 'ENGINE_ERROR: ' + data.error;
+        resDiv.innerText = 'ERROR: ' + (data.error || 'Unknown error');
       }
     } catch (e) {
-      alert('Ecossytem connection failure.');
+      alert('Connection failure: ' + e.message);
     } finally {
       btn.disabled = false;
       btn.innerText = 'Sync Node';
@@ -113,11 +117,11 @@
       
       resDiv.classList.remove('hidden');
       if (data.success) {
-         resDiv.className = 'mt-8 rounded-[1.5rem] p-6 border border-blue-500/20 bg-blue-500/5 text-blue-400 font-mono text-xs leading-relaxed';
-         resDiv.innerHTML = `<span class="text-white font-bold">// PROTOCOL INITIATED \\\\</span><br><br>${data.message}`;
+        resDiv.className = 'mt-8 rounded-[1.5rem] p-6 border border-blue-500/20 bg-blue-500/5 text-blue-400 font-mono text-xs leading-relaxed';
+        resDiv.innerHTML = `<span class="text-white font-bold">// PROTOCOL INITIATED</span><br><br>${data.message}`;
       } else {
-         resDiv.className = 'mt-8 rounded-[1.5rem] p-6 border border-red-500/20 bg-red-500/5 text-red-400 font-mono text-xs leading-relaxed';
-         resDiv.innerText = `ENGINE_HALT: ${data.error}`;
+        resDiv.className = 'mt-8 rounded-[1.5rem] p-6 border border-red-500/20 bg-red-500/5 text-red-400 font-mono text-xs leading-relaxed';
+        resDiv.innerText = `ENGINE_HALT: ${data.error}`;
       }
     } catch(e) {
       alert('Network failure during master protocol.');
@@ -127,3 +131,4 @@
     }
   }
 </script>
+<%- include('partials/footer') %>
