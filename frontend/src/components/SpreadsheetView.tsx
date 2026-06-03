@@ -123,6 +123,8 @@ const SpreadsheetView: React.FC = () => {
   const [dirtyRows, setDirtyRows] = useState<Map<string, Partial<Product>>>(new Map());
   const [committing, setCommitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const gridApiRef = useRef<GridApi | null>(null);
 
@@ -131,11 +133,12 @@ const SpreadsheetView: React.FC = () => {
     setTimeout(() => setToast(null), duration);
   };
 
-  const loadProducts = useCallback(async (query?: string) => {
+  const loadProducts = useCallback(async (pageNum: number, query?: string) => {
     setLoading(true);
     try {
-      const data = await fetchProducts(1, query);
+      const data = await fetchProducts(pageNum, query);
       setAllProducts(data.products);
+      if (data.pagination) setTotalPages(data.pagination.totalPages);
     } catch {
       showToast('Failed to load products', 'error');
     } finally {
@@ -144,11 +147,12 @@ const SpreadsheetView: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    loadProducts();
-  }, [loadProducts]);
+    loadProducts(page);
+  }, [loadProducts, page]);
 
   const handleSearch = () => {
-    loadProducts(searchQuery || undefined);
+    if (page !== 1) setPage(1);
+    else loadProducts(1, searchQuery || undefined);
   };
 
   const filteredProducts = useMemo(() => applyFilter(allProducts, filter), [allProducts, filter]);
@@ -197,7 +201,7 @@ const SpreadsheetView: React.FC = () => {
       if (!selected.length) return;
       showToast(`Pushing ${selected.length} products...`, 'info');
       for (const row of selected) await pushProductToWoo(row.sku).catch(console.error);
-      loadProducts(searchQuery || undefined);
+      loadProducts(page, searchQuery || undefined);
       showToast('Push complete', 'success');
     },
     pushGroup: async () => {
@@ -214,7 +218,7 @@ const SpreadsheetView: React.FC = () => {
           console.error(`Group push failed for ${row.sku}:`, err.message);
         }
       }
-      loadProducts(searchQuery || undefined);
+      loadProducts(page, searchQuery || undefined);
       showToast('Group push sequence finished', 'success');
     },
     sync: async () => {
@@ -319,7 +323,7 @@ const SpreadsheetView: React.FC = () => {
             />
             {searchQuery && (
               <button 
-                onClick={() => { setSearchQuery(''); loadProducts(); }}
+                onClick={() => { setSearchQuery(''); if (page !== 1) setPage(1); else loadProducts(1); }}
                 className="text-slate-600 hover:text-slate-400 text-xs font-black p-1"
               >
                 ESC
@@ -349,6 +353,26 @@ const SpreadsheetView: React.FC = () => {
         >
             Search
         </button>
+
+        <div className="flex gap-2 items-center ml-auto">
+            <button 
+              disabled={loading || page <= 1} 
+              onClick={() => setPage(p => p - 1)}
+              className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-slate-300 text-xs font-bold disabled:opacity-50 hover:bg-white/10"
+            >
+              Prev
+            </button>
+            <span className="text-slate-400 text-xs font-bold w-16 text-center">
+              {page} / {totalPages}
+            </span>
+            <button 
+              disabled={loading || page >= totalPages} 
+              onClick={() => setPage(p => p + 1)}
+              className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-slate-300 text-xs font-bold disabled:opacity-50 hover:bg-white/10"
+            >
+              Next
+            </button>
+        </div>
       </div>
 
 

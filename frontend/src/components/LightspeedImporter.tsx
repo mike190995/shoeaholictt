@@ -39,13 +39,16 @@ export default function LightspeedImporter() {
   const [filterActive, setFilterActive] = useState('1'); // Default to Active
   const [filterChannel, setFilterChannel] = useState(''); // Default to All
 
+  const [offset, setOffset] = useState(0);
+  const limit = 50;
+
   useEffect(() => {
-    handleSearch('');
+    handleSearch('', 0);
     fetchBrands().then(data => setBrands(data.brands)).catch(console.error);
     fetchTypes().then(data => setTypes(data.types)).catch(console.error);
   }, []);
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = async (query: string, currentOffset: number = 0) => {
     setLoading(true);
     setMessage(null);
     try {
@@ -54,9 +57,11 @@ export default function LightspeedImporter() {
         brandId: filterBrandId || undefined, 
         typeId: filterTypeId || undefined,
         active: filterActive || undefined,
-        channel: filterChannel || undefined
-      }, 50);
+        channel: filterChannel || undefined,
+        offset: currentOffset
+      }, limit);
       setRowData(data.products || []);
+      setOffset(currentOffset);
       if (data.products?.length === 0 && query) {
         setMessage({ type: 'error', text: `No products found matching "${query}". Try searching by Name if SKU doesn't work.` });
       }
@@ -204,7 +209,7 @@ export default function LightspeedImporter() {
                     placeholder="Search SKU or Title..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchQuery, 0)}
                     className="bg-transparent border-none text-white focus:outline-none flex-1 font-bold text-sm placeholder:text-slate-700"
                 />
             </div>
@@ -213,7 +218,7 @@ export default function LightspeedImporter() {
                 value={filterBrandId} 
                 onChange={(e) => {
                     setFilterBrandId(e.target.value);
-                    handleSearch(searchQuery);
+                    handleSearch(searchQuery, 0);
                 }}
                 className="bg-white/5 border border-white/10 text-slate-300 text-xs font-bold rounded-xl px-4 py-3 focus:outline-none transition-all hover:bg-white/10"
             >
@@ -225,7 +230,7 @@ export default function LightspeedImporter() {
                 value={filterTypeId} 
                 onChange={(e) => {
                     setFilterTypeId(e.target.value);
-                    handleSearch(searchQuery);
+                    handleSearch(searchQuery, 0);
                 }}
                 className="bg-white/5 border border-white/10 text-slate-300 text-xs font-bold rounded-xl px-4 py-3 focus:outline-none transition-all hover:bg-white/10"
             >
@@ -237,7 +242,7 @@ export default function LightspeedImporter() {
                 value={filterActive} 
                 onChange={(e) => {
                     setFilterActive(e.target.value);
-                    handleSearch(searchQuery);
+                    handleSearch(searchQuery, 0);
                 }}
                 className="bg-white/5 border border-white/10 text-slate-300 text-xs font-bold rounded-xl px-4 py-3 focus:outline-none transition-all hover:bg-white/10"
             >
@@ -250,7 +255,7 @@ export default function LightspeedImporter() {
                 value={filterChannel} 
                 onChange={(e) => {
                     setFilterChannel(e.target.value);
-                    handleSearch(searchQuery);
+                    handleSearch(searchQuery, 0);
                 }}
                 className="bg-white/5 border border-white/10 text-slate-300 text-xs font-bold rounded-xl px-4 py-3 focus:outline-none transition-all hover:bg-white/10"
             >
@@ -260,12 +265,32 @@ export default function LightspeedImporter() {
             </select>
 
             <button
-                onClick={() => handleSearch(searchQuery)}
+                onClick={() => handleSearch(searchQuery, 0)}
                 disabled={loading}
                 className="glass-button-primary bg-blue-600/80"
             >
                 {loading ? 'Searching...' : 'Search'}
             </button>
+            
+            <div className="flex gap-2 items-center ml-2">
+                <button 
+                  disabled={loading || offset === 0} 
+                  onClick={() => handleSearch(searchQuery, Math.max(0, offset - limit))}
+                  className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-slate-300 text-xs font-bold disabled:opacity-50 hover:bg-white/10"
+                >
+                  Prev
+                </button>
+                <span className="text-slate-400 text-xs font-bold w-20 text-center">
+                  {offset + 1} - {offset + rowData.length}
+                </span>
+                <button 
+                  disabled={loading || rowData.length < limit} 
+                  onClick={() => handleSearch(searchQuery, offset + limit)}
+                  className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-slate-300 text-xs font-bold disabled:opacity-50 hover:bg-white/10"
+                >
+                  Next
+                </button>
+            </div>
         </div>
 
         {message && (
