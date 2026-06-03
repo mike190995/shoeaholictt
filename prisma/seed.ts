@@ -1,41 +1,34 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 
-const prisma = new PrismaClient();
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool as any);
+const prisma = new PrismaClient({ adapter } as any);
 
 async function main() {
   console.log('Seeding local database...');
 
-  await prisma.product.upsert({
-    where: { sku: 'SHOE-001' },
-    update: {},
-    create: {
-      sku: 'SHOE-001',
-      title: 'Nike Air Max 2026',
-      price: 150.00,
-      quantity: 10,
-      category: 'Sneakers',
-      lightspeedId: 'ls_101',
-      woocommerceId: 201,
-      metadata: { color: 'Red', size: '10' }
-    }
+  // Only seed initial default credentials if none exist, preventing clobbering user configurations
+  const existing = await prisma.credential.findUnique({
+    where: { platform: 'lightspeed' },
   });
 
-  await prisma.product.upsert({
-    where: { sku: 'SHOE-002' },
-    update: {},
-    create: {
-      sku: 'SHOE-002',
-      title: 'Adidas Ultraboost Pro',
-      price: 180.00,
-      quantity: 5,
-      category: 'Sneakers',
-      lightspeedId: 'ls_102',
-      woocommerceId: 202,
-      metadata: { color: 'Black', size: '11' }
-    }
-  });
-
-  console.log('Seed complete! 🚀');
+  if (!existing) {
+    await prisma.credential.create({
+      data: {
+        platform: 'lightspeed',
+        accessToken: 'lsxs_pt_76bc256d0d21096a67fdbf4e414c2438c8be373d',
+        refreshToken: null,
+        expiresAt: null,
+        accountId: 'shoptt.retail.lightspeed.app',
+      },
+    });
+    console.log('Lightspeed credentials seeded (initial default).');
+  } else {
+    console.log('Lightspeed credentials already exist. Skipping seed to prevent overwriting user configurations.');
+  }
 }
 
 main()
@@ -45,4 +38,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });

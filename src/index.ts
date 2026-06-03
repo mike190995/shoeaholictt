@@ -21,13 +21,6 @@ const app = express();
 // Cloud Run uses a proxy, so we must trust it for rate limiting to work correctly
 app.set('trust proxy', 1);
 
-// ─── Frontend Static Serving ────────────────────
-const frontendDist = resolve(process.cwd(), 'frontend/dist');
-app.use(express.static(frontendDist));
-
-app.set('views', resolve(process.cwd(), 'src/views'));
-app.set('view engine', 'ejs');
-
 // ─── Security & Parsing ────────────────────────
 app.use(helmet({
   contentSecurityPolicy: {
@@ -42,6 +35,12 @@ app.use(helmet({
 }));
 app.use(cors({ origin: config.frontendOrigin }));
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json({
+  verify: (req: any, _res, buf) => {
+    // Save raw body for Lightspeed HMAC verification
+    req.rawBody = buf;
+  }
+}));
 
 // ─── Session Setup ─────────────────────────────
 app.use(session({
@@ -54,6 +53,17 @@ app.use(session({
   }
 }));
 
+app.set('views', resolve(process.cwd(), 'src/views'));
+app.set('view engine', 'ejs');
+
+// ─── Initial Redirects ──────────────────────────
+app.get('/', (req, res) => res.redirect('/admin'));
+app.get('/dashboard', (req, res) => res.redirect('/admin'));
+
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', version: APP_VERSION, timestamp: new Date().toISOString() });
+});
+
 // Global Rate Limiter
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
@@ -64,19 +74,6 @@ const globalLimiter = rateLimit({
 });
 app.use(globalLimiter);
 
-app.use(express.json({
-  verify: (req: any, _res, buf) => {
-    // Save raw body for Lightspeed HMAC verification
-    req.rawBody = buf;
-  }
-}));
-
-
-
-app.get('/health', (_req, res) => {
-  res.status(200).json({ status: 'ok', version: APP_VERSION, timestamp: new Date().toISOString() });
-});
-
 // ─── Global Auth Guard ─────────────────────────
 // Only enforce session on browser-facing admin routes.
 app.use((req, res, next) => {
@@ -86,14 +83,7 @@ app.use((req, res, next) => {
     '/auth',       // Lightspeed OAuth / token routes
     '/worker',     // Cloud Tasks worker callbacks
     '/webhooks',   // Lightspeed & WooCommerce incoming webhooks
-    '/admin/api',  // Dashboard AJAX calls (protected by adminAuth later)
-    // React SPA routes — the SPA itself handles auth for its API calls
-    '/dashboard',
-    '/importer',
-    '/products',
-    '/spreadsheet',
-    '/mapper',
-    '/logs',
+    '/admin/api'   // Dashboard AJAX calls (protected by adminAuth later)
   ];
   
   const isPublic = publicPaths.includes(req.path) || 
@@ -114,6 +104,10 @@ app.use((req, res, next) => {
   // Otherwise (browser navigation), force redirect to /login
   res.redirect('/login');
 });
+
+// ─── Frontend Static Serving ────────────────────
+const frontendDist = resolve(process.cwd(), 'frontend/dist');
+app.use(express.static(frontendDist));
 
 // ─── Routes ────────────────────────────────────
 app.use('/api', apiRouter);          

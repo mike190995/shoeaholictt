@@ -40,3 +40,10 @@ scripts/set-token.ts
 *.pem
 *.key
 service-account*.json
+
+# Scratch & Temporary Scripts
+scratch/
+tmp_*.ts
+tmp_*.js
+tmp_*.cjs
+

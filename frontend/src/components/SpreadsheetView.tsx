@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AgGridReact } from 'ag-grid-react';
 import type { ColDef, GridApi, CellValueChangedEvent } from 'ag-grid-community';
 import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
-import { fetchProducts, batchUpdateProducts, forceSyncProduct, pushProductToWoo, type Product } from '../api/products';
+import { fetchProducts, batchUpdateProducts, forceSyncProduct, pushProductToWoo, api, type Product } from '../api/products';
 import { ProductCellSchema } from '../lib/validation';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -74,16 +74,20 @@ const StatusRenderer: React.FC<any> = (params) => {
 };
 
 const ImageRenderer: React.FC<any> = (params) => {
-  const url = params.data?.thumbnailUrl || params.value;
-  const hasImage = url && !url.includes('placeholder') && !url.includes('no-image');
+  const imageUrl = params.value; // field 'imageUrl'
+  const thumbUrl = params.data?.thumbnailUrl;
+  
+  const isPlaceholder = (u?: string) => !u || u.includes('placeholder') || u.includes('no-image') || u.includes('default-product');
+  
+  const finalImageUrl = !isPlaceholder(imageUrl) ? imageUrl : (!isPlaceholder(thumbUrl) ? thumbUrl : null);
   
   return (
     <div className="flex items-center justify-center h-full py-1">
-      {hasImage ? (
+      {finalImageUrl ? (
         <div className="relative group">
           <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur opacity-0 group-hover:opacity-40 transition duration-300"></div>
           <img 
-            src={url} 
+            src={finalImageUrl} 
             className="relative w-10 h-10 object-cover rounded-lg border border-white/10 shadow-lg transition-transform group-hover:scale-110" 
             alt="" 
           />
@@ -193,8 +197,25 @@ const SpreadsheetView: React.FC = () => {
       if (!selected.length) return;
       showToast(`Pushing ${selected.length} products...`, 'info');
       for (const row of selected) await pushProductToWoo(row.sku).catch(console.error);
-      fetchProducts(1, undefined).then(data => setAllProducts(data.products));
+      loadProducts(searchQuery || undefined);
       showToast('Push complete', 'success');
+    },
+    pushGroup: async () => {
+      const selected = gridApiRef.current?.getSelectedRows() ?? [];
+      if (!selected.length) {
+        showToast('Select a parent product first', 'info');
+        return;
+      }
+      showToast('Pushing style groups...', 'info');
+      for (const row of selected) {
+        try {
+          await api.pushProductGroupToWoo(row.sku);
+        } catch (err: any) {
+          console.error(`Group push failed for ${row.sku}:`, err.message);
+        }
+      }
+      loadProducts(searchQuery || undefined);
+      showToast('Group push sequence finished', 'success');
     },
     sync: async () => {
       const selected = gridApiRef.current?.getSelectedRows() ?? [];
@@ -266,6 +287,7 @@ const SpreadsheetView: React.FC = () => {
 
         <div className="flex gap-3">
           <button onClick={commonActions.sync} className="glass-button-secondary">⚡ Sync</button>
+          <button onClick={commonActions.pushGroup} className="glass-button-secondary border-blue-500/30 text-blue-300">📦 Push Group</button>
           <button onClick={commonActions.pushToWoo} className="glass-button-primary">Push to Store</button>
           <div className="w-px h-8 bg-white/10 mx-2" />
           <button
@@ -328,7 +350,7 @@ const SpreadsheetView: React.FC = () => {
             Search
         </button>
       </div>
-Line 251: 
+
 
       {/* Main Grid Card */}
       <main className="flex-1 glass-card overflow-hidden flex flex-col p-4">

@@ -41,7 +41,7 @@ async function run() {
     }
 
     const universal = UniversalProduct.fromDatabase(dbProduct);
-    const wooPayload = universal.toWoo();
+    const wooPayload = universal.toWoo(undefined, undefined, undefined, isVariant);
     console.log(`[Diagnostic] Computed Woo Payload:`, JSON.stringify(wooPayload, null, 2));
 
     const metadata = (dbProduct.metadata as any) || {};

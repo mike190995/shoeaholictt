@@ -1,0 +1,209 @@
+<%- include('partials/header') %>
+<div class="space-y-10 px-4 sm:px-0">
+    
+    <!-- Header Card -->
+    <div class="glass-card p-10 flex flex-col lg:flex-row items-center justify-between relative overflow-hidden group">
+        <div class="relative z-10">
+            <h3 class="text-3xl font-black text-white italic tracking-tighter uppercase">Lightspeed Discovery</h3>
+            <p class="text-slate-500 mt-2 font-medium">Remote inventory node search for staging & pull protocol.</p>
+        </div>
+        <div class="mt-8 lg:mt-0 flex items-center space-x-4 relative z-10">
+            <button onclick="triggerFullImport()" class="glass bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white px-8 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all">
+                Pull All Discovery
+            </button>
+        </div>
+        <div class="absolute right-[-10%] top-[-20%] w-96 h-96 bg-emerald-600/10 blur-[120px] -z-0 pointer-events-none group-hover:bg-emerald-600/20 transition-all duration-700"></div>
+    </div>
+
+    <!-- Search & Control Tray -->
+    <div class="glass-card p-8 flex flex-col md:flex-row gap-6 items-center">
+        <div class="flex-1 w-full relative">
+            <input type="text" id="ls-search-input" placeholder="Search SKU, Title, or Brand..." class="w-full glass bg-black/20 border-white/10 rounded-2xl px-12 py-4 text-white font-bold placeholder:text-slate-700 outline-none focus:border-blue-500/50 transition-all">
+            <span class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600">🔍</span>
+        </div>
+        
+        <div class="flex w-full md:w-auto gap-4">
+            <button onclick="performSearch()" id="btn-search" class="flex-1 md:flex-none glass bg-blue-600 hover:bg-blue-500 text-white px-10 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-500/20 transition-all active:scale-95">
+                Execute Discovery
+            </button>
+            <button onclick="importSelected()" id="btn-import-selected" class="flex-1 md:flex-none glass bg-emerald-600 hover:bg-emerald-500 text-white px-10 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/20 transition-all active:scale-95 hidden">
+                Pull Selected (<span id="selected-count">0</span>)
+            </button>
+        </div>
+    </div>
+
+    <!-- Status Ticker -->
+    <div id="status-bar" class="hidden glass-card p-4 border-blue-500/20 bg-blue-500/5 text-[10px] font-bold text-blue-400 uppercase tracking-widest text-center animate-pulse"></div>
+
+    <!-- Results Grid -->
+    <div class="glass-card overflow-hidden min-h-[400px]">
+        <div id="results-placeholder" class="flex flex-col items-center justify-center py-32 space-y-4">
+            <div class="w-16 h-16 rounded-full bg-slate-900/50 flex items-center justify-center text-slate-700 text-2xl border border-white/5">📡</div>
+            <p class="text-[10px] font-bold text-slate-600 uppercase tracking-[0.3em]">Initialize scan to discover remote nodes</p>
+        </div>
+
+        <div id="results-container" class="hidden overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-white/[0.02]">
+                    <tr>
+                        <th class="p-5 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] w-16 text-center">
+                            <input type="checkbox" id="select-all" class="rounded bg-black/50 border-white/10 text-blue-500 focus:ring-0">
+                        </th>
+                        <th class="px-8 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Node / Entity</th>
+                        <th class="px-8 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Ident.</th>
+                        <th class="px-8 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Unit Data</th>
+                    </tr>
+                </thead>
+                <tbody id="results-body" class="divide-y divide-white/5"></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let selectedSkus = new Set();
+    let currentResults = [];
+
+    async function performSearch() {
+        const query = document.getElementById('ls-search-input').value.trim();
+        const btn = document.getElementById('btn-search');
+        const container = document.getElementById('results-container');
+        const placeholder = document.getElementById('results-placeholder');
+        const body = document.getElementById('results-body');
+        const statusBar = document.getElementById('status-bar');
+
+        btn.disabled = true;
+        btn.innerText = 'SCANNING...';
+        statusBar.classList.remove('hidden');
+        statusBar.innerText = 'Interrogating Lightspeed Protocol...';
+
+        try {
+            const resp = await fetch(`/admin/api/lightspeed/search?search=${encodeURIComponent(query)}`);
+            const data = await resp.json();
+            
+            currentResults = data.products || [];
+            body.innerHTML = '';
+            selectedSkus.clear();
+            updateSelectionUI();
+
+            if (currentResults.length === 0) {
+                container.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                placeholder.querySelector('p').innerText = 'No nodes discovered for current frequency';
+            } else {
+                placeholder.classList.add('hidden');
+                container.classList.remove('hidden');
+                
+                currentResults.forEach(p => {
+                    const row = document.createElement('tr');
+                    row.className = 'group hover:bg-white/[0.02] transition-colors';
+                    row.innerHTML = `
+                        <td class="p-5 text-center">
+                            <input type="checkbox" data-sku="${p.sku}" class="product-checkbox rounded bg-black/50 border-white/10 text-blue-500 focus:ring-0">
+                        </td>
+                        <td class="px-8 py-6">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 rounded-xl bg-gray-500/10 border border-white/10 flex items-center justify-center shrink-0 overflow-hidden">
+                                     ${p.thumbnailUrl ? `<img src="${p.thumbnailUrl}" class="w-full h-full object-cover">` : '<span class="text-lg">📦</span>'}
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-bold text-white group-hover:text-blue-400 transition-colors">${p.name}</p>
+                                    <p class="text-[9px] text-slate-500 font-black uppercase tracking-widest mt-0.5">${p.brand || 'No Brand'} / ${p.category}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-6">
+                            <p class="text-xs font-mono text-blue-500">${p.sku}</p>
+                            <span class="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1 block">ID: ${p.id.substring(0, 10)}...</span>
+                        </td>
+                        <td class="px-8 py-6">
+                            <p class="text-sm font-black text-white">$${Number(p.price).toFixed(2)}</p>
+                            <p class="text-[9px] font-black uppercase tracking-widest mt-1 ${p.stock > 0 ? 'text-emerald-500' : 'text-rose-500'}">INV. ${p.stock}</p>
+                        </td>
+                    `;
+                    body.appendChild(row);
+                });
+
+                // Re-bind checkboxes
+                document.querySelectorAll('.product-checkbox').forEach(cb => {
+                    cb.addEventListener('change', (e) => {
+                        const sku = e.target.dataset.sku;
+                        if (e.target.checked) selectedSkus.add(sku);
+                        else selectedSkus.delete(sku);
+                        updateSelectionUI();
+                    });
+                });
+            }
+        } catch (e) {
+            alert('Protocol handshake failed: ' + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Execute Discovery';
+            statusBar.classList.add('hidden');
+        }
+    }
+
+    function updateSelectionUI() {
+        const count = selectedSkus.size;
+        const btn = document.getElementById('btn-import-selected');
+        document.getElementById('selected-count').innerText = count;
+        if (count > 0) btn.classList.remove('hidden');
+        else btn.classList.add('hidden');
+    }
+
+    document.getElementById('select-all').addEventListener('change', (e) => {
+        const checkboxes = document.querySelectorAll('.product-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = e.target.checked;
+            const sku = cb.dataset.sku;
+            if (e.target.checked) selectedSkus.add(sku);
+            else selectedSkus.delete(sku);
+        });
+        updateSelectionUI();
+    });
+
+    async function importSelected() {
+        const btn = document.getElementById('btn-import-selected');
+        const skus = Array.from(selectedSkus);
+        
+        btn.disabled = true;
+        btn.innerText = 'IMPORTING...';
+
+        try {
+            const resp = await fetch('/admin/api/lightspeed/import', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ skus })
+            });
+            const data = await resp.json();
+            
+            if (data.success) {
+                alert(`SUCCESS: ${data.imported} nodes mirrored to local catalog.`);
+                selectedSkus.clear();
+                updateSelectionUI();
+                document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = false);
+            } else {
+                alert('ERR: ' + data.error);
+            }
+        } catch (e) {
+            alert('Import protocol failed.');
+        } finally {
+            btn.disabled = false;
+            updateSelectionUI();
+            btn.innerText = `Pull Selected (${selectedSkus.size})`;
+        }
+    }
+
+    function triggerFullImport() {
+        if (confirm('EXECUTE MASTER SYNC?\nThis triggers a full scan of the Lightspeed catalog in the background.')) {
+            fetch('/admin/api/sync/full', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) alert('Protocol initiated. Monitor sync logs for status.');
+                    else alert('Engine Halt: ' + data.error);
+                });
+        }
+    }
+</script>
+<%- include('partials/footer') %>

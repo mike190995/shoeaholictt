@@ -24,6 +24,19 @@ const INDEX_PATH = join(__dirname, '../../frontend/dist/index.html');
 
 export const adminRouter = Router();
 
+adminRouter.get('/api/debug-ls/:sku', async (req, res) => {
+  try {
+    const { sku } = req.params;
+    const product = await prisma.product.findUnique({ where: { sku } });
+    if (!product) return res.status(404).json({ error: 'Not found locally' });
+    const lsClient = await createLightspeedClient();
+    const lsRes = await lsClient.get(`/products/${product.lightspeedId}`);
+    res.json(lsRes.data.data);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Live System Health Check ────────────────────
 async function checkSystemHealth() {
   const health: Record<string, string> = {};
@@ -117,22 +130,63 @@ adminRouter.get('/api/products', async (req, res) => {
       prisma.product.count({ where }),
     ]);
 
+    const isMissingImage = (url?: string | null) => {
+      if (!url) return true;
+      const lower = url.toLowerCase();
+      return lower.includes('placeholder') || lower.includes('no-image') || lower.includes('default-product');
+    };
+
+    // Gather Parent Images for variants missing their own
+    const missingParentsByLS = products
+      .filter(p => isMissingImage(p.imageUrl) && p.variantParentId)
+      .map(p => p.variantParentId as string);
+    
+    const missingParentsBySKU = products
+      .filter(p => isMissingImage(p.imageUrl) && !p.variantParentId && p.parentSku)
+      .map(p => p.parentSku as string);
+
+    const parentImagesMap = new Map<string, string>(); // Link by LS ID OR Sku
+    
+    if (missingParentsByLS.length > 0 || missingParentsBySKU.length > 0) {
+      const parents = await prisma.product.findMany({
+        where: {
+          OR: [
+            { lightspeedId: { in: missingParentsByLS } },
+            { sku: { in: missingParentsBySKU } }
+          ]
+        },
+        select: { lightspeedId: true, sku: true, imageUrl: true }
+      });
+      parents.forEach(p => {
+        if (!isMissingImage(p.imageUrl)) {
+          if (p.lightspeedId) parentImagesMap.set(p.lightspeedId, p.imageUrl!);
+          if (p.sku) parentImagesMap.set(p.sku, p.imageUrl!);
+        }
+      });
+    }
+
     // Map to the frontend's expected shape
-    const mapped = products.map((p: any) => ({
-      id: p.id,
-      name: p.title,
-      sku: p.sku,
-      price: p.price,
-      stock: p.quantity,
-      category: p.category,
-      brand: p.brand,
-      tags: p.tags,
-      imageUrl: p.imageUrl,
-      thumbnailUrl: (p.metadata as any)?.thumbnailUrl || p.imageUrl,
-      status: p.quantity > 0 ? 'published' : 'draft',
-      woocommerceId: (p.metadata as any)?.woocommerceId || null,
-      lastSynced: p.updatedAt,
-    }));
+    const mapped = products.map((p: any) => {
+      const inheritedImageUrl = isMissingImage(p.imageUrl) 
+        ? (parentImagesMap.get(p.variantParentId || '') || parentImagesMap.get(p.parentSku || '') || null)
+        : p.imageUrl;
+      
+      return {
+        id: p.id,
+        name: p.title,
+        sku: p.sku,
+        price: p.price,
+        stock: p.quantity,
+        category: p.category,
+        brand: p.brand,
+        tags: p.tags,
+        imageUrl: inheritedImageUrl,
+        thumbnailUrl: isMissingImage((p.metadata as any)?.thumbnailUrl) ? inheritedImageUrl : ((p.metadata as any).thumbnailUrl || inheritedImageUrl),
+        status: p.quantity > 0 ? 'published' : 'draft',
+        woocommerceId: (p.metadata as any)?.woocommerceId || null,
+        lastSynced: p.updatedAt,
+      };
+    });
 
     res.json({
       products: mapped,
@@ -379,11 +433,28 @@ adminRouter.post('/api/sync/full', async (req, res) => {
 adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
   try {
     const { sku } = req.params;
+    const result = await executeWooPush(sku);
+    res.json({ 
+      success: true, 
+      message: `Product ${result.action} successfully in WooCommerce.`, 
+      woocommerceId: result.woocommerceId,
+      product: result.product
+    });
+  } catch (err: any) {
+    console.error('[Admin] Push to WooCommerce error:', err.message);
+    res.status(500).json({ 
+      error: 'Failed to push product to WooCommerce', 
+      details: err.response?.data || err.message 
+    });
+  }
+});
+
+export async function executeWooPush(sku: string): Promise<any> {
+  try {
     const product = await prisma.product.findUnique({ where: { sku } });
 
     if (!product) {
-      res.status(404).json({ error: `Product not found for SKU: ${sku}` });
-      return;
+      throw new Error(`Product not found for SKU: ${sku}`);
     }
 
     // 0. Deep Fetch from Lightspeed to get high-res images and latest stock
@@ -488,25 +559,58 @@ adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
       }
     }
 
-    // 2. Prepare WooCommerce Payload & Image Deduplication Map
-    const mediaMap = new Map<string, number>();
+    // 2. Prepare WooCommerce Payload
     const wooClient = createWooCommerceClient();
+    const isVariant = !!finalProduct.variantParentId;
 
-    // Strategy: Search for existing Media IDs for our images in other already-pushed products
-    const imageUrls = [finalProduct.imageUrl, ...((finalProduct.metadata as any)?.galleryImages || [])].filter(Boolean);
-    if (imageUrls.length > 0) {
-      const candidates = await prisma.product.findMany({
-        where: {
-          imageUrl: { in: imageUrls }
-        },
-        select: { imageUrl: true, metadata: true }
+    // --- PARENT AUTO-SYNC ---
+    if (isVariant && finalProduct.variantParentId) {
+      const parent = await prisma.product.findUnique({
+        where: { lightspeedId: finalProduct.variantParentId }
       });
-      candidates.forEach(c => {
-        const metadata = (c.metadata as any) || {};
-        if (c.imageUrl && metadata.wooImageId) {
-          mediaMap.set(c.imageUrl, Number(metadata.wooImageId));
+      if (parent) {
+        const parentWooId = (parent.metadata as any)?.woocommerceId;
+        
+        // AUTO-PUSH PARENT FIRST if it hasn't been synced to Woo
+        if (!parentWooId && parent.sku !== sku) {
+          console.log(`[Admin] Auto-pushing PARENT product ${parent.sku} before variant ${sku}...`);
+          try {
+            const parentResult = await executeWooPush(parent.sku);
+            console.log(`[Admin] Parent ${parent.sku} auto-pushed successfully (Woo ID: ${parentResult.woocommerceId}).`);
+          } catch (autoPushErr: any) {
+            console.warn(`[Admin] Failed to auto-push parent ${parent.sku}. Proceeding with variant sync anyway. Error:`, autoPushErr.message);
+          }
         }
-      });
+      }
+    }
+
+    const isMissingImage = (url?: string | null) => {
+      if (!url) return true;
+      const lower = url.toLowerCase();
+      return lower.includes('placeholder') || lower.includes('no-image') || lower.includes('default-product');
+    };
+
+    // --- IMAGE INHERITANCE ---
+    finalImageUrl = finalProduct.imageUrl;
+    
+    // If variant is missing image (or has placeholder), try to inherit from parent
+    if (isVariant && isMissingImage(finalImageUrl)) {
+        const parentId = finalProduct.variantParentId;
+        const parentSku = finalProduct.parentSku;
+
+        const parent = await prisma.product.findFirst({ 
+          where: { 
+            OR: [
+              parentId ? { lightspeedId: parentId } : undefined,
+              parentSku ? { sku: parentSku } : undefined
+            ].filter(Boolean) as any
+          } 
+        });
+
+        if (parent && !isMissingImage(parent.imageUrl)) {
+            console.log(`[Admin] Variant ${sku} inheriting image from parent ${parent.sku}: ${parent.imageUrl}`);
+            finalImageUrl = parent.imageUrl!;
+        }
     }
 
     const universal = UniversalProduct.fromDatabase({ 
@@ -541,12 +645,11 @@ adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
       console.warn(`[Admin] Field mapping warning (ignoring): ${fieldErr.message}`);
     }
 
-    const wooPayload = universal.toWoo(wooCategoryId, fieldMappings, mediaMap);
+    const wooPayload = universal.toWoo(wooCategoryId, fieldMappings, undefined, isVariant);
     
     // 3. Push to WooCommerce
     const metadata = (finalProduct.metadata as Record<string, any>) || {};
     let wooId = metadata.woocommerceId ? Number(metadata.woocommerceId) : null;
-    const isVariant = !!finalProduct.variantParentId;
     let wooParentId: number | null = null;
 
     // Handle variant parenting
@@ -609,10 +712,10 @@ adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
       throw pushErr;
     }
 
-    // Capture the Media IDs returned by Woo for future deduplication mapping
-    const wooImageId = wooResponse.images?.[0]?.id;
-
     // Update local database with the ID and sync timestamp
+    const wooImageId = isVariant && wooResponse.image?.id 
+      ? wooResponse.image.id 
+      : wooResponse.images?.[0]?.id;
     const updatedProduct = await prisma.product.update({
       where: { sku },
       data: {
@@ -636,18 +739,292 @@ adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
       },
     });
 
-    res.json({ 
+    return { 
       success: true, 
-      message: `Product ${action} successfully in WooCommerce.`, 
+      action, 
       woocommerceId: wooId,
       product: updatedProduct
-    });
+    };
   } catch (err: any) {
-    console.error('[Admin] Push to WooCommerce error:', err.message);
-    res.status(500).json({ 
-      error: 'Failed to push product to WooCommerce', 
-      details: err.response?.data || err.message 
-    });
+    console.error(`[Admin] executeWooPush failed for ${sku}:`, err.message);
+    throw err;
+  }
+}
+
+/**
+ * Pushes a style group (parent + siblings) to WooCommerce as a Variable Product.
+ * Implements Architecture §3: Data Transformation and Grouping.
+ */
+export async function pushProductGroup(parentSku: string): Promise<any> {
+  const wooClient = createWooCommerceClient();
+  const lsClient = await createLightspeedClient();
+
+  // 1. Load Initial Product (could be parent or variant)
+  let parent = await prisma.product.findUnique({ where: { sku: parentSku } });
+  if (!parent) throw new Error(`Product not found for SKU: ${parentSku}`);
+  
+  // Auto-resolve parent if a variant SKU was provided
+  if (parent.variantParentId) {
+    console.log(`[Admin] SKU ${parentSku} is a variant. Auto-resolving parent product...`);
+    const resolvedParent = await prisma.product.findUnique({ where: { lightspeedId: parent.variantParentId } });
+    if (!resolvedParent) throw new Error(`Parent product not found for variant Parent ID: ${parent.variantParentId}`);
+    parent = resolvedParent;
+    parentSku = parent.sku; // Update the reference
+  }
+
+  const lightspeedId = parent.lightspeedId;
+  if (!lightspeedId) throw new Error(`Parent ${parentSku} is missing lightspeedId.`);
+
+  // 2. Load Sibling Variants
+  const siblingsRaw = await prisma.product.findMany({
+    where: { 
+      OR: [
+        { variantParentId: lightspeedId },
+        { parentSku: parentSku }
+      ]
+    }
+  });
+
+  // Deduplicate by SKU to prevent double-counting if a record matches both criteria
+  const siblingsMap = new Map();
+  siblingsRaw.forEach(s => siblingsMap.set(s.sku, s));
+  const siblings = Array.from(siblingsMap.values()) as typeof siblingsRaw;
+
+  if (siblings.length === 0) {
+    console.warn(`[Admin] Parent ${parentSku} has no siblings. Falling back to single SKU push.`);
+    return executeWooPush(parentSku);
+  }
+
+  console.log(`[Admin] Starting Group Push for ${parentSku} (${siblings.length} variants).`);
+
+  // 3. JIT Fetch and Build Attributes
+  // We need to know all possible options for the parent shell.
+  const supersetAttributes: Record<string, Set<string>> = {};
+  const enrichedVariants: any[] = [];
+  
+  // Include the parent itself in the fetch list as requested (it might have its own stock/details)
+  const allItems = [parent, ...siblings];
+
+  for (const variant of allItems) {
+    try {
+      // JIT fetch fresh details (stock, skuImages, attributes) for each variant
+      const lsSearchRes = await lsClient.get('/search', { params: { sku: variant.sku, type: 'products', embed: 'images,inventory' } });
+      let raw = lsSearchRes.data.data?.[0];
+      
+      // Follow-up: If search didn't return inventory, fetch it directly
+      if (raw && (!raw.inventory || (Array.isArray(raw.inventory) && raw.inventory.length === 0))) {
+        const invRes = await lsClient.get(`/products/${raw.id}/inventory`).catch(() => null);
+        if (invRes?.data?.data) {
+          raw.inventory = invRes.data.data;
+        }
+      }
+
+      if (raw) {
+        const universal = UniversalProduct.fromLightspeed(raw);
+        enrichedVariants.push({ variant, universal });
+        
+        // Add to attribute map
+        (universal.data.variantOptions || []).forEach(opt => {
+          if (!supersetAttributes[opt.name]) supersetAttributes[opt.name] = new Set();
+          supersetAttributes[opt.name].add(opt.value);
+        });
+      }
+    } catch (err: any) {
+      console.warn(`[Admin] Failed to JIT fetch variant ${variant.sku}:`, err.message);
+    }
+  }
+
+  const finalAttributes: Record<string, string[]> = {};
+  Object.entries(supersetAttributes).forEach(([k, v]) => {
+    finalAttributes[k] = Array.from(v);
+  });
+
+  // 4. CLEAN SLATE: Delete every product in this group from WooCommerce via SKU lookup,
+  // whether or not we have a local woocommerceId recorded. This prevents SKU collision errors.
+  console.log(`[Admin] Clean slate: nuking ${siblings.length + 1} SKUs from WooCommerce...`);
+  const allGroupSkus = [parent, ...siblings].map(p => p.sku);
+
+  for (const sku of allGroupSkus) {
+    try {
+      // 1. Search for any TOP-LEVEL product with this SKU
+      const simpleRes = await wooClient.get('/products', { params: { sku, per_page: 10 } });
+      for (const p of (simpleRes.data as any[]) || []) {
+        console.log(`[Admin] Deleting conflicting product: ${sku} (ID: ${p.id}, Type: ${p.type})`);
+        await wooClient.delete(`/products/${p.id}`, { params: { force: true } }).catch(() => {});
+      }
+
+      // 2. Search for any VARIATION with this SKU (harder, but we can try common parents or use the sku directly if the API supports it)
+      // Note: standard WC API doesn't support global variation search by SKU easily.
+      // But we can check if the current parent in our metadata exists and has this variation.
+      const parentId = (parent.metadata as any)?.woocommerceId;
+      if (parentId) {
+        const varRes = await wooClient.get(`/products/${parentId}/variations`, { params: { sku } }).catch(() => null);
+        if (varRes && Array.isArray(varRes.data)) {
+          for (const v of varRes.data) {
+             console.log(`[Admin] Deleting conflicting variation from known parent: ${sku} (ID: ${v.id})`);
+             await wooClient.delete(`/products/${parentId}/variations/${v.id}`, { params: { force: true } }).catch(() => {});
+          }
+        }
+      }
+    } catch (err: any) {
+      console.warn(`[Admin] Clean slate warning for SKU ${sku}:`, err.message);
+    }
+    
+    // Always clear the local DB link regardless
+    try {
+      const dbRec = await prisma.product.findUnique({ where: { sku } });
+      if (dbRec) {
+        const meta = (dbRec.metadata as any) || {};
+        delete meta.woocommerceId;
+        await prisma.product.update({ where: { sku }, data: { metadata: meta } });
+      }
+    } catch {}
+  }
+
+  // 4b. Prepare Parent Aggregates
+  let totalStock = 0;
+  const galleryImagesSet = new Set<string>();
+  const categoriesSet = new Set<string>();
+  const tagsSet = new Set<string>();
+  
+  // Add parent's base data
+  if (parent.category) categoriesSet.add(parent.category);
+  (parent.tags || []).forEach((t: string) => tagsSet.add(t));
+
+  for (const { universal } of enrichedVariants) {
+    totalStock += universal.data.quantity || 0;
+    
+    // Aggregating categories and tags from all variants
+    if (universal.data.category) categoriesSet.add(universal.data.category);
+    (universal.data.tags || []).forEach((t: string) => tagsSet.add(t));
+    
+    if (universal.data.imageUrl) galleryImagesSet.add(universal.data.imageUrl);
+    if (universal.data.thumbnailUrl) galleryImagesSet.add(universal.data.thumbnailUrl);
+    (universal.data.galleryImages || []).forEach((img: string) => galleryImagesSet.add(img));
+  }
+  const galleryImages = Array.from(galleryImagesSet).filter(Boolean);
+  const finalCategories = Array.from(categoriesSet).filter(Boolean);
+  const finalTags = Array.from(tagsSet).filter(Boolean);
+
+  // 4c. Resolve Categories and Tags in WooCommerce
+  const resolveTerms = async (endpoint: string, names: string[]) => {
+    const ids: number[] = [];
+    for (const name of names) {
+      try {
+        const res = await wooClient.post(endpoint, { name }).catch(err => {
+          const errorData = err.response?.data;
+          if (errorData?.code === 'term_exists' && errorData?.data?.resource_id) {
+             return { data: { id: errorData.data.resource_id } };
+          }
+          throw err;
+        });
+        if (res?.data?.id) ids.push(res.data.id);
+      } catch (err: any) {
+        console.warn(`[Admin] Failed to resolve ${endpoint} for "${name}":`, err.message);
+      }
+    }
+    return ids;
+  };
+
+  console.log(`[Admin] Resolving ${finalCategories.length} categories and ${finalTags.length} tags...`);
+  const wooCategoryIds = await resolveTerms('/products/categories', finalCategories);
+  const wooTagIds = await resolveTerms('/products/tags', finalTags);
+
+  // 5. Push Parent Shell
+  const parentUniversal = UniversalProduct.fromDatabase(parent);
+  // Re-inject for mapper consistency if needed
+  parentUniversal.data.category = finalCategories[0]; // Primary
+  parentUniversal.data.tags = finalTags;
+  
+  const parentPayload = parentUniversal.toWooParent(
+    finalAttributes, 
+    wooCategoryIds, 
+    wooTagIds,
+    galleryImages, 
+    totalStock
+  );
+  
+  console.log(`[Admin] Pushing parent shell for ${parentSku}...`);
+  const parentResponse = await wooClient.post('/products', parentPayload);
+  const parentWooId = parentResponse.data.id;
+
+  await prisma.product.update({
+    where: { sku: parentSku },
+    data: { metadata: { ...(parent.metadata as any), woocommerceId: parentWooId } }
+  });
+
+  // 6. Push Variations
+  const results = { created: 0, updated: 0, failed: 0 };
+  for (const { variant, universal } of enrichedVariants) {
+    try {
+      // Avoid pushing the parent product as a variation of itself (SKU collision)
+      if (variant.sku === parentSku) {
+        console.log(`[Admin] Skipping variation sync for parent SKU ${variant.sku} (stock already aggregated).`);
+        continue;
+      }
+
+      const variationPayload = universal.toWoo(undefined, undefined, undefined, true);
+      console.log(`[Admin] Syncing variation ${variant.sku} under parent ${parentWooId}...`);
+      
+      // Idempotency check: Search for this SKU in the parent's variation list
+      const varSearchRes = await wooClient.get(`/products/${parentWooId}/variations`, { 
+        params: { sku: variant.sku } 
+      });
+      
+      const existing = (varSearchRes.data as any[])?.[0];
+      let vRes;
+      
+      if (existing) {
+        console.log(`[Admin] Variation ${variant.sku} exists (ID: ${existing.id}). Updating...`);
+        vRes = await wooClient.put(`/products/${parentWooId}/variations/${existing.id}`, variationPayload);
+        results.updated++;
+      } else {
+        console.log(`[Admin] Variation ${variant.sku} is new. Creating...`);
+        // We still use a rescue-retry just in case an orphan from another parent is blocking us
+        try {
+          vRes = await wooClient.post(`/products/${parentWooId}/variations`, variationPayload);
+        } catch (err: any) {
+          const errorData = err.response?.data;
+          const culpritId = errorData?.data?.resource_id || errorData?.resource_id;
+          if (culpritId) {
+            console.log(`[Admin] SKU conflict found for ${variant.sku}. Nuking ID ${culpritId} and retrying...`);
+            await wooClient.delete(`/products/${culpritId}`, { params: { force: true } }).catch(() => {});
+            vRes = await wooClient.post(`/products/${parentWooId}/variations`, variationPayload);
+          } else {
+            throw err;
+          }
+        }
+        results.created++;
+      }
+      
+      await prisma.product.update({
+        where: { sku: variant.sku },
+        data: { metadata: { ...(variant.metadata as any), woocommerceId: vRes.data.id } }
+      });
+    } catch (err: any) {
+      console.error(`[Admin] Failed variation sync for ${variant.sku}:`, err.response?.data || err.message);
+      results.failed++;
+    }
+  }
+
+  return {
+    success: true,
+    parentWooId,
+    variantsCreated: results.created,
+    variantsUpdated: results.updated,
+    variantsFailed: results.failed
+  };
+}
+
+// ─── Push Product Group to WooCommerce ──────────────
+adminRouter.post('/api/products/:sku/push-group', async (req, res) => {
+  try {
+    const { sku } = req.params;
+    const result = await pushProductGroup(sku);
+    res.json(result);
+  } catch (err: any) {
+    console.error('[Admin] Push group error:', err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -707,10 +1084,20 @@ adminRouter.delete('/api/products/:sku/woo', async (req, res) => {
 
     const metadata = (product.metadata as Record<string, any>) || {};
     const wooId = metadata.woocommerceId ? Number(metadata.woocommerceId) : null;
+    const wooClient = createWooCommerceClient();
+    
+    // Proactive search by SKU to catch orphans
+    const searchRes = await wooClient.get('/products', { params: { sku } });
+    const discovered = (searchRes.data as any[]) || [];
+    const idsToDelete = new Set<number>();
+    if (wooId) idsToDelete.add(wooId);
+    discovered.forEach(p => idsToDelete.add(p.id));
 
-    if (wooId) {
-      const wooClient = createWooCommerceClient();
-      await deleteWooProduct(wooClient, wooId);
+    for (const idToNuke of Array.from(idsToDelete)) {
+      try {
+        console.log(`[Admin] Deleting product/orphan from Woo: ${idToNuke}`);
+        await deleteWooProduct(wooClient, idToNuke);
+      } catch {}
     }
 
     // Now perform the unlink logic to clean up local DB
@@ -727,13 +1114,13 @@ adminRouter.delete('/api/products/:sku/woo', async (req, res) => {
         entityType: 'product',
         entityId: sku,
         status: 'completed',
-        payload: { action: 'delete_from_woo', wooId },
+        payload: { action: 'delete_from_woo', ids: Array.from(idsToDelete) },
       },
     });
 
     res.json({ 
       success: true, 
-      message: `Product ${sku} deleted from WooCommerce Store and unlinked locally.`,
+      message: `Product ${sku} and ${idsToDelete.size} instances deleted/unlinked.`,
       product: updatedProduct 
     });
   } catch (err: any) {
@@ -1067,8 +1454,41 @@ adminRouter.get('/api/lightspeed/search', async (req, res) => {
       rawProducts = extractProducts(response);
     }
     
+    // Inherit images for variants from either local DB or Lightspeed
+    const variantWrappers = rawProducts.map(raw => ({ 
+      raw, 
+      universal: UniversalProduct.fromLightspeed(raw) 
+    }));
+
+    const isMissingImage = (url?: string | null) => {
+      if (!url) return true;
+      const lower = url.toLowerCase();
+      return lower.includes('placeholder') || lower.includes('no-image') || lower.includes('default-product');
+    };
+
+    const missingImgParents = variantWrappers
+      .filter(w => isMissingImage(w.universal.data.imageUrl) && w.universal.data.variantParentId)
+      .map(w => w.universal.data.variantParentId!);
+
+    const searchParentMap = new Map<string, string>();
+    if (missingImgParents.length > 0) {
+      // 1. Check local DB first for parent images
+      const localParents = await prisma.product.findMany({
+        where: { lightspeedId: { in: Array.from(new Set(missingImgParents)) } },
+        select: { lightspeedId: true, imageUrl: true }
+      });
+      localParents.forEach(p => { if (!isMissingImage(p.imageUrl)) searchParentMap.set(p.lightspeedId!, p.imageUrl!); });
+
+      // 2. Fallback: Check if any parents are actually in our current search results
+      variantWrappers.forEach(w => {
+        if (!isMissingImage(w.universal.data.imageUrl) && !w.universal.data.variantParentId) {
+          searchParentMap.set(w.raw.id, w.universal.data.imageUrl!);
+        }
+      });
+    }
+
     // Map to Universal Canonical Model format
-    const mapped = (await Promise.all(rawProducts.map(async (raw: any) => {
+    const mapped = (await Promise.all(variantWrappers.map(async ({ raw, universal }) => {
       try {
         // Enforce enrichment for variant products that often missing embedded inventory
         if (!raw.inventory || raw.inventory.length === 0) {
@@ -1076,7 +1496,10 @@ adminRouter.get('/api/lightspeed/search', async (req, res) => {
           raw.inventory = await fetchInventoryForProduct(lsClient, raw.id);
         }
 
-        const universal = UniversalProduct.fromLightspeed(raw);
+        const inheritedImageUrl = isMissingImage(universal.data.imageUrl) 
+          ? (universal.data.variantParentId ? searchParentMap.get(universal.data.variantParentId) : '')
+          : universal.data.imageUrl;
+
         return {
           id: universal.data.metadata?.lightspeedId || raw.id || '',
           name: universal.data.title,
@@ -1085,8 +1508,8 @@ adminRouter.get('/api/lightspeed/search', async (req, res) => {
           stock: universal.data.quantity,
           category: universal.data.category || 'Uncategorized',
           brand: universal.data.brand || '',
-          imageUrl: universal.data.imageUrl || '',
-          thumbnailUrl: universal.data.thumbnailUrl || '',
+          imageUrl: inheritedImageUrl || '',
+          thumbnailUrl: universal.data.thumbnailUrl || inheritedImageUrl || '',
           status: 'remote',
           lastSynced: new Date().toISOString()
         };
@@ -1364,7 +1787,7 @@ adminRouter.get('/catalog', async (req, res) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = 50;
 
-    const [products, total] = await Promise.all([
+    const [productsRaw, total] = await Promise.all([
       prisma.product.findMany({
         skip: (page - 1) * limit,
         take: limit,
@@ -1372,6 +1795,42 @@ adminRouter.get('/catalog', async (req, res) => {
       }),
       prisma.product.count(),
     ]);
+
+    const isMissingImage = (url?: string | null) => {
+      if (!url) return true;
+      const lower = url.toLowerCase();
+      return lower.includes('placeholder') || lower.includes('no-image') || lower.includes('default-product');
+    };
+
+    // Inherit images for variants (Two-tier strategy)
+    const missingLS = productsRaw.filter(p => isMissingImage(p.imageUrl) && p.variantParentId).map(p => p.variantParentId!);
+    const missingSKU = productsRaw.filter(p => isMissingImage(p.imageUrl) && !p.variantParentId && p.parentSku).map(p => p.parentSku!);
+    
+    const parentImages = new Map<string, string>();
+    if (missingLS.length > 0 || missingSKU.length > 0) {
+      const parents = await prisma.product.findMany({
+        where: {
+          OR: [
+            { lightspeedId: { in: missingLS } },
+            { sku: { in: missingSKU } }
+          ]
+        },
+        select: { lightspeedId: true, sku: true, imageUrl: true }
+      });
+      parents.forEach(p => { 
+        if (!isMissingImage(p.imageUrl)) {
+          if (p.lightspeedId) parentImages.set(p.lightspeedId, p.imageUrl!);
+          if (p.sku) parentImages.set(p.sku, p.imageUrl!);
+        }
+      });
+    }
+
+    const products = productsRaw.map(p => ({
+      ...p,
+      imageUrl: isMissingImage(p.imageUrl) 
+        ? (parentImages.get(p.variantParentId || '') || parentImages.get(p.parentSku || '') || null) 
+        : p.imageUrl
+    }));
 
     res.render('products', { 
       title: 'Catalog', 
@@ -1391,9 +1850,9 @@ adminRouter.get('/products', (req, res) => {
   res.redirect('/admin/catalog');
 });
 
-// Import Node — redirect to the React SPA importer page
-adminRouter.get('/import', (req, res) => {
-  res.redirect('/importer');
+// Import Node — discover and pull from Lightspeed
+adminRouter.get('/import', async (req, res) => {
+  res.render('import', { title: 'Import Node', activeTab: 'import' });
 });
 
 // Manual Override Controls

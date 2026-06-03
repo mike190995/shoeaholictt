@@ -18,48 +18,140 @@ authRouter.get('/lightspeed', (_req, res) => {
 });
 
 /**
- * GET /auth/lightspeed/manual
- * TEMPORARY: Manually sets a Personal Token in the database.
- * Usage: /auth/lightspeed/manual?token=lsxs_pt_...&accountId=shoptt
+ * GET & POST /auth/lightspeed/manual
+ * Manually sets a Personal Token in the database.
+ * Supports direct query params (for quick links) or form submissions.
  */
 authRouter.get('/lightspeed/manual', async (req, res, next) => {
-  console.log('[Auth Debug] /auth/lightspeed/manual query params:', req.query);
+  // 1. Session auth guard
+  if (!req.session || !(req.session as any).authenticated) {
+    return res.redirect('/login');
+  }
+
   try {
-    const { token, accountId } = req.query;
+    const { token, accountId, success } = req.query;
 
-    if (!token || typeof token !== 'string' || !accountId || typeof accountId !== 'string') {
-      res.status(400).json({ error: 'Missing token or accountId query parameter.' });
-      return;
+    // Load existing credentials to display in the form
+    const credential = await prisma.credential.findUnique({ where: { platform: 'lightspeed' } });
+
+    // If query params are provided, perform immediate update (e.g. from hardcoded dashboard link)
+    if (token && typeof token === 'string' && accountId && typeof accountId === 'string') {
+      const trimmedToken = token.trim();
+      const trimmedAccountId = accountId.trim();
+
+      if (!trimmedToken.startsWith('lsxs_pt_')) {
+        return res.render('manual_auth', {
+          title: 'Lightspeed Connection',
+          activeTab: 'dashboard',
+          success: false,
+          error: 'Invalid token format. Must start with lsxs_pt_ for X-Series.',
+          token: trimmedToken,
+          accountId: trimmedAccountId
+        });
+      }
+
+      await prisma.credential.upsert({
+        where: { platform: 'lightspeed' },
+        update: {
+          accessToken: trimmedToken,
+          refreshToken: null,
+          expiresAt: null,
+          accountId: trimmedAccountId,
+        },
+        create: {
+          platform: 'lightspeed',
+          accessToken: trimmedToken,
+          refreshToken: null,
+          expiresAt: null,
+          accountId: trimmedAccountId,
+        },
+      });
+
+      return res.render('manual_auth', {
+        title: 'Lightspeed Connection',
+        activeTab: 'dashboard',
+        success: true,
+        error: null,
+        token: trimmedToken,
+        accountId: trimmedAccountId
+      });
     }
 
-    if (!token.startsWith('lsxs_pt_')) {
-      res.status(400).json({ error: 'Invalid token format. Must start with lsxs_pt_ for X-Series.' });
-      return;
-    }
-
-    await prisma.credential.upsert({
-      where: { platform: 'lightspeed' },
-      update: {
-        accessToken: token,
-        refreshToken: null,
-        expiresAt: null,
-        accountId,
-      },
-      create: {
-        platform: 'lightspeed',
-        accessToken: token,
-        refreshToken: null,
-        expiresAt: null,
-        accountId,
-      },
-    });
-
-    res.json({ 
-      message: 'Lightspeed X-Series Personal Token set successfully.',
-      accountId,
-      status: 'authenticated'
+    // Default: render form with current database values
+    res.render('manual_auth', {
+      title: 'Lightspeed Connection',
+      activeTab: 'dashboard',
+      success: success === 'true',
+      error: null,
+      token: credential?.accessToken || '',
+      accountId: credential?.accountId || '',
     });
   } catch (err) {
     next(err);
   }
 });
+
+authRouter.post('/lightspeed/manual', async (req, res, next) => {
+  // Session auth guard
+  if (!req.session || !(req.session as any).authenticated) {
+    return res.redirect('/login');
+  }
+
+  try {
+    const { token, accountId } = req.body;
+
+    if (!token || typeof token !== 'string' || !accountId || typeof accountId !== 'string') {
+      return res.render('manual_auth', {
+        title: 'Lightspeed Connection',
+        activeTab: 'dashboard',
+        success: false,
+        error: 'Missing token or Store Domain / Account ID.',
+        token: (token || '').trim(),
+        accountId: (accountId || '').trim()
+      });
+    }
+
+    const trimmedToken = token.trim();
+    const trimmedAccountId = accountId.trim();
+
+    if (!trimmedToken.startsWith('lsxs_pt_')) {
+      return res.render('manual_auth', {
+        title: 'Lightspeed Connection',
+        activeTab: 'dashboard',
+        success: false,
+        error: 'Invalid token format. Must start with lsxs_pt_ for X-Series.',
+        token: trimmedToken,
+        accountId: trimmedAccountId
+      });
+    }
+
+    await prisma.credential.upsert({
+      where: { platform: 'lightspeed' },
+      update: {
+        accessToken: trimmedToken,
+        refreshToken: null,
+        expiresAt: null,
+        accountId: trimmedAccountId,
+      },
+      create: {
+        platform: 'lightspeed',
+        accessToken: trimmedToken,
+        refreshToken: null,
+        expiresAt: null,
+        accountId: trimmedAccountId,
+      },
+    });
+
+    res.render('manual_auth', {
+      title: 'Lightspeed Connection',
+      activeTab: 'dashboard',
+      success: true,
+      error: null,
+      token: trimmedToken,
+      accountId: trimmedAccountId
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
