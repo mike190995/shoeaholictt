@@ -59,6 +59,7 @@ app.set('view engine', 'ejs');
 // ─── Initial Redirects ──────────────────────────
 app.get('/', (req, res) => res.redirect('/admin'));
 app.get('/dashboard', (req, res) => res.redirect('/admin'));
+app.get('/importer', (req, res) => res.redirect('/admin/import'));
 
 app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', version: APP_VERSION, timestamp: new Date().toISOString() });

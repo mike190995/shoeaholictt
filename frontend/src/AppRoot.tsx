@@ -30,7 +30,7 @@ export default function AppRoot() {
 
           {/* EJS admin pages — full page navigation */}
           <NavHardLink href="/admin" icon={<HomeIcon />} label="Health Monitor" />
-          <SpaNavItem to="/importer" icon={<DownloadIcon />} label="Import Node" />
+          <NavHardLink href="/admin/import" icon={<DownloadIcon />} label="Import Node" />
 
           <SectionLabel className="pt-6">Operations</SectionLabel>
           <SpaNavItem to="/spreadsheet" icon={<GridIcon />} label="Spreadsheet" />
@@ -58,8 +58,8 @@ export default function AppRoot() {
       {/* Main Content */}
       <main className="flex-1 min-h-screen overflow-y-auto">
         <Routes>
-          <Route path="/" element={<Navigate to="/importer" replace />} />
-          <Route path="/dashboard" element={<Navigate to="/importer" replace />} />
+          <Route path="/" element={<Navigate to="/spreadsheet" replace />} />
+          <Route path="/dashboard" element={<Navigate to="/spreadsheet" replace />} />
           <Route path="/importer" element={<LightspeedImporter />} />
           <Route path="/spreadsheet" element={<SpreadsheetView />} />
           <Route path="/mapper" element={<DataMapper />} />

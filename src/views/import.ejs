@@ -197,11 +197,18 @@
 
     function triggerFullImport() {
         if (confirm('EXECUTE MASTER SYNC?\nThis triggers a full scan of the Lightspeed catalog in the background.')) {
-            fetch('/admin/api/sync/full', { method: 'POST' })
+            fetch('/admin/api/lightspeed/import', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ all: true })
+            })
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) alert('Protocol initiated. Monitor sync logs for status.');
                     else alert('Engine Halt: ' + data.error);
+                })
+                .catch(err => {
+                    alert('Protocol handshake failed: ' + err.message);
                 });
         }
     }

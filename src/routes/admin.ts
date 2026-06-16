@@ -1371,7 +1371,6 @@ adminRouter.get('/api/lightspeed/search', async (req, res) => {
   try {
     const search = req.query.search as string | undefined;
     const limit = parseInt(req.query.limit as string) || 50;
-    const offset = parseInt(req.query.offset as string) || 0;
     const brandId = req.query.brandId as string | undefined;
     const typeId = req.query.typeId as string | undefined;
     const active = req.query.active as string | undefined; // "0" or "1"
@@ -1398,7 +1397,7 @@ adminRouter.get('/api/lightspeed/search', async (req, res) => {
       const looksLikeSku = /^\d+$/.test(search) || search.length < 15;
       
       if (looksLikeSku) {
-        const skuParams: any = { page_size: limit, offset: offset, sku: search, embed: 'inventory' };
+        const skuParams: any = { page_size: limit, sku: search, embed: 'inventory' };
         if (active !== undefined) skuParams.active = active;
         if (channel === 'online') skuParams.ecwid_enabled_webstore = '1';
         else if (channel === 'instore') skuParams.ecwid_enabled_webstore = '0';
@@ -1415,7 +1414,7 @@ adminRouter.get('/api/lightspeed/search', async (req, res) => {
 
       // If no results by SKU (or if it didn't look like one), try fuzzy /search
       if (rawProducts.length === 0) {
-        const searchParams: any = { type: 'products', page_size: limit, offset: offset, embed: 'inventory' };
+        const searchParams: any = { type: 'products', page_size: limit, embed: 'inventory' };
         if (active !== undefined) searchParams.active = active;
         if (channel === 'online') searchParams.ecwid_enabled_webstore = '1';
         else if (channel === 'instore') searchParams.ecwid_enabled_webstore = '0';
@@ -1432,7 +1431,7 @@ adminRouter.get('/api/lightspeed/search', async (req, res) => {
       
       // If no results by SKU, try by product name using the base /products endpoint
       if (rawProducts.length === 0) {
-        const nameParams: any = { page_size: limit, offset: offset, name: search, embed: 'inventory' };
+        const nameParams: any = { page_size: limit, name: search, embed: 'inventory' };
         console.log(`[Admin] Falling back to /products name search: "${search}"`);
         try {
           const nameResponse = await lsClient.get('/products', { params: nameParams });
@@ -1444,7 +1443,7 @@ adminRouter.get('/api/lightspeed/search', async (req, res) => {
       }
     } else {
       // No search term — browse mode with optional filters
-      const params: any = { page_size: limit, offset: offset, embed: 'inventory' };
+      const params: any = { page_size: limit, embed: 'inventory' };
       if (brandId) params.brand_id = brandId;
       if (typeId) params.product_type_id = typeId;
       if (active !== undefined) params.active = active;

@@ -8,7 +8,7 @@ import { ProductCellSchema } from '../lib/validation';
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 // ── Smart Filter Definitions ─────────────────────
-type FilterType = 'orphaned' | 'enrichment' | 'low_stock' | 'has_photo' | 'no_photo' | 'online' | 'instore' | 'in_stock' | 'out_of_stock';
+type FilterType = 'all' | 'orphaned' | 'enrichment' | 'low_stock' | 'has_photo' | 'no_photo' | 'online' | 'instore';
 
 function isDefaultImage(url?: string): boolean {
   if (!url) return true;
@@ -16,22 +16,25 @@ function isDefaultImage(url?: string): boolean {
   return lower.includes('default') || lower.includes('placeholder') || lower.includes('none');
 }
 
-function applyFilters(products: Product[], filters: Set<FilterType>): Product[] {
-  if (filters.size === 0) return products;
-  
-  return products.filter(p => {
-    let match = true;
-    if (filters.has('orphaned')) match = match && !p.imageUrl;
-    if (filters.has('enrichment')) match = match && (isDefaultImage(p.imageUrl) || !p.category || p.price === 0);
-    if (filters.has('low_stock')) match = match && p.stock <= 2;
-    if (filters.has('has_photo')) match = match && !isDefaultImage(p.imageUrl);
-    if (filters.has('no_photo')) match = match && isDefaultImage(p.imageUrl);
-    if (filters.has('online')) match = match && !!(p.tags && p.tags.some(t => t.toLowerCase() === 'online'));
-    if (filters.has('instore')) match = match && !!(p.tags && p.tags.some(t => t.toLowerCase() === 'instore' || t.toLowerCase() === 'in-store'));
-    if (filters.has('in_stock')) match = match && p.stock > 0;
-    if (filters.has('out_of_stock')) match = match && p.stock <= 0;
-    return match;
-  });
+function applyFilter(products: Product[], filter: FilterType): Product[] {
+  switch (filter) {
+    case 'orphaned':
+      return products.filter(p => !p.imageUrl);
+    case 'enrichment':
+      return products.filter(p => isDefaultImage(p.imageUrl) || !p.category || p.price === 0);
+    case 'low_stock':
+      return products.filter(p => p.stock <= 2);
+    case 'has_photo':
+      return products.filter(p => !isDefaultImage(p.imageUrl));
+    case 'no_photo':
+      return products.filter(p => isDefaultImage(p.imageUrl));
+    case 'online':
+      return products.filter(p => p.tags && p.tags.some(t => t.toLowerCase() === 'online'));
+    case 'instore':
+      return products.filter(p => p.tags && p.tags.some(t => t.toLowerCase() === 'instore' || t.toLowerCase() === 'in-store'));
+    default:
+      return products;
+  }
 }
 
 // ── Custom Cell Renderers (React) ────────────────
@@ -116,12 +119,10 @@ const Toast: React.FC<{ message: string; type: 'success' | 'error' | 'info' }> =
 const SpreadsheetView: React.FC = () => {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilters, setActiveFilters] = useState<Set<FilterType>>(new Set());
+  const [filter, setFilter] = useState<FilterType>('all');
   const [dirtyRows, setDirtyRows] = useState<Map<string, Partial<Product>>>(new Map());
   const [committing, setCommitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const gridApiRef = useRef<GridApi | null>(null);
 
@@ -130,12 +131,11 @@ const SpreadsheetView: React.FC = () => {
     setTimeout(() => setToast(null), duration);
   };
 
-  const loadProducts = useCallback(async (pageNum: number, query?: string) => {
+  const loadProducts = useCallback(async (query?: string) => {
     setLoading(true);
     try {
-      const data = await fetchProducts(pageNum, query);
+      const data = await fetchProducts(1, query);
       setAllProducts(data.products);
-      if (data.pagination) setTotalPages(data.pagination.totalPages);
     } catch {
       showToast('Failed to load products', 'error');
     } finally {
@@ -144,15 +144,14 @@ const SpreadsheetView: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    loadProducts(page);
-  }, [loadProducts, page]);
+    loadProducts();
+  }, [loadProducts]);
 
   const handleSearch = () => {
-    if (page !== 1) setPage(1);
-    else loadProducts(1, searchQuery || undefined);
+    loadProducts(searchQuery || undefined);
   };
 
-  const filteredProducts = useMemo(() => applyFilters(allProducts, activeFilters), [allProducts, activeFilters]);
+  const filteredProducts = useMemo(() => applyFilter(allProducts, filter), [allProducts, filter]);
 
   const onCellValueChanged = useCallback((event: CellValueChangedEvent) => {
     const sku = event.data.sku as string;
@@ -198,7 +197,7 @@ const SpreadsheetView: React.FC = () => {
       if (!selected.length) return;
       showToast(`Pushing ${selected.length} products...`, 'info');
       for (const row of selected) await pushProductToWoo(row.sku).catch(console.error);
-      loadProducts(page, searchQuery || undefined);
+      loadProducts(searchQuery || undefined);
       showToast('Push complete', 'success');
     },
     pushGroup: async () => {
@@ -215,7 +214,7 @@ const SpreadsheetView: React.FC = () => {
           console.error(`Group push failed for ${row.sku}:`, err.message);
         }
       }
-      loadProducts(page, searchQuery || undefined);
+      loadProducts(searchQuery || undefined);
       showToast('Group push sequence finished', 'success');
     },
     sync: async () => {
@@ -320,7 +319,7 @@ const SpreadsheetView: React.FC = () => {
             />
             {searchQuery && (
               <button 
-                onClick={() => { setSearchQuery(''); if (page !== 1) setPage(1); else loadProducts(1); }}
+                onClick={() => { setSearchQuery(''); loadProducts(); }}
                 className="text-slate-600 hover:text-slate-400 text-xs font-black p-1"
               >
                 ESC
@@ -330,25 +329,12 @@ const SpreadsheetView: React.FC = () => {
 
         {/* Filter Bar */}
         <div className="flex gap-2 p-1 bg-white/[0.03] border border-white/5 rounded-2xl w-fit flex-wrap">
-          <button
-            onClick={() => setActiveFilters(new Set())}
-            className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-              activeFilters.size === 0 ? 'bg-white/10 text-white shadow-inner' : 'text-slate-500 hover:text-slate-300'
-            }`}
-          >
-            All
-          </button>
-          {(['orphaned', 'enrichment', 'in_stock', 'out_of_stock', 'low_stock', 'has_photo', 'no_photo', 'online', 'instore'] as FilterType[]).map(f => (
+          {(['all', 'orphaned', 'enrichment', 'low_stock', 'has_photo', 'no_photo', 'online', 'instore'] as FilterType[]).map(f => (
             <button
               key={f}
-              onClick={() => {
-                const next = new Set(activeFilters);
-                if (next.has(f)) next.delete(f);
-                else next.add(f);
-                setActiveFilters(next);
-              }}
+              onClick={() => setFilter(f)}
               className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                activeFilters.has(f) ? 'bg-blue-500/20 text-blue-400 shadow-inner border border-blue-500/30' : 'text-slate-500 hover:text-slate-300'
+                filter === f ? 'bg-white/10 text-white shadow-inner' : 'text-slate-500 hover:text-slate-300'
               }`}
             >
               {f.replace(/_/g, ' ')}
@@ -363,26 +349,6 @@ const SpreadsheetView: React.FC = () => {
         >
             Search
         </button>
-
-        <div className="flex gap-2 items-center ml-auto">
-            <button 
-              disabled={loading || page <= 1} 
-              onClick={() => setPage(p => p - 1)}
-              className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-slate-300 text-xs font-bold disabled:opacity-50 hover:bg-white/10"
-            >
-              Prev
-            </button>
-            <span className="text-slate-400 text-xs font-bold w-16 text-center">
-              {page} / {totalPages}
-            </span>
-            <button 
-              disabled={loading || page >= totalPages} 
-              onClick={() => setPage(p => p + 1)}
-              className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-slate-300 text-xs font-bold disabled:opacity-50 hover:bg-white/10"
-            >
-              Next
-            </button>
-        </div>
       </div>
 
 

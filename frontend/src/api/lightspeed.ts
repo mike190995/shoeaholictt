@@ -6,7 +6,6 @@ export interface FilterOptions {
   typeId?: string;
   active?: string;
   channel?: string;
-  offset?: number;
 }
 
 export async function fetchBrands() {
@@ -28,7 +27,6 @@ export async function searchLightspeed(options: FilterOptions, limit: number = 5
   if (options.typeId) params.set('typeId', options.typeId);
   if (options.active) params.set('active', options.active);
   if (options.channel) params.set('channel', options.channel);
-  if (options.offset !== undefined) params.set('offset', String(options.offset));
 
   const response = await fetch(`/admin/api/lightspeed/search?${params}`);
   if (!response.ok) {
