@@ -8,7 +8,7 @@ import { ProductCellSchema } from '../lib/validation';
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 // ── Smart Filter Definitions ─────────────────────
-type FilterType = 'all' | 'orphaned' | 'enrichment' | 'low_stock' | 'has_photo' | 'no_photo' | 'online' | 'instore';
+type FilterType = 'orphaned' | 'enrichment' | 'in_stock' | 'out_of_stock' | 'low_stock' | 'has_photo' | 'no_photo' | 'online' | 'instore';
 
 function isDefaultImage(url?: string): boolean {
   if (!url) return true;
@@ -16,25 +16,23 @@ function isDefaultImage(url?: string): boolean {
   return lower.includes('default') || lower.includes('placeholder') || lower.includes('none');
 }
 
-function applyFilter(products: Product[], filter: FilterType): Product[] {
-  switch (filter) {
-    case 'orphaned':
-      return products.filter(p => !p.imageUrl);
-    case 'enrichment':
-      return products.filter(p => isDefaultImage(p.imageUrl) || !p.category || p.price === 0);
-    case 'low_stock':
-      return products.filter(p => p.stock <= 2);
-    case 'has_photo':
-      return products.filter(p => !isDefaultImage(p.imageUrl));
-    case 'no_photo':
-      return products.filter(p => isDefaultImage(p.imageUrl));
-    case 'online':
-      return products.filter(p => p.tags && p.tags.some(t => t.toLowerCase() === 'online'));
-    case 'instore':
-      return products.filter(p => p.tags && p.tags.some(t => t.toLowerCase() === 'instore' || t.toLowerCase() === 'in-store'));
-    default:
-      return products;
-  }
+function applyFilters(products: Product[], activeFilters: Set<FilterType>): Product[] {
+  if (activeFilters.size === 0) return products;
+
+  return products.filter(p => {
+    for (const filter of activeFilters) {
+      if (filter === 'orphaned' && p.imageUrl) return false;
+      if (filter === 'enrichment' && !(isDefaultImage(p.imageUrl) || !p.category || p.price === 0)) return false;
+      if (filter === 'in_stock' && p.stock <= 0) return false;
+      if (filter === 'out_of_stock' && p.stock > 0) return false;
+      if (filter === 'low_stock' && (p.stock <= 0 || p.stock > 2)) return false;
+      if (filter === 'has_photo' && isDefaultImage(p.imageUrl)) return false;
+      if (filter === 'no_photo' && !isDefaultImage(p.imageUrl)) return false;
+      if (filter === 'online' && !(p.tags && p.tags.some(t => t.toLowerCase() === 'online'))) return false;
+      if (filter === 'instore' && !(p.tags && p.tags.some(t => t.toLowerCase() === 'instore' || t.toLowerCase() === 'in-store'))) return false;
+    }
+    return true;
+  });
 }
 
 // ── Custom Cell Renderers (React) ────────────────
@@ -119,7 +117,9 @@ const Toast: React.FC<{ message: string; type: 'success' | 'error' | 'info' }> =
 const SpreadsheetView: React.FC = () => {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<FilterType>('all');
+  const [activeFilters, setActiveFilters] = useState<Set<FilterType>>(new Set());
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [dirtyRows, setDirtyRows] = useState<Map<string, Partial<Product>>>(new Map());
   const [committing, setCommitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -131,11 +131,13 @@ const SpreadsheetView: React.FC = () => {
     setTimeout(() => setToast(null), duration);
   };
 
-  const loadProducts = useCallback(async (query?: string) => {
+  const loadProducts = useCallback(async (pageNo: number = 1, query?: string) => {
     setLoading(true);
     try {
-      const data = await fetchProducts(1, query);
+      const data = await fetchProducts(pageNo, query);
       setAllProducts(data.products);
+      setPage(data.pagination.page || 1);
+      setTotalPages(data.pagination.totalPages || 1);
     } catch {
       showToast('Failed to load products', 'error');
     } finally {
@@ -144,14 +146,15 @@ const SpreadsheetView: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    loadProducts();
-  }, [loadProducts]);
+    loadProducts(page, searchQuery || undefined);
+  }, [page, loadProducts]);
 
   const handleSearch = () => {
-    loadProducts(searchQuery || undefined);
+    setPage(1);
+    loadProducts(1, searchQuery || undefined);
   };
 
-  const filteredProducts = useMemo(() => applyFilter(allProducts, filter), [allProducts, filter]);
+  const filteredProducts = useMemo(() => applyFilters(allProducts, activeFilters), [allProducts, activeFilters]);
 
   const onCellValueChanged = useCallback((event: CellValueChangedEvent) => {
     const sku = event.data.sku as string;
@@ -197,7 +200,7 @@ const SpreadsheetView: React.FC = () => {
       if (!selected.length) return;
       showToast(`Pushing ${selected.length} products...`, 'info');
       for (const row of selected) await pushProductToWoo(row.sku).catch(console.error);
-      loadProducts(searchQuery || undefined);
+      loadProducts(page, searchQuery || undefined);
       showToast('Push complete', 'success');
     },
     pushGroup: async () => {
@@ -214,7 +217,7 @@ const SpreadsheetView: React.FC = () => {
           console.error(`Group push failed for ${row.sku}:`, err.message);
         }
       }
-      loadProducts(searchQuery || undefined);
+      loadProducts(page, searchQuery || undefined);
       showToast('Group push sequence finished', 'success');
     },
     sync: async () => {
@@ -319,7 +322,7 @@ const SpreadsheetView: React.FC = () => {
             />
             {searchQuery && (
               <button 
-                onClick={() => { setSearchQuery(''); loadProducts(); }}
+                onClick={() => { setSearchQuery(''); loadProducts(1); }}
                 className="text-slate-600 hover:text-slate-400 text-xs font-black p-1"
               >
                 ESC
@@ -327,28 +330,92 @@ const SpreadsheetView: React.FC = () => {
             )}
         </div>
 
-        {/* Filter Bar */}
-        <div className="flex gap-2 p-1 bg-white/[0.03] border border-white/5 rounded-2xl w-fit flex-wrap">
-          {(['all', 'orphaned', 'enrichment', 'low_stock', 'has_photo', 'no_photo', 'online', 'instore'] as FilterType[]).map(f => (
+        {/* Filter Bar (Two Rows) */}
+        <div className="flex flex-col gap-2 p-2 bg-white/[0.03] border border-white/5 rounded-3xl w-fit">
+          <div className="flex gap-2">
             <button
-              key={f}
-              onClick={() => setFilter(f)}
+              onClick={() => setActiveFilters(new Set())}
               className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                filter === f ? 'bg-white/10 text-white shadow-inner' : 'text-slate-500 hover:text-slate-300'
+                activeFilters.size === 0 ? 'bg-white/10 text-white shadow-inner' : 'text-slate-500 hover:text-slate-300'
               }`}
             >
-              {f.replace(/_/g, ' ')}
+              All
             </button>
-          ))}
+            {(['orphaned', 'enrichment', 'in_stock', 'out_of_stock'] as FilterType[]).map(f => {
+              const isActive = activeFilters.has(f);
+              return (
+                <button
+                  key={f}
+                  onClick={() => {
+                    const next = new Set(activeFilters);
+                    if (next.has(f)) next.delete(f);
+                    else next.add(f);
+                    setActiveFilters(next);
+                  }}
+                  className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                    isActive 
+                      ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 shadow-inner' 
+                      : 'text-slate-500 hover:text-slate-300 border-transparent'
+                  }`}
+                >
+                  {f.replace(/_/g, ' ')}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex gap-2">
+            {(['low_stock', 'has_photo', 'no_photo', 'online', 'instore'] as FilterType[]).map(f => {
+              const isActive = activeFilters.has(f);
+              return (
+                <button
+                  key={f}
+                  onClick={() => {
+                    const next = new Set(activeFilters);
+                    if (next.has(f)) next.delete(f);
+                    else next.add(f);
+                    setActiveFilters(next);
+                  }}
+                  className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                    isActive 
+                      ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 shadow-inner' 
+                      : 'text-slate-500 hover:text-slate-300 border-transparent'
+                  }`}
+                >
+                  {f.replace(/_/g, ' ')}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <button
             onClick={handleSearch}
             disabled={loading}
-            className="glass-button-primary bg-blue-600/80 !px-8"
+            className="glass-button-primary bg-blue-600/80 !px-8 h-12"
         >
             Search
         </button>
+
+        {/* Pagination controls */}
+        <div className="flex gap-2 items-center">
+            <button 
+              disabled={loading || page <= 1} 
+              onClick={() => setPage(p => p - 1)}
+              className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-slate-300 text-xs font-bold disabled:opacity-50 hover:bg-white/10"
+            >
+              Prev
+            </button>
+            <span className="text-slate-400 text-xs font-bold w-16 text-center">
+              {page} / {totalPages}
+            </span>
+            <button 
+              disabled={loading || page >= totalPages} 
+              onClick={() => setPage(p => p + 1)}
+              className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-slate-300 text-xs font-bold disabled:opacity-50 hover:bg-white/10"
+            >
+              Next
+            </button>
+        </div>
       </div>
 
 

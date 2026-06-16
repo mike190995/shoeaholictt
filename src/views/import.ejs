@@ -195,8 +195,54 @@
         }
     }
 
+    let syncCheckInterval = null;
+
+    async function checkActiveSync() {
+        try {
+            const resp = await fetch('/admin/api/logs?limit=5');
+            const data = await resp.json();
+            const logs = data.logs || [];
+            
+            const importLog = logs.find(log => log.entityId === 'full_import');
+            if (importLog) {
+                const statusBar = document.getElementById('status-bar');
+                if (importLog.status === 'pending') {
+                    statusBar.classList.remove('hidden');
+                    statusBar.className = 'glass-card p-4 border-blue-500/20 bg-blue-500/5 text-[10px] font-bold text-blue-400 uppercase tracking-widest text-center animate-pulse';
+                    statusBar.innerText = 'Full catalog import is active in the background. Check logs for details.';
+                    if (!syncCheckInterval) {
+                        syncCheckInterval = setInterval(checkActiveSync, 5000);
+                    }
+                } else if (importLog.status === 'success') {
+                    statusBar.classList.remove('hidden');
+                    statusBar.className = 'glass-card p-4 border-emerald-500/20 bg-emerald-500/5 text-[10px] font-bold text-emerald-400 uppercase tracking-widest text-center';
+                    statusBar.innerText = `Last full sync successful: Completed at ${new Date(importLog.createdAt).toLocaleTimeString()}`;
+                    if (syncCheckInterval) {
+                        clearInterval(syncCheckInterval);
+                        syncCheckInterval = null;
+                    }
+                } else if (importLog.status === 'failed') {
+                    statusBar.classList.remove('hidden');
+                    statusBar.className = 'glass-card p-4 border-rose-500/20 bg-rose-500/5 text-[10px] font-bold text-rose-400 uppercase tracking-widest text-center';
+                    statusBar.innerText = `Last full sync failed: ${importLog.payload?.error || 'Check Audit Stream'}`;
+                    if (syncCheckInterval) {
+                        clearInterval(syncCheckInterval);
+                        syncCheckInterval = null;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Failed to check sync status:', e);
+        }
+    }
+
     function triggerFullImport() {
         if (confirm('EXECUTE MASTER SYNC?\nThis triggers a full scan of the Lightspeed catalog in the background.')) {
+            const statusBar = document.getElementById('status-bar');
+            statusBar.classList.remove('hidden');
+            statusBar.className = 'glass-card p-4 border-blue-500/20 bg-blue-500/5 text-[10px] font-bold text-blue-400 uppercase tracking-widest text-center animate-pulse';
+            statusBar.innerText = 'Initiating background catalog sync...';
+
             fetch('/admin/api/lightspeed/import', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -204,13 +250,26 @@
             })
                 .then(r => r.json())
                 .then(data => {
-                    if (data.success) alert('Protocol initiated. Monitor sync logs for status.');
-                    else alert('Engine Halt: ' + data.error);
+                    if (data.success) {
+                        statusBar.innerText = 'Full catalog import is active in the background. Check logs for details.';
+                        if (!syncCheckInterval) {
+                            syncCheckInterval = setInterval(checkActiveSync, 5000);
+                        }
+                    } else {
+                        alert('Engine Halt: ' + data.error);
+                        checkActiveSync();
+                    }
                 })
                 .catch(err => {
                     alert('Protocol handshake failed: ' + err.message);
+                    checkActiveSync();
                 });
         }
     }
+
+    // Call on load
+    document.addEventListener('DOMContentLoaded', () => {
+        checkActiveSync();
+    });
 </script>
 <%- include('partials/footer') %>
