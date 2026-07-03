@@ -90,6 +90,13 @@ class MiddlewareClient {
     });
   }
 
+  async pushFilteredToWoo(activeFilters: string[], search?: string): Promise<{ success: boolean; message: string; syncLogId: string }> {
+    return this.request<{ success: boolean; message: string; syncLogId: string }>('/admin/api/products/push-filtered', {
+      method: 'POST',
+      body: JSON.stringify({ activeFilters, search }),
+    });
+  }
+
   async unlinkProduct(sku: string): Promise<{ success: boolean; message: string }> {
     return this.request(`/admin/api/products/${encodeURIComponent(sku)}/unlink`, {
       method: 'POST',
@@ -158,3 +165,4 @@ export const pushProductToWoo = api.pushProductToWoo.bind(api);
 export const pushProductGroupToWoo = api.pushProductGroupToWoo.bind(api);
 export const unlinkProduct = api.unlinkProduct.bind(api);
 export const deleteProductFromWoo = api.deleteProductFromWoo.bind(api);
+export const pushFilteredToWoo = api.pushFilteredToWoo.bind(api);

@@ -195,6 +195,18 @@ async function main() {
     console.log(`🚀 LSWOO Middleware running on port ${config.port}`);
     console.log(`   Environment: ${config.nodeEnv}`);
   });
+
+  // Start the 5-minute automatic Lightspeed Sync
+  console.log('⏰ Scheduling automatic Lightspeed sync every 5 minutes...');
+  setInterval(async () => {
+    console.log('⏰ Running scheduled automatic Lightspeed sync...');
+    try {
+      const { performFullLightspeedSync } = await import('./routes/admin.js');
+      await performFullLightspeedSync('5-minute automatic sync');
+    } catch (err: any) {
+      console.error('💀 Automatic Lightspeed sync failed:', err.message);
+    }
+  }, 5 * 60 * 1000);
 }
 
 main().catch((err) => {

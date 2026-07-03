@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AgGridReact } from 'ag-grid-react';
 import type { ColDef, GridApi, CellValueChangedEvent } from 'ag-grid-community';
 import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
-import { fetchProducts, batchUpdateProducts, forceSyncProduct, pushProductToWoo, api, type Product } from '../api/products';
+import { fetchProducts, batchUpdateProducts, pushProductToWoo, pushFilteredToWoo, api, type Product } from '../api/products';
+import { importFromLightspeed } from '../api/lightspeed';
 import { ProductCellSchema } from '../lib/validation';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -221,11 +222,26 @@ const SpreadsheetView: React.FC = () => {
       showToast('Group push sequence finished', 'success');
     },
     sync: async () => {
-      const selected = gridApiRef.current?.getSelectedRows() ?? [];
-      if (!selected.length) return;
-      showToast('Syncing...', 'info');
-      await Promise.allSettled(selected.map(r => forceSyncProduct(r.sku)));
-      showToast('Sync enqueued', 'success');
+      showToast('Starting full catalog pull from Lightspeed...', 'info');
+      try {
+        await importFromLightspeed(undefined, undefined, true);
+        showToast('Lightspeed catalog sync started in the background.', 'success');
+        setTimeout(() => {
+          loadProducts(page, searchQuery || undefined);
+        }, 3000);
+      } catch (err: any) {
+        showToast(`Sync failed: ${err.message}`, 'error');
+      }
+    },
+    pushFiltered: async () => {
+      if (activeFilters.size <= 1) return;
+      showToast('Starting background push of all filtered products to WooCommerce...', 'info');
+      try {
+        const result = await pushFilteredToWoo(Array.from(activeFilters), searchQuery || undefined);
+        showToast(result.message || 'Background push of filtered products started!', 'success');
+      } catch (err: any) {
+        showToast(`Push failed: ${err.message}`, 'error');
+      }
     }
   };
 
@@ -292,6 +308,14 @@ const SpreadsheetView: React.FC = () => {
           <button onClick={commonActions.sync} className="glass-button-secondary">⚡ Sync</button>
           <button onClick={commonActions.pushGroup} className="glass-button-secondary border-blue-500/30 text-blue-300">📦 Push Group</button>
           <button onClick={commonActions.pushToWoo} className="glass-button-primary">Push to Store</button>
+          {activeFilters.size > 1 && (
+            <button 
+              onClick={commonActions.pushFiltered} 
+              className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 border border-indigo-500/30 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all"
+            >
+              📤 Push All (Filtered)
+            </button>
+          )}
           <div className="w-px h-8 bg-white/10 mx-2" />
           <button
             onClick={handleCommit}

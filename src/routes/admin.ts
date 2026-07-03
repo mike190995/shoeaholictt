@@ -341,87 +341,102 @@ adminRouter.post('/api/products/:sku/force-sync', async (req, res) => {
 });
 
 /**
+ * Shared service function to execute a full background sync from Lightspeed into the database mirror.
+ */
+export async function performFullLightspeedSync(initiatedBy: string): Promise<string> {
+  const syncLog = await prisma.syncLog.create({
+    data: {
+      direction: 'ls_to_db',
+      entityType: 'catalog',
+      entityId: 'full_import',
+      status: 'pending',
+      message: `Full catalog import initiated from ${initiatedBy}`
+    }
+  });
+
+  // Fire and forget background import
+  (async () => {
+    try {
+      const lsClient = await createLightspeedClient();
+      const { fetchFullInventoryMap } = await import('../services/lightspeed.js');
+      const { UniversalProduct } = await import('../mappers/universal.js');
+      
+      // Step 1: Pre-fetch full inventory map to avoid individual calls inside the loop
+      const inventoryMap = await fetchFullInventoryMap(lsClient);
+      
+      let after: string | undefined = undefined;
+      let imported = 0;
+      let fetching = true;
+      
+      while (fetching) {
+        const response: any = await lsClient.get('/products', { 
+          params: { page_size: 100, embed: 'inventory', ...(after ? { after } : {}) } 
+        });
+        const rawItems = response.data.data || [];
+        
+        for (const item of rawItems) {
+          try {
+            // Enrich item with pre-calculated inventory from our map
+            (item as any).inventory_level = inventoryMap.get(item.id) || 0;
+            
+            const universal = UniversalProduct.fromLightspeed(item);
+            const dbData = universal.toPostgres() as any;
+            await prisma.product.upsert({
+              where: { sku: universal.data.sku },
+              update: dbData,
+              create: dbData,
+                });
+            imported++;
+          } catch (e: any) {
+            console.error(`[Import] Failed item: ${item.sku}`, e.message);
+          }
+        }
+
+        const version: any = response.data.version;
+        if (version?.max && rawItems.length > 0) {
+          after = version.max;
+        } else {
+          fetching = false;
+        }
+      }
+
+      await prisma.syncLog.update({
+        where: { id: syncLog.id },
+        data: { 
+          status: 'completed', 
+          completedAt: new Date(),
+          message: `Full import complete: ${imported} products synchronized.`
+        }
+      });
+      console.log(`[Import] Background task finished: ${imported} products imported.`);
+    } catch (err: any) {
+      console.error('[Import] Background task failed:', err.message);
+      await prisma.syncLog.update({
+        where: { id: syncLog.id },
+        data: { 
+          status: 'failed', 
+          error: err.message,
+          completedAt: new Date()
+        }
+      });
+    }
+  })();
+
+  return syncLog.id;
+}
+
+/**
  * POST /api/sync/full
  * Master catalog pull — fetches all products from Lightspeed and updates the staging DB.
  * Used by the EJS "Execute Master Protocol" button.
  */
 adminRouter.post('/api/sync/full', async (req, res) => {
   try {
-    const syncLog = await prisma.syncLog.create({
-      data: {
-        direction: 'ls_to_db',
-        entityType: 'catalog',
-        entityId: 'full_import',
-        status: 'pending',
-        message: 'Full catalog import initiated from admin dashboard'
-      }
-    });
-
-    // Fire and forget — full scan runs in background
-    (async () => {
-      try {
-        const lsClient = await createLightspeedClient();
-        const { fetchFullInventoryMap } = await import('../services/lightspeed.js');
-
-        // Pre-fetch entire inventory table to avoid per-product calls
-        const inventoryMap = await fetchFullInventoryMap(lsClient);
-
-        let after: string | undefined = undefined;
-        let imported = 0;
-        let fetching = true;
-
-        while (fetching) {
-          const response: any = await lsClient.get('/products', {
-            params: { page_size: 100, embed: 'inventory', ...(after ? { after } : {}) }
-          });
-          const rawItems: any[] = response.data.data || [];
-
-          for (const item of rawItems) {
-            try {
-              (item as any).inventory_level = inventoryMap.get(item.id) || 0;
-              const universal = UniversalProduct.fromLightspeed(item);
-              const data = universal.toPostgres() as any;
-              await prisma.product.upsert({
-                where: { sku: universal.data.sku },
-                update: data,
-                create: data,
-              });
-              imported++;
-            } catch (e: any) {
-              console.error(`[SyncFull] Failed item: ${item.sku}`, e.message);
-            }
-          }
-
-          const version: any = response.data.version;
-          if (version?.max && rawItems.length > 0) {
-            after = version.max;
-          } else {
-            fetching = false;
-          }
-        }
-
-        await prisma.syncLog.update({
-          where: { id: syncLog.id },
-          data: {
-            status: 'completed',
-            completedAt: new Date(),
-            message: `Full import complete: ${imported} products synchronized.`
-          }
-        });
-        console.log(`[SyncFull] Done. ${imported} products imported.`);
-      } catch (err: any) {
-        console.error('[SyncFull] Background task failed:', err.message);
-        await prisma.syncLog.update({
-          where: { id: syncLog.id },
-          data: { status: 'failed', error: err.message, completedAt: new Date() }
-        });
-      }
-    })();
-
+    const syncLogId = await performFullLightspeedSync('admin dashboard (Execute Master Protocol)');
     res.json({
       success: true,
       message: 'Full catalog pull started in the background. Check Sync Logs for progress.',
-      syncLogId: syncLog.id
+      syncLogId
     });
   } catch (err: any) {
     console.error('[SyncFull] Failed to start:', err.message);
@@ -442,10 +457,107 @@ adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
     });
   } catch (err: any) {
     console.error('[Admin] Push to WooCommerce error:', err.message);
-    res.status(500).json({ 
-      error: 'Failed to push product to WooCommerce', 
-      details: err.response?.data || err.message 
+  }
+});
+
+adminRouter.post('/api/products/push-filtered', async (req, res) => {
+  try {
+    const { activeFilters, search } = req.body as { activeFilters: string[], search?: string };
+
+    if (!activeFilters || !Array.isArray(activeFilters)) {
+      res.status(400).json({ error: 'Must provide an array of activeFilters' });
+      return;
+    }
+
+    const syncLog = await prisma.syncLog.create({
+      data: {
+        direction: 'db_to_woo',
+        entityType: 'catalog',
+        entityId: 'batch_filtered_push',
+        status: 'pending',
+        message: `Batch filtered push started for ${activeFilters.length} filters: ${activeFilters.join(', ')}`
+      }
     });
+
+    // Run the push process in the background
+    (async () => {
+      try {
+        const isMissingImage = (url?: string | null) => {
+          if (!url) return true;
+          const lower = url.toLowerCase();
+          return lower.includes('default') || lower.includes('placeholder') || lower.includes('none');
+        };
+
+        const products = await prisma.product.findMany({
+          where: search ? {
+            OR: [
+              { title: { contains: search, mode: 'insensitive' } },
+              { sku: { contains: search, mode: 'insensitive' } }
+            ]
+          } : {}
+        });
+
+        // Apply filters
+        const filtered = products.filter(p => {
+          for (const filter of activeFilters) {
+            if (filter === 'orphaned' && p.imageUrl) return false;
+            if (filter === 'enrichment' && !(isMissingImage(p.imageUrl) || !p.category || Number(p.price) === 0)) return false;
+            if (filter === 'in_stock' && p.quantity <= 0) return false;
+            if (filter === 'out_of_stock' && p.quantity > 0) return false;
+            if (filter === 'low_stock' && (p.quantity <= 0 || p.quantity > 2)) return false;
+            if (filter === 'has_photo' && isMissingImage(p.imageUrl)) return false;
+            if (filter === 'no_photo' && !isMissingImage(p.imageUrl)) return false;
+            if (filter === 'online' && !(p.tags && (p.tags as string[]).some((t: string) => t.toLowerCase() === 'online'))) return false;
+            if (filter === 'instore' && !(p.tags && (p.tags as string[]).some((t: string) => t.toLowerCase() === 'instore' || t.toLowerCase() === 'in-store'))) return false;
+          }
+          return true;
+        });
+
+        console.log(`[PushFiltered] Starting push for ${filtered.length} products matching filters: ${activeFilters.join(', ')}`);
+
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const product of filtered) {
+          try {
+            await executeWooPush(product.sku);
+            successCount++;
+          } catch (err: any) {
+            failCount++;
+            console.error(`[PushFiltered] Failed to push SKU ${product.sku}:`, err.message);
+          }
+        }
+
+        await prisma.syncLog.update({
+          where: { id: syncLog.id },
+          data: {
+            status: 'completed',
+            completedAt: new Date(),
+            message: `Batch filtered push completed: ${successCount} pushed, ${failCount} failed.`
+          }
+        });
+        console.log(`[PushFiltered] Done. ${successCount} products pushed.`);
+      } catch (err: any) {
+        console.error('[PushFiltered] Background push failed:', err.message);
+        await prisma.syncLog.update({
+          where: { id: syncLog.id },
+          data: {
+            status: 'failed',
+            error: err.message,
+            completedAt: new Date()
+          }
+        });
+      }
+    })();
+
+    res.json({
+      success: true,
+      message: 'Batch push of filtered products started in the background. Check Sync Logs for progress.',
+      syncLogId: syncLog.id
+    });
+  } catch (err: any) {
+    console.error('[PushFiltered] Failed to start:', err.message);
+    res.status(500).json({ error: 'Failed to start batch push' });
   }
 });
 
@@ -1550,88 +1662,17 @@ adminRouter.post('/api/lightspeed/import', async (req, res) => {
 
     // If it's a "Pull All" request, handle in background to avoid timeout
     if (all) {
-      const syncLog = await prisma.syncLog.create({
-        data: {
-          direction: 'ls_to_db',
-          entityType: 'catalog',
-          entityId: 'full_import',
-          status: 'pending',
-          message: 'Full catalog import initiated from admin dashboard'
-        }
-      });
-
-      // Fire and forget background import
-      (async () => {
-        try {
-          const lsClient = await createLightspeedClient();
-          const { fetchFullInventoryMap } = await import('../services/lightspeed.js');
-          const { UniversalProduct } = await import('../mappers/universal.js');
-          
-          // Step 1: Pre-fetch full inventory map to avoid individual calls inside the loop
-          const inventoryMap = await fetchFullInventoryMap(lsClient);
-          
-          let after: string | undefined = undefined;
-          let imported = 0;
-          let fetching = true;
-          
-          while (fetching) {
-            const response: any = await lsClient.get('/products', { 
-              params: { page_size: 100, embed: 'inventory', ...(after ? { after } : {}) } 
-            });
-            const rawItems = response.data.data || [];
-            
-            for (const item of rawItems) {
-              try {
-                // Enrich item with pre-calculated inventory from our map
-                (item as any).inventory_level = inventoryMap.get(item.id) || 0;
-                
-                const universal = UniversalProduct.fromLightspeed(item);
-                const dbData = universal.toPostgres() as any;
-                await prisma.product.upsert({
-                  where: { sku: universal.data.sku },
-                  update: dbData,
-                  create: dbData,
-                });
-                imported++;
-              } catch (e: any) {
-                console.error(`[Import] Failed item: ${item.sku}`, e.message);
-              }
-            }
-
-            const version: any = response.data.version;
-            if (version?.max && rawItems.length > 0) {
-              after = version.max;
-            } else {
-              fetching = false;
-            }
-          }
-
-          await prisma.syncLog.update({
-            where: { id: syncLog.id },
-            data: { 
-              status: 'completed', 
-              completedAt: new Date(),
-              message: `Full import complete: ${imported} products synchronized.`
-            }
-          });
-        } catch (err: any) {
-          console.error('[Import] Background task failed:', err.message);
-          await prisma.syncLog.update({
-            where: { id: syncLog.id },
-            data: { 
-              status: 'failed', 
-              error: err.message,
-              completedAt: new Date()
-            }
-          });
-        }
-      })();
-
-      return res.json({ 
-        success: true, 
-        message: 'Full catalog import started in background.',
-        syncLogId: syncLog.id 
-      });
+      try {
+        const syncLogId = await performFullLightspeedSync('admin dashboard (Vite Importer)');
+        return res.json({ 
+          success: true, 
+          message: 'Full catalog import started in background.',
+          syncLogId 
+        });
+      } catch (err: any) {
+        console.error('[Import] Failed to start:', err.message);
+        return res.status(500).json({ error: 'Failed to start full import' });
+      }
     }
 
     const lsClient = await createLightspeedClient();
