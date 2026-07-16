@@ -239,6 +239,32 @@ adminRouter.get('/api/logs', async (req, res) => {
   }
 });
 
+// ─── Single Sync Log API ──────────────────────────
+adminRouter.get('/api/logs/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const log = await prisma.syncLog.findUnique({ where: { id } });
+    if (!log) {
+      res.status(404).json({ error: 'Log not found' });
+      return;
+    }
+    // Map to frontend-friendly shape if needed, or return raw
+    res.json({
+      id: log.id,
+      direction: log.direction,
+      entityType: log.entityType,
+      entityId: log.entityId,
+      status: log.status === 'completed' ? 'success' : log.status,
+      message: log.message,
+      payload: log.payload,
+      createdAt: log.createdAt,
+    });
+  } catch (err: any) {
+    console.error('[Admin] Get log by ID error:', err.message);
+    res.status(500).json({ error: 'Failed to load log detail' });
+  }
+});
+
 // ─── Retry Failed Sync Log ───────────────────────
 adminRouter.post('/api/logs/:id/retry', async (req, res) => {
   try {
@@ -513,6 +539,7 @@ adminRouter.post('/api/products/push-filtered', async (req, res) => {
 
         let successCount = 0;
         let failCount = 0;
+        let processedCount = 0;
 
         for (const product of filtered) {
           try {
@@ -522,6 +549,15 @@ adminRouter.post('/api/products/push-filtered', async (req, res) => {
             failCount++;
             console.error(`[PushFiltered] Failed to push SKU ${product.sku}:`, err.message);
           }
+          processedCount++;
+          
+          // Update DB with exact progress counts
+          await prisma.syncLog.update({
+            where: { id: syncLog.id },
+            data: {
+              message: `Pushing filtered products: ${processedCount}/${filtered.length} processed (${successCount} succeeded, ${failCount} failed)`
+            }
+          }).catch(err => console.error('[PushFiltered] Failed to update progress:', err.message));
         }
 
         await prisma.syncLog.update({

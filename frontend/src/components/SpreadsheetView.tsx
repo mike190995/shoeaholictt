@@ -127,6 +127,22 @@ const SpreadsheetView: React.FC = () => {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const gridApiRef = useRef<GridApi | null>(null);
 
+  const [activeSyncLogId, setActiveSyncLogId] = useState<string | null>(() => localStorage.getItem('activeSyncLogId'));
+  const [syncLogMessage, setSyncLogMessage] = useState<string>('');
+
+  const progressPercent = useMemo(() => {
+    if (!syncLogMessage) return 0;
+    const match = syncLogMessage.match(/(\d+)\/(\d+)\s+processed/);
+    if (match && match[1] && match[2]) {
+      const processed = parseInt(match[1]);
+      const total = parseInt(match[2]);
+      if (total > 0) {
+        return Math.min(100, Math.round((processed / total) * 100));
+      }
+    }
+    return 0;
+  }, [syncLogMessage]);
+
   const showToast = (message: string, type: 'success' | 'error' | 'info', duration = 3000) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), duration);
@@ -149,6 +165,44 @@ const SpreadsheetView: React.FC = () => {
   useEffect(() => {
     loadProducts(page, searchQuery || undefined);
   }, [page, loadProducts]);
+
+  useEffect(() => {
+    if (!activeSyncLogId) return;
+
+    let intervalId: any;
+    
+    const checkStatus = async () => {
+      try {
+        const res = await fetch(`/admin/api/logs/${activeSyncLogId}`);
+        if (!res.ok) {
+          throw new Error('Log not found');
+        }
+        const data = await res.json();
+        setSyncLogMessage(data.message || '');
+
+        if (data.status === 'success' || data.status === 'completed') {
+          showToast('Background push of filtered products completed successfully!', 'success');
+          setActiveSyncLogId(null);
+          localStorage.removeItem('activeSyncLogId');
+          loadProducts(page, searchQuery || undefined);
+        } else if (data.status === 'failed') {
+          showToast(`Background push failed: ${data.message || 'Unknown error'}`, 'error');
+          setActiveSyncLogId(null);
+          localStorage.removeItem('activeSyncLogId');
+        }
+      } catch (err: any) {
+        console.error('[SpreadsheetView] Log status check failed:', err.message);
+        setActiveSyncLogId(null);
+        localStorage.removeItem('activeSyncLogId');
+      }
+    };
+
+    checkStatus();
+
+    intervalId = setInterval(checkStatus, 2000);
+
+    return () => clearInterval(intervalId);
+  }, [activeSyncLogId, page, searchQuery, loadProducts]);
 
   const handleSearch = () => {
     setPage(1);
@@ -238,6 +292,11 @@ const SpreadsheetView: React.FC = () => {
       showToast('Starting background push of all filtered products to WooCommerce...', 'info');
       try {
         const result = await pushFilteredToWoo(Array.from(activeFilters), searchQuery || undefined);
+        if (result.syncLogId) {
+          setActiveSyncLogId(result.syncLogId);
+          localStorage.setItem('activeSyncLogId', result.syncLogId);
+          setSyncLogMessage('Initializing background push...');
+        }
         showToast(result.message || 'Background push of filtered products started!', 'success');
       } catch (err: any) {
         showToast(`Push failed: ${err.message}`, 'error');
@@ -294,6 +353,33 @@ const SpreadsheetView: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen max-h-screen overflow-hidden p-6 gap-6">
+      {/* Real-time Progress Tracking Overlay */}
+      {activeSyncLogId && (
+        <div className="w-full bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-500/20 rounded-3xl p-5 shadow-2xl backdrop-blur-3xl animate-in fade-in slide-in-from-top-4 duration-500 relative overflow-hidden flex flex-col gap-3 shrink-0">
+          <div className="absolute inset-0 bg-blue-500/5 blur-xl pointer-events-none" />
+          
+          <div className="flex justify-between items-center relative z-10">
+            <div className="flex items-center gap-3">
+              <span className="flex h-3 w-3 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+              </span>
+              <p className="text-xs font-black tracking-wider text-blue-300 uppercase">Active WooCommerce Sync Task</p>
+            </div>
+            <div className="text-xs font-black text-indigo-300 uppercase tracking-widest">{progressPercent}% Completed</div>
+          </div>
+          
+          <div className="text-sm font-bold text-white relative z-10 truncate">{syncLogMessage || 'Initializing background push...'}</div>
+          
+          <div className="w-full bg-black/40 rounded-full h-3.5 border border-white/5 overflow-hidden p-0.5 relative z-10">
+            <div 
+              style={{ width: `${progressPercent}%` }} 
+              className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 h-full rounded-full shadow-lg shadow-blue-500/50 transition-all duration-500 ease-out animate-pulse"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Premium Header */}
       <header className="flex justify-between items-end">
         <div className="space-y-1">
