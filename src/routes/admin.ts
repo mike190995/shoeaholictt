@@ -448,15 +448,11 @@ adminRouter.post('/api/sync/full', async (req, res) => {
 adminRouter.post('/api/products/:sku/push-to-woo', async (req, res) => {
   try {
     const { sku } = req.params;
-    const result = await executeWooPush(sku);
-    res.json({ 
-      success: true, 
-      message: `Product ${result.action} successfully in WooCommerce.`, 
-      woocommerceId: result.woocommerceId,
-      product: result.product
-    });
+    const result = await executeSmartWooPush(sku);
+    res.json(result);
   } catch (err: any) {
     console.error('[Admin] Push to WooCommerce error:', err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -520,7 +516,7 @@ adminRouter.post('/api/products/push-filtered', async (req, res) => {
 
         for (const product of filtered) {
           try {
-            await executeWooPush(product.sku);
+            await executeSmartWooPush(product.sku);
             successCount++;
           } catch (err: any) {
             failCount++;
@@ -561,7 +557,113 @@ adminRouter.post('/api/products/push-filtered', async (req, res) => {
   }
 });
 
-export async function executeWooPush(sku: string): Promise<any> {
+export async function executeSmartWooPush(sku: string): Promise<any> {
+  try {
+    const product = await prisma.product.findUnique({ where: { sku } });
+
+    if (!product) {
+      throw new Error(`Product not found for SKU: ${sku}`);
+    }
+
+    // Check if this SKU was just pushed as part of a group in the last 30 seconds
+    const lastPushStr = (product.metadata as any)?.lastPushToWoo;
+    if (lastPushStr) {
+      const lastPush = new Date(lastPushStr);
+      const diffMs = Date.now() - lastPush.getTime();
+      if (diffMs < 30000) { // 30 seconds
+        console.log(`[Admin] Smart Push: SKU ${sku} was already pushed in the last 30 seconds. Skipping redundant push.`);
+        return {
+          success: true,
+          message: `Product already up to date (pushed via group sync).`,
+          woocommerceId: (product.metadata as any)?.woocommerceId,
+          product
+        };
+      }
+    }
+
+    // 1. Auto-resolve parent if variant
+    let parent = product;
+    if (product.variantParentId) {
+      const resolvedParent = await prisma.product.findUnique({
+        where: { lightspeedId: product.variantParentId }
+      });
+      if (resolvedParent) {
+        parent = resolvedParent;
+      }
+    }
+
+    // 2. Load siblings/variants
+    const siblingsRaw = await prisma.product.findMany({
+      where: {
+        OR: [
+          { variantParentId: parent.lightspeedId || undefined },
+          { parentSku: parent.sku }
+        ].filter(Boolean) as any
+      }
+    });
+
+    // Deduplicate siblings by SKU and exclude parent
+    const siblingsMap = new Map();
+    siblingsRaw.forEach(s => siblingsMap.set(s.sku, s));
+    siblingsMap.delete(parent.sku);
+    const siblings = Array.from(siblingsMap.values()) as typeof siblingsRaw;
+
+    // 3. Build superset attributes to see if we have varying attributes
+    const supersetAttributes: Record<string, Set<string>> = {};
+    const allItems = [parent, ...siblings];
+
+    for (const item of allItems) {
+      const variantOptions = (item.metadata as any)?.variantOptions || [];
+      if (Array.isArray(variantOptions)) {
+        variantOptions.forEach((opt: any) => {
+          if (opt.name && opt.value) {
+            const nameTrim = String(opt.name).trim();
+            const valTrim = String(opt.value).trim();
+            if (nameTrim && valTrim) {
+              if (!supersetAttributes[nameTrim]) {
+                supersetAttributes[nameTrim] = new Set();
+              }
+              supersetAttributes[nameTrim].add(valTrim);
+            }
+          }
+        });
+      }
+    }
+
+    // Check for variation: at least one attribute must have > 1 value
+    let hasVaryingAttributes = false;
+    for (const [name, values] of Object.entries(supersetAttributes)) {
+      if (values.size > 1) {
+        hasVaryingAttributes = true;
+        break;
+      }
+    }
+
+    // 4. Decide: Simple vs Variable
+    if (siblings.length > 0 && hasVaryingAttributes) {
+      console.log(`[Admin] Smart Push: Variable Product detected for SKU ${sku} (Parent: ${parent.sku}, ${siblings.length} variants). Pushing group...`);
+      const groupResult = await pushProductGroup(parent.sku);
+      return {
+        ...groupResult,
+        isVariable: true,
+        message: `Variable product group pushed successfully.`
+      };
+    } else {
+      console.log(`[Admin] Smart Push: Simple Product detected for SKU ${sku}. Pushing single product...`);
+      const simpleResult = await executeWooPush(sku, true);
+      return {
+        ...simpleResult,
+        isVariable: false,
+        message: `Product ${simpleResult.action} successfully in WooCommerce.`
+      };
+    }
+  } catch (err: any) {
+    console.error(`[Admin] executeSmartWooPush failed for ${sku}:`, err.message);
+    throw err;
+  }
+}
+
+export async function executeWooPush(sku: string, forceSimple: boolean = false): Promise<any> {
   try {
     const product = await prisma.product.findUnique({ where: { sku } });
 
@@ -673,7 +775,7 @@ export async function executeWooPush(sku: string): Promise<any> {
 
     // 2. Prepare WooCommerce Payload
     const wooClient = createWooCommerceClient();
-    const isVariant = !!finalProduct.variantParentId;
+    const isVariant = forceSimple ? false : !!finalProduct.variantParentId;
 
     // --- PARENT AUTO-SYNC ---
     if (isVariant && finalProduct.variantParentId) {

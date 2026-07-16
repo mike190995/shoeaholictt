@@ -306,7 +306,6 @@ const SpreadsheetView: React.FC = () => {
 
         <div className="flex gap-3">
           <button onClick={commonActions.sync} className="glass-button-secondary">⚡ Sync</button>
-          <button onClick={commonActions.pushGroup} className="glass-button-secondary border-blue-500/30 text-blue-300">📦 Push Group</button>
           <button onClick={commonActions.pushToWoo} className="glass-button-primary">Push to Store</button>
           {activeFilters.size > 1 && (
             <button 
