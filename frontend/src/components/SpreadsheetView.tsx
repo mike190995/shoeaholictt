@@ -130,6 +130,10 @@ const SpreadsheetView: React.FC = () => {
   const [activeSyncLogId, setActiveSyncLogId] = useState<string | null>(() => localStorage.getItem('activeSyncLogId'));
   const [syncLogMessage, setSyncLogMessage] = useState<string>('');
 
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [allDatabaseSelected, setAllDatabaseSelected] = useState(false);
+  const [showSelectAllBanner, setShowSelectAllBanner] = useState(false);
+
   const progressPercent = useMemo(() => {
     if (!syncLogMessage) return 0;
     const match = syncLogMessage.match(/(\d+)\/(\d+)\s+processed/);
@@ -155,6 +159,7 @@ const SpreadsheetView: React.FC = () => {
       setAllProducts(data.products);
       setPage(data.pagination.page || 1);
       setTotalPages(data.pagination.totalPages || 1);
+      setTotalProducts(data.pagination.total || 0);
     } catch {
       showToast('Failed to load products', 'error');
     } finally {
@@ -204,12 +209,35 @@ const SpreadsheetView: React.FC = () => {
     return () => clearInterval(intervalId);
   }, [activeSyncLogId, page, searchQuery, loadProducts]);
 
+  const filteredProducts = useMemo(() => applyFilters(allProducts, activeFilters), [allProducts, activeFilters]);
+
+  useEffect(() => {
+    if (allDatabaseSelected && gridApiRef.current && filteredProducts.length > 0) {
+      gridApiRef.current.selectAll();
+    }
+  }, [allProducts, allDatabaseSelected, filteredProducts]);
+
+  const onSelectionChanged = useCallback(() => {
+    if (!gridApiRef.current) return;
+    const selectedCount = gridApiRef.current.getSelectedRows().length;
+    const displayedCount = filteredProducts.length;
+
+    if (displayedCount === 0) return;
+
+    if (selectedCount === displayedCount) {
+      if (totalProducts > displayedCount) {
+        setShowSelectAllBanner(true);
+      }
+    } else {
+      setShowSelectAllBanner(false);
+      setAllDatabaseSelected(false);
+    }
+  }, [filteredProducts.length, totalProducts]);
+
   const handleSearch = () => {
     setPage(1);
     loadProducts(1, searchQuery || undefined);
   };
-
-  const filteredProducts = useMemo(() => applyFilters(allProducts, activeFilters), [allProducts, activeFilters]);
 
   const onCellValueChanged = useCallback((event: CellValueChangedEvent) => {
     const sku = event.data.sku as string;
@@ -251,6 +279,10 @@ const SpreadsheetView: React.FC = () => {
 
   const commonActions = {
     pushToWoo: async () => {
+      if (allDatabaseSelected) {
+        await commonActions.pushFiltered();
+        return;
+      }
       const selected = gridApiRef.current?.getSelectedRows() ?? [];
       if (!selected.length) return;
       showToast(`Pushing ${selected.length} products...`, 'info');
@@ -289,6 +321,14 @@ const SpreadsheetView: React.FC = () => {
     },
     pushFiltered: async () => {
       if (activeFilters.size <= 1) return;
+      
+      // Select the entire database and visible rows first for visual/step feedback
+      setAllDatabaseSelected(true);
+      setShowSelectAllBanner(true);
+      if (gridApiRef.current) {
+        gridApiRef.current.selectAll();
+      }
+
       showToast('Starting background push of all filtered products to WooCommerce...', 'info');
       try {
         const result = await pushFilteredToWoo(Array.from(activeFilters), searchQuery || undefined);
@@ -536,20 +576,62 @@ const SpreadsheetView: React.FC = () => {
             <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Initializing Catalog</p>
           </div>
         ) : (
-          <div className="flex-1 ag-theme-alpine-dark ag-theme-glass">
-            <AgGridReact
-              rowData={filteredProducts}
-              columnDefs={colDefs}
-              onGridReady={(p) => (gridApiRef.current = p.api)}
-              onCellValueChanged={onCellValueChanged}
-              rowSelection="multiple"
-              getRowId={(p) => p.data.sku}
-              stopEditingWhenCellsLoseFocus={true}
-              rowHeight={56}
-              headerHeight={48}
-              animateRows={true}
-            />
-          </div>
+          <>
+            {showSelectAllBanner && (
+              <div className="mb-3 px-4 py-2.5 bg-blue-500/10 border border-blue-500/20 text-slate-200 rounded-xl text-xs font-semibold flex items-center justify-between shadow-lg shadow-blue-500/5 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-400">ℹ️</span>
+                  {allDatabaseSelected ? (
+                    <span>
+                      All <strong className="text-white font-black">{totalProducts}</strong> products matching your search/filters are selected across all pages.
+                    </span>
+                  ) : (
+                    <span>
+                      All <strong className="text-white font-black">{filteredProducts.length}</strong> products on this page are selected.
+                    </span>
+                  )}
+                </div>
+                
+                {allDatabaseSelected ? (
+                  <button 
+                    onClick={() => {
+                      setAllDatabaseSelected(false);
+                      setShowSelectAllBanner(false);
+                      gridApiRef.current?.deselectAll();
+                    }}
+                    className="text-blue-400 hover:text-blue-300 font-bold transition-colors underline cursor-pointer"
+                  >
+                    Clear selection
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      setAllDatabaseSelected(true);
+                      gridApiRef.current?.selectAll();
+                    }}
+                    className="text-blue-400 hover:text-blue-300 font-bold transition-colors underline cursor-pointer"
+                  >
+                    Select all {totalProducts} products matching these filters
+                  </button>
+                )}
+              </div>
+            )}
+            <div className="flex-1 ag-theme-alpine-dark ag-theme-glass">
+              <AgGridReact
+                rowData={filteredProducts}
+                columnDefs={colDefs}
+                onGridReady={(p) => (gridApiRef.current = p.api)}
+                onCellValueChanged={onCellValueChanged}
+                onSelectionChanged={onSelectionChanged}
+                rowSelection="multiple"
+                getRowId={(p) => p.data.sku}
+                stopEditingWhenCellsLoseFocus={true}
+                rowHeight={56}
+                headerHeight={48}
+                animateRows={true}
+              />
+            </div>
+          </>
         )}
       </main>
 
