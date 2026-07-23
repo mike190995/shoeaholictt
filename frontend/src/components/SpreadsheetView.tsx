@@ -320,8 +320,6 @@ const SpreadsheetView: React.FC = () => {
       }
     },
     pushFiltered: async () => {
-      if (activeFilters.size <= 1) return;
-      
       // Select the entire database and visible rows first for visual/step feedback
       setAllDatabaseSelected(true);
       setShowSelectAllBanner(true);
@@ -433,14 +431,6 @@ const SpreadsheetView: React.FC = () => {
         <div className="flex gap-3">
           <button onClick={commonActions.sync} className="glass-button-secondary">⚡ Sync</button>
           <button onClick={commonActions.pushToWoo} className="glass-button-primary">Push to Store</button>
-          {activeFilters.size > 1 && (
-            <button 
-              onClick={commonActions.pushFiltered} 
-              className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 border border-indigo-500/30 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all"
-            >
-              📤 Push All (Filtered)
-            </button>
-          )}
           <div className="w-px h-8 bg-white/10 mx-2" />
           <button
             onClick={handleCommit}
